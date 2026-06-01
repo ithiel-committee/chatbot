@@ -1,6 +1,10 @@
 import * as THREE from "three";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
-import { VRMLoaderPlugin, VRMExpressionPresetName } from "@pixiv/three-vrm";
+import {
+  VRMLoaderPlugin,
+  VRMExpressionPresetName,
+  VRMHumanBoneName,
+} from "@pixiv/three-vrm";
 
 // シーン、カメラ、レンダラーの初期化
 const canvas = document.getElementById("canvas");
@@ -22,8 +26,10 @@ const light = new THREE.DirectionalLight(0xffffff, 1.0);
 light.position.set(1.0, 1.0, 1.0).normalize();
 scene.add(light);
 
-// VRMモデルの管理オブジェクト
+// VRMモデルの管理オブジェクトと腕のボーン
 let currentVrm = null;
+let leftUpperArm = null;
+let rightUpperArm = null;
 
 // 感情の状態管理
 const expressionState = {
@@ -39,7 +45,7 @@ const expressionState = {
 const loader = new GLTFLoader();
 loader.register((parser) => new VRMLoaderPlugin(parser));
 
-// VRMモデルの読み込み（パスは環境に合わせて変更）
+// VRMモデルの読み込み
 loader.load(
   "/3dmodel/ithiel.vrm",
   (gltf) => {
@@ -49,6 +55,14 @@ loader.load(
 
     // モデルの向きを正面に調整
     vrm.scene.rotation.y = Math.PI;
+
+    // 正規化された腕のボーンを取得
+    leftUpperArm = vrm.humanoid.getNormalizedBoneNode(
+      VRMHumanBoneName.LeftUpperArm,
+    );
+    rightUpperArm = vrm.humanoid.getNormalizedBoneNode(
+      VRMHumanBoneName.RightUpperArm,
+    );
 
     // 初期感情の設定（例：喜びを目標にする）
     setTargetExpression("happy");
@@ -92,6 +106,14 @@ function animate() {
   if (currentVrm) {
     // VRMの更新（ボーンアニメーションや視線処理など）
     currentVrm.update(deltaTime);
+
+    // 腕を下げるポーズを毎フレーム適用（updateの直後に実行してポーズを固定する）
+    if (leftUpperArm) {
+      leftUpperArm.rotation.z = Math.PI * 0.4; // 左腕を下げる
+    }
+    if (rightUpperArm) {
+      rightUpperArm.rotation.z = -Math.PI * 0.4; // 右腕を下げる
+    }
 
     // 表情Managerの取得
     const expressionManager = currentVrm.expressionManager;
