@@ -6,4 +6,8 @@
 
 ## run
 
+```bash
+pnpm dev
+```
+
 ## file structure

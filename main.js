@@ -19,7 +19,11 @@ const camera = new THREE.PerspectiveCamera(
 camera.position.set(0.0, 1.3, 1.5);
 
 // 背景画像はWebGL内ではなくCSS(body)で描画して軽量化するため、WebGLキャンバスを透明に設定(alpha: true)
-const renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true, alpha: true });
+const renderer = new THREE.WebGLRenderer({
+  canvas: canvas,
+  antialias: true,
+  alpha: true,
+});
 renderer.setSize(window.innerWidth, window.innerHeight);
 renderer.setPixelRatio(window.devicePixelRatio);
 
@@ -99,20 +103,20 @@ function setTargetExpression(emotion) {
     clearTimeout(expressionResetTimer);
   }
 
-  // 8秒後に自然な表情(relaxed)に戻す
+  // 自然な表情(relaxed)に戻す
   if (emotion !== "relaxed") {
     expressionResetTimer = setTimeout(() => {
       setTargetExpression("relaxed");
-    }, 8000);
+    }, 6000);
   }
 }
 
 // --- 対話ロジック & UI連携 ---
 const qaPairs = [
   {
-    keywords: ["こんにちは", "ハロー", "はじめまして", "自己紹介"],
+    keywords: ["こんにちは", "ハロー", "はじめまして", "自己紹介", "hi", "Hi"],
     reply:
-      "こんにちは！中央大学国際情報学部（iTL）公認マスコットキャラクターのイティエルです！今日からお話できるようになりました。何かお手伝いできることはありますか？",
+      "こんにちは！中央大学国際情報学部（iTL）のイティエルです！何かお手伝いできることはありますか？",
     emotion: "happy",
   },
   {
@@ -138,7 +142,7 @@ const qaPairs = [
   {
     keywords: ["キャンパス", "場所", "どこ", "中央大学"],
     reply:
-      "国際情報学部は「市ヶ谷田町キャンパス」の1学部のみ独立しているんです。飯田橋駅や市ヶ谷駅から近くて、とてもアクセスしやすい綺麗なビルなんですよ！",
+      "国際情報学部は「市ヶ谷田町キャンパス」の1学部のみ独立しているんです。市ヶ谷駅から近くて、とてもアクセスしやすい綺麗なビルなんですよ！",
     emotion: "happy",
   },
   {
@@ -154,7 +158,7 @@ const qaPairs = [
     emotion: "relaxed",
   },
   {
-    keywords: ["法律", "情報", "勉強", "iTL"],
+    keywords: ["法律", "情報", "勉強", "iTL", "itl"],
     reply:
       "国際情報学部は「情報の仕組み」と「法律（IT社会のルール）」の両方を学ぶ学部なんですよ。新しい技術を正しく使うための力を身につけられるんです！",
     emotion: "happy",
@@ -283,7 +287,7 @@ function animate() {
     if (expressionManager) {
       // 簡易口パクアニメーション（応答テキストタイピング中のみ）
       if (isTypingResponse) {
-        const mouthOpen = Math.sin(clock.getElapsedTime() * 15) * 0.25 + 0.25; // 0.0 ~ 0.5の開閉
+        const mouthOpen = Math.sin(clock.getElapsedTime() * 50) * 0.2 + 0.2;
         expressionManager.setValue(VRMExpressionPresetName.Aa, mouthOpen);
       } else {
         expressionManager.setValue(VRMExpressionPresetName.Aa, 0.0);
