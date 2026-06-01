@@ -9,13 +9,17 @@ import {
 // シーン、カメラ、レンダラーの初期化
 const canvas = document.getElementById("canvas");
 const scene = new THREE.Scene();
+
+// 背景を明るい薄グレーに設定
+scene.background = new THREE.Color(0xf0f0f0);
+
 const camera = new THREE.PerspectiveCamera(
   30,
   window.innerWidth / window.innerHeight,
   0.1,
   20.0,
 );
-camera.position.set(0.0, 1.4, 1.5);
+camera.position.set(0.0, 1.3, 1.5);
 
 const renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true });
 renderer.setSize(window.innerWidth, window.innerHeight);
@@ -25,6 +29,10 @@ renderer.setPixelRatio(window.devicePixelRatio);
 const light = new THREE.DirectionalLight(0xffffff, 1.0);
 light.position.set(1.0, 1.0, 1.0).normalize();
 scene.add(light);
+
+// 環境光を追加してモデル全体を均一に明るくする
+const ambientLight = new THREE.AmbientLight(0xffffff, 0.8);
+scene.add(ambientLight);
 
 // VRMモデルの管理オブジェクトと腕のボーン
 let currentVrm = null;
