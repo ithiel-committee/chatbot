@@ -1,3 +1,5 @@
 *.psd
 live2d/
 3dmodel/
+node_modules/
+.env
