@@ -10,9 +10,6 @@ import {
 const canvas = document.getElementById("canvas");
 const scene = new THREE.Scene();
 
-// 背景を明るい薄グレーに設定
-scene.background = new THREE.Color(0xf0f0f0);
-
 const camera = new THREE.PerspectiveCamera(
   30,
   window.innerWidth / window.innerHeight,
@@ -21,7 +18,8 @@ const camera = new THREE.PerspectiveCamera(
 );
 camera.position.set(0.0, 1.3, 1.5);
 
-const renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true });
+// 背景画像はWebGL内ではなくCSS(body)で描画して軽量化するため、WebGLキャンバスを透明に設定(alpha: true)
+const renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true, alpha: true });
 renderer.setSize(window.innerWidth, window.innerHeight);
 renderer.setPixelRatio(window.devicePixelRatio);
 
