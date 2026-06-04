@@ -4,3 +4,4 @@ live2d/
 node_modules/
 .env
 bg.jpg
+capture/
