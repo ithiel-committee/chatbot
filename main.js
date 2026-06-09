@@ -41,6 +41,10 @@ let currentVrm = null;
 let leftUpperArm = null;
 let rightUpperArm = null;
 
+// 制御フラグ
+const enableLipSync = false;
+const enableExpressionAnimation = false;
+
 // 感情の状態管理
 const expressionState = {
   // 現在の各表情のウェイト
@@ -74,8 +78,8 @@ loader.load(
       VRMHumanBoneName.RightUpperArm,
     );
 
-    // 初期感情の設定（例：喜びを目標にする）
-    setTargetExpression("happy");
+    // 初期感情の設定（例：ニュートラルにする）
+    setTargetExpression("neutral");
   },
   (progress) => {
     // progress.total が 0 の場合のゼロ除算を防ぐ
@@ -285,8 +289,8 @@ function animate() {
     const expressionManager = currentVrm.expressionManager;
 
     if (expressionManager) {
-      // 簡易口パクアニメーション（応答テキストタイピング中のみ）
-      if (isTypingResponse) {
+      // 簡易口パクアニメーション（フラグ有効時かつ応答テキストタイピング中のみ）
+      if (enableLipSync && isTypingResponse) {
         const mouthOpen = Math.sin(clock.getElapsedTime() * 50) * 0.2 + 0.2;
         expressionManager.setValue(VRMExpressionPresetName.Aa, mouthOpen);
       } else {
@@ -298,9 +302,15 @@ function animate() {
         const cur = expressionState.current[key];
         const tar = expressionState.target[key];
 
-        // 線形補間によるウェイトの計算
-        expressionState.current[key] =
-          cur + (tar - cur) * expressionState.speed;
+        // 状態遷移時にアニメーションするかどうかの制御
+        if (enableExpressionAnimation) {
+          // 線形補間によるウェイトの計算
+          expressionState.current[key] =
+            cur + (tar - cur) * expressionState.speed;
+        } else {
+          // 0秒で感情を即時切り替える
+          expressionState.current[key] = tar;
+        }
 
         // 表情名をVRMのプリセット名にマッピング
         let presetName;
