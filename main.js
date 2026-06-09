@@ -116,58 +116,17 @@ function setTargetExpression(emotion) {
 }
 
 // --- 対話ロジック & UI連携 ---
-const qaPairs = [
-  {
-    keywords: ["こんにちは", "ハロー", "はじめまして", "自己紹介", "hi", "Hi"],
-    reply:
-      "こんにちは！中央大学国際情報学部（iTL）のイティエルです！何かお手伝いできることはありますか？",
-    emotion: "happy",
-  },
-  {
-    keywords: [
-      "お腹空いた",
-      "お腹すいた",
-      "昼ご飯",
-      "昼ごはん",
-      "ランチ",
-      "学食",
-      "弁当",
-    ],
-    reply:
-      "市ヶ谷田町キャンパスには学食がないので、近隣のお弁当屋さんやカフェが人気なんですよ！一週間頑張ったご褒美には、美味しい外食を食べに行くのもいいですね！",
-    emotion: "relaxed",
-  },
-  {
-    keywords: ["時間割", "授業", "講義", "課題"],
-    reply:
-      "時間割や講義情報ですね！国際情報学部の時間割は、学内ポータルで確認できます。課題の提出期限などは、うっかり忘れがちなのでスケジュール帳にしっかりメモしておきましょうね！",
-    emotion: "relaxed",
-  },
-  {
-    keywords: ["キャンパス", "場所", "どこ", "中央大学"],
-    reply:
-      "国際情報学部は「市ヶ谷田町キャンパス」の1学部のみ独立しているんです。市ヶ谷駅から近くて、とてもアクセスしやすい綺麗なビルなんですよ！",
-    emotion: "happy",
-  },
-  {
-    keywords: ["雨", "天気", "寒"],
-    reply:
-      "今日はなんだか天気が悪くて肌寒いですね……。激しい寒暖差が続いていますので、体調管理には気を付けて、温かくしてお過ごしくださいね。",
-    emotion: "sad",
-  },
-  {
-    keywords: ["疲れた", "しんどい", "眠い"],
-    reply:
-      "今日もお疲れ様です！なかなか作業に身が入らない日もありますよね。そういう時は温かい飲み物でも飲んで、無理せずスケジュールを見直してみるのもおすすめですよ。",
-    emotion: "relaxed",
-  },
-  {
-    keywords: ["法律", "情報", "勉強", "iTL", "itl"],
-    reply:
-      "国際情報学部は「情報の仕組み」と「法律（IT社会のルール）」の両方を学ぶ学部なんですよ。新しい技術を正しく使うための力を身につけられるんです！",
-    emotion: "happy",
-  },
-];
+let qaPairs = [];
+
+async function loadQAPairs() {
+  try {
+    const response = await fetch("/assets/qa_pairs.json");
+    qaPairs = await response.json();
+  } catch (error) {
+    console.error("Failed to load QA pairs:", error);
+  }
+}
+loadQAPairs();
 
 function getReply(inputText) {
   for (const pair of qaPairs) {
