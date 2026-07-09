@@ -1,9 +1,7 @@
 *.psd
 live2d/
-3dmodel/
 node_modules/
 .env
-bg.jpg
 capture/
 .agent/
 dist/
