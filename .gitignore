@@ -1,0 +1,7 @@
+*.psd
+live2d/
+node_modules/
+.env
+capture/
+.agent/
+dist/
