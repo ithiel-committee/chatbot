@@ -82,11 +82,15 @@ loader.load(
     setTargetExpression("neutral");
   },
   (progress) => {
-    // progress.total が 0 の場合のゼロ除算を防ぐ
-    const percent = progress.total
-      ? (progress.loaded / progress.total) * 100
-      : 0;
-    console.log(`Loading... ${percent.toFixed(2)}%`);
+    if (progress.total > 0) {
+      // サーバーのgzip圧縮等の影響でloadedがtotalを上回ることがあるため、100%でキャップする
+      const percent = Math.min((progress.loaded / progress.total) * 100, 100);
+      console.log(`Loading... ${percent.toFixed(2)}%`);
+    } else {
+      // totalが不明な場合は読み込み済みの容量(MB)を表示する
+      const mb = (progress.loaded / 1024 / 1024).toFixed(2);
+      console.log(`Loading... ${mb} MB`);
+    }
   },
   (error) => console.error(error),
 );
