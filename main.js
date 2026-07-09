@@ -61,7 +61,7 @@ loader.register((parser) => new VRMLoaderPlugin(parser));
 
 // VRMモデルの読み込み
 loader.load(
-  "/3dmodel/ithiel.vrm",
+  "./3dmodel/ithiel.vrm",
   (gltf) => {
     const vrm = gltf.userData.vrm;
     currentVrm = vrm;
@@ -120,7 +120,7 @@ let qaPairs = [];
 
 async function loadQAPairs() {
   try {
-    const response = await fetch("/assets/qa_pairs.json");
+    const response = await fetch("./assets/qa_pairs.json");
     qaPairs = await response.json();
   } catch (error) {
     console.error("Failed to load QA pairs:", error);
