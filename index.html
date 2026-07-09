@@ -1,0 +1,145 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <title>iThieL Chatbot</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@400;500;700&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      body {
+        margin: 0;
+        font-family: "Zen Maru Gothic", sans-serif;
+        background-image: url("/assets/bg.jpg");
+        background-size: cover;
+        background-position: center;
+        background-repeat: no-repeat;
+        background-color: #f0f0f0;
+        overflow: hidden;
+      }
+      canvas {
+        width: 100vw;
+        height: 100vh;
+        display: block;
+      }
+      /* テキストエリアコンテナ */
+      #text-area-container {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        width: 100vw;
+        height: 38vh;
+        /* 背景は半透明な黒、上部は透明度のグラデーション */
+        background: linear-gradient(
+          to top,
+          rgba(0, 0, 0, 0.9) 0%,
+          rgba(0, 0, 0, 0.7) 60%,
+          rgba(0, 0, 0, 0) 100%
+        );
+        color: #ffffff;
+        padding: 30px 40px;
+        box-sizing: border-box;
+        z-index: 10;
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-end;
+        cursor: text;
+      }
+      #log-scroll {
+        overflow-y: auto;
+        max-height: 100%;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        font-size: 1.15rem;
+        line-height: 1.7;
+        font-weight: 500;
+      }
+      /* スクロールバーを非表示にしつつスクロール可能に */
+      #log-scroll::-webkit-scrollbar {
+        display: none;
+      }
+      #log-scroll {
+        -ms-overflow-style: none; /* IE and Edge */
+        scrollbar-width: none; /* Firefox */
+      }
+      #log {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+      }
+      .log-row {
+        white-space: pre-wrap;
+        word-break: break-all;
+      }
+      .user-msg {
+        color: #ffffff; /* ユーザーの入力テキスト */
+      }
+      .char-msg {
+        color: #ffffff; /* キャラクターの出力テキスト */
+      }
+      #input-line {
+        display: flex;
+        align-items: center;
+        margin-top: 6px;
+      }
+      #input-prompt {
+        color: #ffffff;
+        margin-right: 8px;
+        font-weight: 700;
+        user-select: none;
+      }
+      #input-text {
+        min-height: 1.6em;
+        white-space: pre-wrap;
+        word-break: break-all;
+        color: #ffffff;
+      }
+      #cursor {
+        display: inline-block;
+        width: 10px;
+        height: 1.25em;
+        background-color: #ffffff;
+        margin-left: 4px;
+        animation: blink 0.8s infinite;
+        vertical-align: middle;
+      }
+      @keyframes blink {
+        0%,
+        100% {
+          opacity: 0;
+        }
+        50% {
+          opacity: 1;
+        }
+      }
+      /* 実際の入力を受け付ける非表示インプット */
+      #hidden-input {
+        position: absolute;
+        top: -100px;
+        left: -100px;
+        opacity: 0;
+        width: 1px;
+        height: 1px;
+      }
+    </style>
+  </head>
+  <body>
+    <canvas id="canvas"></canvas>
+    <div id="text-area-container">
+      <div id="log-scroll">
+        <div id="log"></div>
+        <div id="input-line">
+          <span id="input-prompt">&gt;</span>
+          <span id="input-text"></span>
+          <span id="cursor"></span>
+        </div>
+      </div>
+      <input type="text" id="hidden-input" autofocus autocomplete="off" />
+    </div>
+    <script type="module" src="/main.js"></script>
+  </body>
+</html>
