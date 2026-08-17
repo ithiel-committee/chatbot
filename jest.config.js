@@ -45,7 +45,7 @@ const config = {
     ],
   },
   transformIgnorePatterns: [
-    'node_modules/(?!(@pixiv/three-vrm|three/examples/jsm|pdfjs-dist|i18next|idb))',
+    'node_modules/(?!(@pixiv/three-vrm|three/examples/jsm|pdfjs-dist|i18next|idb|@mastra))',
   ],
   moduleDirectories: ['node_modules', '<rootDir>/src/__mocks__'],
   testPathIgnorePatterns: ['/node_modules/', '/\\.next/', '/\\.open-next/'],

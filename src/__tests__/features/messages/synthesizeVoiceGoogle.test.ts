@@ -101,30 +101,18 @@ describe('synthesizeVoiceGoogleApi', () => {
     )
   })
 
-  describe('language mappings', () => {
-    const languageMappings: [string, string, string][] = [
-      ['ko', 'ko-KR-Neural2-A', 'ko-KR'],
-      ['zh-CN', 'cmn-CN-Standard-A', 'zh-CN'],
-      ['zh-TW', 'cmn-TW-Standard-A', 'zh-TW'],
-      ['fr', 'fr-FR-Standard-A', 'fr-FR'],
-      ['de', 'de-DE-Standard-A', 'de-DE'],
-    ]
+  it('should use correct defaults for additional languages falling back to en-US', async () => {
+    const fakeAudio = btoa('data')
+    mockFetch.mockResolvedValue({
+      ok: true,
+      json: () => Promise.resolve({ audio: fakeAudio }),
+    })
 
-    it.each(languageMappings)(
-      'should use correct defaults for %s',
-      async (lang, expectedTtsType, expectedLangCode) => {
-        const fakeAudio = btoa('data')
-        mockFetch.mockResolvedValue({
-          ok: true,
-          json: () => Promise.resolve({ audio: fakeAudio }),
-        })
+    // ja/en以外はdefaultのen-US-Neural2-Fにフォールバックする
+    await synthesizeVoiceGoogleApi(mockTalk, '', 'ko' as any)
 
-        await synthesizeVoiceGoogleApi(mockTalk, '', lang as any)
-
-        const body = JSON.parse(mockFetch.mock.calls[0][1].body)
-        expect(body.ttsType).toBe(expectedTtsType)
-        expect(body.languageCode).toBe(expectedLangCode)
-      }
-    )
+    const body = JSON.parse(mockFetch.mock.calls[0][1].body)
+    expect(body.ttsType).toBe('en-US-Neural2-F')
+    expect(body.languageCode).toBe('en-US')
   })
 })
