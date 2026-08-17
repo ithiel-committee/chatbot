@@ -8,7 +8,7 @@
     "nikechan_v2.vrm",
     "nikechan_v2_outerwear.vrm"
   ],
-  "backgrounds": ["bg-c.png"],
+  "backgrounds": ["bg.jpg", "bg-c.png"],
   "live2d": [
     {
       "path": "/live2d/nike01/nike01.model3.json",

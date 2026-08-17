@@ -617,7 +617,7 @@ const getInitialValuesFromEnv = (): SettingsState => ({
   maxPastMessages:
     parseInt(process.env.NEXT_PUBLIC_MAX_PAST_MESSAGES || '10') || 10,
   backgroundImageUrl:
-    process.env.NEXT_PUBLIC_BACKGROUND_IMAGE_PATH || '/backgrounds/bg-c.png',
+    process.env.NEXT_PUBLIC_BACKGROUND_IMAGE_PATH || '/backgrounds/bg.jpg',
   useVideoAsBackground:
     process.env.NEXT_PUBLIC_USE_VIDEO_AS_BACKGROUND === 'true',
   hideVideoDisplay: process.env.NEXT_PUBLIC_HIDE_VIDEO_DISPLAY === 'true',
@@ -1078,6 +1078,21 @@ const mergePersistedSettings = (
   const mergedState = {
     ...currentState,
     ...(persistedState as Partial<SettingsState> | undefined),
+  }
+
+  if (
+    mergedState.backgroundImageUrl === '/backgrounds/bg-c.png' ||
+    !mergedState.backgroundImageUrl
+  ) {
+    mergedState.backgroundImageUrl = currentState.backgroundImageUrl
+  }
+
+  if (
+    mergedState.selectedVrmPath === '/vrm/AvatarSample_B.vrm' ||
+    mergedState.selectedVrmPath === '/vrm/nikechan_v1.vrm' ||
+    !mergedState.selectedVrmPath
+  ) {
+    mergedState.selectedVrmPath = currentState.selectedVrmPath
   }
 
   if (process.env.NEXT_PUBLIC_ALWAYS_OVERRIDE_WITH_ENV_VARIABLES === 'true') {

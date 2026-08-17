@@ -65,6 +65,7 @@ public/scripts/live2dcubismcore.min.js
 
 # Background files
 /public/backgrounds/*
+!/public/backgrounds/bg.jpg
 !/public/backgrounds/bg-c.png
 
 # PNGTuber files
