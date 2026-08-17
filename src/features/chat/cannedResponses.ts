@@ -92,14 +92,28 @@ export function getCannedResponse(messages: Message[]): string | null {
 }
 
 /**
- * 定型文をストリームとして返すモックストリームを生成する
+ * 定型文をAI生成風のストリームとして返すモックストリームを生成する
  */
 export function createCannedResponseStream(
   text: string
 ): ReadableStream<string> {
+  const tagMatch = text.match(/^\s*(\[[^\]]+\])+/)
+  const tags = tagMatch ? tagMatch[0] : ''
+  const body = tags ? text.slice(tags.length) : text
+
   return new ReadableStream({
-    start(controller) {
-      controller.enqueue(text)
+    async start(controller) {
+      if (tags) {
+        controller.enqueue(tags)
+      }
+
+      const chunkSize = 2
+      for (let i = 0; i < body.length; i += chunkSize) {
+        const chunk = body.slice(i, i + chunkSize)
+        controller.enqueue(chunk)
+        await new Promise((resolve) => setTimeout(resolve, 20))
+      }
+
       controller.close()
     },
   })
