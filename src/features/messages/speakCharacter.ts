@@ -266,7 +266,25 @@ const createSpeakCharacter = () => {
       }
 
       if (!result.audio) {
-        result.onComplete?.()
+        if (result.talk.message || result.displayText) {
+          if (result.tokenAtStart !== SpeakQueue.currentStopToken) {
+            result.onComplete?.()
+            continue
+          }
+          void speakQueue.addTask({
+            sessionId: result.sessionId,
+            talk: result.talk,
+            displayText: result.displayText,
+            kind: 'silent',
+            onPlaybackStart: () => {
+              markConversationLatency(result.sessionId, 'playback_started')
+              result.onPlaybackStart?.()
+            },
+            onComplete: result.onComplete,
+          })
+        } else {
+          result.onComplete?.()
+        }
         continue
       }
 

@@ -23,6 +23,10 @@ type SpeakTask = SpeakTaskBase &
         audioStream: ReadableStream<Uint8Array>
         sampleRate: number
       }
+    | {
+        kind: 'silent'
+        durationMs?: number
+      }
   )
 
 export class SpeakQueue {
@@ -244,7 +248,19 @@ export class SpeakQueue {
             },
           }
           try {
-            if (task.kind === 'pcm16-stream') {
+            if (task.kind === 'silent') {
+              observer.onPlaybackStart()
+              const model = homeStore.getState().viewer.model
+              if (model && task.talk.emotion) {
+                await model.playEmotion(task.talk.emotion)
+              }
+              const displayLength = (
+                task.displayText ?? task.talk.message
+              ).length
+              const duration =
+                task.durationMs ?? Math.min(6000, Math.max(1500, displayLength * 80))
+              await new Promise((resolve) => setTimeout(resolve, duration))
+            } else if (task.kind === 'pcm16-stream') {
               if (!renderer?.speakPcm16Stream) {
                 throw new Error(
                   'Current character renderer does not support PCM16 streaming'
