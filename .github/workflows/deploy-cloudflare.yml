@@ -42,25 +42,19 @@ jobs:
       - name: Install canvas dependencies (cairo)
         run: sudo apt-get update && sudo apt-get install -y libcairo2-dev libpango1.0-dev libjpeg-dev libgif-dev librsvg2-dev
 
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '24.x'
-          cache: 'npm'
-
-      - name: Setup npm
-        run: npm install -g npm@^11.6.2
-
-      - name: Verify toolchain
-        run: |
-          node --version
-          npm --version
-          node -e "const { execSync } = require('child_process'); const nodeMajor = Number(process.versions.node.split('.')[0]); const npmVersion = execSync('npm --version', { encoding: 'utf8' }).trim().split('.').map(Number); if (nodeMajor !== 24 || npmVersion[0] !== 11 || npmVersion[1] < 6 || (npmVersion[1] === 6 && npmVersion[2] < 2)) process.exit(1);"
+          cache: 'pnpm'
 
       - name: Install dependencies
         env:
           ELECTRON_SKIP_BINARY_DOWNLOAD: '1'
-        run: npm ci
+        run: pnpm install --frozen-lockfile
 
       - name: Setup environment variables
         run: |
@@ -108,7 +102,7 @@ jobs:
           CUSTOM_API_HEADERS: ${{ secrets.CUSTOM_API_HEADERS }}
 
       - name: Build for Cloudflare
-        run: npm run build:cloudflare
+        run: pnpm run build:cloudflare
         env:
           NEXT_PUBLIC_OFFICIAL_SITE: 'true'
 
