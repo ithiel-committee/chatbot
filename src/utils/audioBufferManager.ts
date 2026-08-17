@@ -2,12 +2,19 @@ import { logger } from '@/lib/logger'
 
 export type SendCallback = (buffer: ArrayBuffer) => Promise<void>
 
+// Realtime/Audio APIは24kHz・16bit・mono PCM。24,000 bytesは約500ms分で、
+// 旧100,000 bytes（約2.1秒）より早く再生へ渡しつつ細切れ再生を避ける。
+export const DEFAULT_AUDIO_BUFFER_THRESHOLD = 24_000
+
 export class AudioBufferManager {
   private buffer: ArrayBuffer = new ArrayBuffer(0)
   private readonly BUFFER_THRESHOLD: number
   private readonly sendCallback: SendCallback
 
-  constructor(sendCallback: SendCallback, bufferThreshold: number = 100_000) {
+  constructor(
+    sendCallback: SendCallback,
+    bufferThreshold: number = DEFAULT_AUDIO_BUFFER_THRESHOLD
+  ) {
     this.sendCallback = sendCallback
     this.BUFFER_THRESHOLD = bufferThreshold
   }

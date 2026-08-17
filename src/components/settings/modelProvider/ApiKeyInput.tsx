@@ -1,5 +1,6 @@
 import { useTranslation } from 'react-i18next'
 import { Link } from '../../link'
+import { settingsControlClass } from '@/components/settings/formStyles'
 
 interface ApiKeyInputProps {
   label: string
@@ -35,7 +36,7 @@ export const ApiKeyInput = ({
         )}
       </div>
       <input
-        className="text-ellipsis px-4 py-2 w-full sm:w-col-span-2 bg-white hover:bg-white-hover rounded-lg"
+        className={settingsControlClass.long}
         type="password"
         placeholder={placeholder}
         value={value}

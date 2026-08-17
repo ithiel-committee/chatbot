@@ -8,17 +8,14 @@ export async function synthesizeVoiceGSVIApi(
   batchsize: number,
   speed: number
 ): Promise<ArrayBuffer> {
-  const style = 'default'
-
   return synthesizeVoiceApi(
-    url.replace(/\/$/, ''),
+    '/api/tts-gsvi',
     {
-      character: character,
-      emotion: style,
-      text: talk.message,
-      batch_size: batchsize,
-      speed: speed.toString(),
-      stream: true,
+      message: talk.message,
+      serverUrl: url,
+      character,
+      batchSize: batchsize,
+      speed,
     },
     'GSVI',
     {

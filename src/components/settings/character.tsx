@@ -8,6 +8,7 @@ import {
   CharacterVrmExtrasSection,
   CharacterPromptSection,
 } from './character/index'
+import { settingsControlClass } from '@/components/settings/formStyles'
 
 const Character = () => {
   const { t } = useTranslation()
@@ -57,7 +58,7 @@ const Character = () => {
       <div className="">
         <div className="mb-4 text-xl font-bold">{t('CharacterName')}</div>
         <input
-          className="text-ellipsis px-4 py-2 w-full sm:w-col-span-2 bg-white hover:bg-white-hover rounded-lg"
+          className={settingsControlClass.compact}
           type="text"
           placeholder={t('CharacterName')}
           value={characterName}

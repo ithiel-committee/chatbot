@@ -63,6 +63,17 @@ jest.mock('../../../features/messages/synthesizeVoiceVoicevox', () => ({
     mockSynthesizeVoicevoxApi(...args),
 }))
 
+const mockSynthesizeVoiceOpenAIStreamApi = jest.fn()
+jest.mock('../../../features/messages/synthesizeVoiceOpenAI', () => ({
+  synthesizeVoiceOpenAIApi: jest.fn(),
+  synthesizeVoiceOpenAIStreamApi: (...args: unknown[]) =>
+    mockSynthesizeVoiceOpenAIStreamApi(...args),
+}))
+
+jest.mock('../../../features/messages/characterRenderer', () => ({
+  getCharacterRenderer: () => ({ speakPcm16Stream: jest.fn() }),
+}))
+
 import { speakCharacter } from '../../../features/messages/speakCharacter'
 
 function createDeferred<T>() {
@@ -76,8 +87,9 @@ function createDeferred<T>() {
 }
 
 const flushPromises = async () => {
-  await Promise.resolve()
-  await Promise.resolve()
+  for (let index = 0; index < 8; index += 1) {
+    await Promise.resolve()
+  }
 }
 
 describe('speakCharacter concurrency', () => {
@@ -127,6 +139,27 @@ describe('speakCharacter concurrency', () => {
     })
   })
 
+  it('forwards the display callback to the actual playback start', async () => {
+    const onPlaybackStart = jest.fn()
+    mockSynthesizeVoicevoxApi.mockResolvedValueOnce(new ArrayBuffer(1))
+
+    speakCharacter(
+      'session-playback',
+      { message: 'spoken', emotion: 'neutral' },
+      undefined,
+      undefined,
+      'displayed',
+      onPlaybackStart
+    )
+    await flushPromises()
+
+    expect(onPlaybackStart).not.toHaveBeenCalled()
+    const queuedTask = mockAddTask.mock.calls[0][0]
+    queuedTask.onPlaybackStart()
+
+    expect(onPlaybackStart).toHaveBeenCalledTimes(1)
+  })
+
   it('drops old synthesis results after a session switch', async () => {
     const oldTask = createDeferred<ArrayBuffer>()
     const newTask = createDeferred<ArrayBuffer>()
@@ -166,5 +199,59 @@ describe('speakCharacter concurrency', () => {
       onComplete: expect.any(Function),
     })
     expect(newComplete).not.toHaveBeenCalled()
+  })
+
+  it('cancels an old PCM16 stream after a session switch', async () => {
+    const oldTask = createDeferred<{
+      stream: ReadableStream<Uint8Array>
+      sampleRate: 24000
+    }>()
+    const newTask = createDeferred<{
+      stream: ReadableStream<Uint8Array>
+      sampleRate: 24000
+    }>()
+    const cancel = jest.fn()
+    const oldComplete = jest.fn()
+
+    mockSettingsGetState.mockReturnValue({
+      audioMode: false,
+      changeEnglishToJapanese: false,
+      selectLanguage: 'ja',
+      selectVoice: 'openai',
+      openaiKey: 'key',
+      openaiTTSVoice: 'alloy',
+      openaiTTSModel: 'tts-1',
+      openaiTTSSpeed: 1,
+    })
+    mockSynthesizeVoiceOpenAIStreamApi
+      .mockReturnValueOnce(oldTask.promise)
+      .mockReturnValueOnce(newTask.promise)
+
+    speakCharacter(
+      'session-old-stream',
+      { message: 'old', emotion: 'neutral' },
+      undefined,
+      oldComplete
+    )
+    speakCharacter('session-new-stream', {
+      message: 'new',
+      emotion: 'neutral',
+    })
+
+    oldTask.resolve({
+      stream: new ReadableStream<Uint8Array>({ cancel }),
+      sampleRate: 24000,
+    })
+    await flushPromises()
+    await flushPromises()
+
+    expect(cancel).toHaveBeenCalledWith('speech discarded')
+    expect(oldComplete).toHaveBeenCalledTimes(1)
+
+    newTask.resolve({
+      stream: new ReadableStream<Uint8Array>(),
+      sampleRate: 24000,
+    })
+    await flushPromises()
   })
 })

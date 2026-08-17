@@ -9,6 +9,7 @@ import {
 import settingsStore, { SettingsState } from '@/features/stores/settings'
 import { Link } from '../../link'
 import { TextButton } from '../../textButton'
+import { settingsControlClass } from '@/components/settings/formStyles'
 
 interface KoeiromapSettingsProps {
   koeiromapKey: string
@@ -34,7 +35,7 @@ export const KoeiromapSettings = ({
       <div className="mt-4 font-bold">{t('APIKey')}</div>
       <div className="mt-2">
         <input
-          className="text-ellipsis px-4 py-2 w-full bg-white hover:bg-white-hover rounded-lg"
+          className={settingsControlClass.long}
           type="text"
           placeholder="..."
           value={koeiromapKey}

@@ -1,5 +1,6 @@
 import {
   AudioBufferManager,
+  DEFAULT_AUDIO_BUFFER_THRESHOLD,
   base64ToArrayBuffer,
   validateAudioBuffer,
 } from '@/utils/audioBufferManager'
@@ -48,6 +49,15 @@ describe('AudioBufferManager', () => {
   })
 
   describe('addData', () => {
+    it('uses about 500ms of 24kHz PCM as the default threshold', () => {
+      const manager = new AudioBufferManager(sendCallback)
+      manager.addData(new Uint8Array(DEFAULT_AUDIO_BUFFER_THRESHOLD - 2).buffer)
+      expect(sendCallback).not.toHaveBeenCalled()
+
+      manager.addData(new Uint8Array(2).buffer)
+      expect(sendCallback).toHaveBeenCalledTimes(1)
+    })
+
     it('should accumulate data without sending below threshold', () => {
       const manager = new AudioBufferManager(sendCallback, 1000)
       manager.addData(new Uint8Array(500).buffer)

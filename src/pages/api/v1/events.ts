@@ -14,8 +14,11 @@ const writeSseEvent = (res: NextApiResponse, event: ApiEvent) => {
 }
 
 const handler = (req: NextApiRequest, res: NextApiResponse) => {
-  const clientId =
-    typeof req.query.clientId === 'string' ? req.query.clientId : undefined
+  const receiverId =
+    typeof req.query.receiverId === 'string' ? req.query.receiverId.trim() : ''
+  const legacyClientId =
+    typeof req.query.clientId === 'string' ? req.query.clientId.trim() : ''
+  const clientId = receiverId || legacyClientId || undefined
   const snapshot = req.query.snapshot === 'true'
 
   if (snapshot) {
@@ -29,6 +32,7 @@ const handler = (req: NextApiRequest, res: NextApiResponse) => {
     'Content-Type': 'text/event-stream',
     'Cache-Control': 'no-cache, no-transform',
     Connection: 'keep-alive',
+    'X-Accel-Buffering': 'no',
   })
 
   res.write(': connected\n\n')
@@ -41,7 +45,16 @@ const handler = (req: NextApiRequest, res: NextApiResponse) => {
     }
   })
 
-  req.socket.on('close', unsubscribe)
+  const heartbeat = setInterval(() => res.write(': heartbeat\n\n'), 15_000)
+  let closed = false
+  const cleanup = () => {
+    if (closed) return
+    closed = true
+    clearInterval(heartbeat)
+    unsubscribe()
+  }
+  req.socket.on('close', cleanup)
+  res.once('close', cleanup)
 }
 
 export default withAccessPolicy(routePolicies['/api/v1/events'], handler)

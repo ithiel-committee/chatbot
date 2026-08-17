@@ -25,6 +25,7 @@ import { useModelProviderState } from '@/components/settings/modelProvider/hooks
 import { ToggleSwitch } from '@/components/toggleSwitch'
 import { languageOptions } from '@/components/settings/languageOptions'
 import speakers from '@/components/speakers.json'
+import { settingsFieldWidth } from '@/components/settings/formStyles'
 
 type SpeakerOption = {
   id: number | string
@@ -37,7 +38,7 @@ const inputClassName =
 const selectButtonClassName =
   'theme-surface-control flex w-full cursor-pointer items-center justify-between rounded-lg border px-4 py-2 text-left shadow-sm transition hover:border-primary/40 focus:border-primary focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/20'
 
-const choiceControlClassName = 'w-full max-w-full sm:w-80'
+const choiceControlClassName = settingsFieldWidth.medium
 
 const quickGridClassName = 'mt-4 grid gap-4 sm:grid-cols-2'
 

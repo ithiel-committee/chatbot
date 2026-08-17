@@ -11,11 +11,17 @@
  * 設計ドキュメント: docs/access-policy-design.md §4.2
  */
 
+import { isIP } from 'node:net'
 import type { NextApiHandler, NextApiRequest, NextApiResponse } from 'next'
-import { guardServerSecretAccess } from '@/lib/api-services/serverSecretGuard'
+import {
+  guardServerSecretAccess,
+  isServerSecretAccessDisabled,
+} from '@/lib/api-services/serverSecretGuard'
 import {
   isAllowedConfiguredOrListedUrl,
   isHttpUrl,
+  isLoopbackHost,
+  isSameMachineHost,
 } from '@/lib/api-services/serverUrlGuard'
 import {
   isRestrictedMode,
@@ -43,7 +49,13 @@ export interface PolicyGate {
    * secret.kind === 'dynamic' のルート専用の遅延ガード。
    * false が返ったらレスポンス送信済みなので即 return すること。
    */
-  guardServerSecret(usesServerSecret: boolean): boolean
+  guardServerSecret(
+    usesServerSecret: boolean,
+    options?: {
+      /** 動的URLルートで、同一マシンのローカル接続だけdisabledでも許可する */
+      allowLocalLoopbackUrl?: URL
+    }
+  ): boolean
 }
 
 export type PolicyGuardedHandler = (
@@ -51,6 +63,107 @@ export type PolicyGuardedHandler = (
   res: NextApiResponse,
   gate: PolicyGate
 ) => unknown | Promise<unknown>
+
+const EXPLICIT_PROXY_HEADER_NAMES = [
+  'forwarded',
+  'x-real-ip',
+  'cf-connecting-ip',
+] as const
+
+function getCommaSeparatedHeaderValues(
+  value: string | string[] | undefined
+): string[] | undefined {
+  if (value === undefined) return undefined
+
+  return (Array.isArray(value) ? value : [value])
+    .flatMap((entry) => entry.split(','))
+    .map((entry) => entry.trim())
+}
+
+function isStrictLoopbackIpAddress(value: string): boolean {
+  return isIP(value) !== 0 && isLoopbackHost(value)
+}
+
+function isLoopbackForwardedHost(value: string): boolean {
+  try {
+    const parsed = new URL(`http://${value}`)
+    return (
+      !parsed.username &&
+      !parsed.password &&
+      parsed.pathname === '/' &&
+      !parsed.search &&
+      !parsed.hash &&
+      isLoopbackHost(parsed.hostname)
+    )
+  } catch {
+    return false
+  }
+}
+
+function hasExternalProxyEvidence(req: NextApiRequest): boolean {
+  if (
+    EXPLICIT_PROXY_HEADER_NAMES.some(
+      (name) => req.headers?.[name] !== undefined
+    )
+  ) {
+    return true
+  }
+
+  const forwardedAddresses = getCommaSeparatedHeaderValues(
+    req.headers?.['x-forwarded-for']
+  )
+  if (
+    forwardedAddresses !== undefined &&
+    (forwardedAddresses.length === 0 ||
+      forwardedAddresses.some((address) => !isStrictLoopbackIpAddress(address)))
+  ) {
+    return true
+  }
+
+  const forwardedHosts = getCommaSeparatedHeaderValues(
+    req.headers?.['x-forwarded-host']
+  )
+  return (
+    forwardedHosts !== undefined &&
+    (forwardedHosts.length === 0 ||
+      forwardedHosts.some((host) => !isLoopbackForwardedHost(host)))
+  )
+}
+
+function isSameMachineLoopbackRequest(req: NextApiRequest): boolean {
+  if (hasExternalProxyEvidence(req)) return false
+
+  const hostHeader = req.headers?.host
+  if (!hostHeader) return false
+
+  let requestHostname: string
+  try {
+    requestHostname = new URL(`http://${hostHeader}`).hostname
+  } catch {
+    return false
+  }
+
+  const remoteAddress = req.socket?.remoteAddress
+  return (
+    Boolean(remoteAddress) &&
+    isLoopbackHost(requestHostname) &&
+    isLoopbackHost(remoteAddress || '')
+  )
+}
+
+function allowsSameMachineAccess(
+  policy: RoutePolicy,
+  req: NextApiRequest,
+  resolvedServerUrl: ResolvedServerUrl | undefined
+): boolean {
+  return (
+    policy.serverUrl?.allowLocalLoopback === true &&
+    isServerSecretAccessDisabled() &&
+    Boolean(resolvedServerUrl) &&
+    isSameMachineHost(resolvedServerUrl?.parsed.hostname || '') &&
+    isSameMachineLoopbackRequest(req)
+  )
+}
 
 export function withAccessPolicy(
   policy: RoutePolicy,
@@ -132,11 +245,17 @@ export function withAccessPolicy(
 
     // 5. サーバー秘匿リソースガード
     let usesServerSecret = false
+    const allowsSameMachine = allowsSameMachineAccess(
+      policy,
+      req,
+      resolvedServerUrl
+    )
     if (policy.secret.kind === 'pairs') {
       usesServerSecret = evaluateSecretPairs(req, policy.secret.pairs)
       const mustGuard =
-        usesServerSecret ||
-        Boolean(resolvedServerUrl?.isProtectedServerResource)
+        !allowsSameMachine &&
+        (usesServerSecret ||
+          Boolean(resolvedServerUrl?.isProtectedServerResource))
       if (
         mustGuard &&
         !guardServerSecretAccess(req, res, { featureName: policy.featureName })
@@ -146,6 +265,7 @@ export function withAccessPolicy(
     } else if (policy.secret.kind === 'always') {
       usesServerSecret = true
       if (
+        !allowsSameMachine &&
         !guardServerSecretAccess(req, res, { featureName: policy.featureName })
       ) {
         return
@@ -155,11 +275,19 @@ export function withAccessPolicy(
     const gate: PolicyGate = {
       usesServerSecret,
       serverUrl: resolvedServerUrl,
-      guardServerSecret: (dynamicUsesServerSecret: boolean): boolean => {
+      guardServerSecret: (dynamicUsesServerSecret, options): boolean => {
         if (policy.secret.kind !== 'dynamic') {
           throw new Error(
             `guardServerSecret() is only available for secret.kind === 'dynamic' routes (${policy.path})`
           )
+        }
+        const allowsDynamicSameMachine =
+          Boolean(options?.allowLocalLoopbackUrl) &&
+          isServerSecretAccessDisabled() &&
+          isSameMachineHost(options?.allowLocalLoopbackUrl?.hostname || '') &&
+          isSameMachineLoopbackRequest(req)
+        if (allowsDynamicSameMachine) {
+          return true
         }
         if (!dynamicUsesServerSecret) {
           return true

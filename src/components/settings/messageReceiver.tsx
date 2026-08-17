@@ -8,6 +8,7 @@ import { v4 as uuidv4 } from 'uuid'
 import Link from 'next/link'
 import { useRestrictedMode } from '@/hooks/useRestrictedMode'
 import { DisabledSettingNote } from '@/components/settings/disabledSettingNote'
+import { settingsActionWidth } from '@/components/settings/formStyles'
 
 const MessageReceiverSetting = () => {
   const { t } = useTranslation()
@@ -93,26 +94,26 @@ const MessageReceiverSetting = () => {
           <div className="mt-4">
             <div className="font-bold">{t('ClientID')}</div>
             {isEditing ? (
-              <div className="flex gap-2 mt-1">
+              <div className="mt-1 flex flex-col gap-2 sm:flex-row">
                 <input
                   type="text"
                   value={inputClientId}
                   onChange={handleClientIdChange}
                   onKeyDown={handleKeyDown}
-                  className="flex-1 p-2 border border-gray-300 rounded-3xl"
+                  className="w-full flex-1 rounded-3xl border border-gray-300 p-2"
                   placeholder={t('EnterClientID')}
                   aria-label={t('ClientID')}
                   autoFocus
                 />
                 <TextButton
                   onClick={handleSaveClientId}
-                  className="px-3 py-2 text-sm bg-primary hover:bg-primary-hover rounded-3xl font-bold"
+                  className={`${settingsActionWidth} rounded-3xl bg-primary px-3 py-2 text-sm font-bold hover:bg-primary-hover`}
                 >
                   {t('Save')}
                 </TextButton>
                 <TextButton
                   onClick={handleCancelEdit}
-                  className="px-3 py-2 text-sm bg-gray-500 hover:bg-gray-600 rounded-3xl font-bold"
+                  className={`${settingsActionWidth} rounded-3xl bg-gray-500 px-3 py-2 text-sm font-bold hover:bg-gray-600`}
                 >
                   {t('Cancel')}
                 </TextButton>

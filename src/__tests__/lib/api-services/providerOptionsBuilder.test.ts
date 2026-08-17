@@ -36,6 +36,60 @@ describe('buildReasoningProviderOptions', () => {
         openai: { reasoningEffort: 'high', reasoningSummary: 'detailed' },
       })
     })
+
+    it('normalizes a stale unsupported effort to medium', () => {
+      const result = buildReasoningProviderOptions(
+        'openai',
+        'gpt-5.4-mini',
+        true,
+        'minimal',
+        8192
+      )
+      expect(result).toEqual({
+        openai: { reasoningEffort: 'medium', reasoningSummary: 'detailed' },
+      })
+    })
+
+    it('normalizes to the first supported effort when medium is unavailable', () => {
+      const result = buildReasoningProviderOptions(
+        'openai',
+        'gpt-5-pro',
+        true,
+        'low',
+        8192
+      )
+      expect(result).toEqual({
+        openai: { reasoningEffort: 'high', reasoningSummary: 'detailed' },
+      })
+    })
+
+    it('preserves the effort for an unlisted custom model', () => {
+      const result = buildReasoningProviderOptions(
+        'openai',
+        'custom-openai-model',
+        true,
+        'minimal',
+        8192,
+        true
+      )
+      expect(result).toEqual({
+        openai: { reasoningEffort: 'minimal', reasoningSummary: 'detailed' },
+      })
+    })
+
+    it('uses service defaults when a custom model matches a standard model name', () => {
+      const result = buildReasoningProviderOptions(
+        'openai',
+        'gpt-5-pro',
+        true,
+        'low',
+        8192,
+        true
+      )
+      expect(result).toEqual({
+        openai: { reasoningEffort: 'low', reasoningSummary: 'detailed' },
+      })
+    })
   })
 
   describe('Azure', () => {

@@ -2,6 +2,7 @@ import { useTranslation } from 'react-i18next'
 
 import settingsStore from '@/features/stores/settings'
 import { Link } from '../../link'
+import { settingsControlClass } from '@/components/settings/formStyles'
 
 interface StyleBertVITS2SettingsProps {
   stylebertvits2ServerUrl: string
@@ -37,7 +38,7 @@ export const StyleBertVITS2Settings = ({
       <div className="mt-4 font-bold">{t('StyleBeatVITS2ServerURL')}</div>
       <div className="mt-2">
         <input
-          className="text-ellipsis px-4 py-2 w-full bg-white hover:bg-white-hover rounded-lg"
+          className={settingsControlClass.long}
           type="text"
           placeholder="..."
           value={stylebertvits2ServerUrl}
@@ -51,7 +52,7 @@ export const StyleBertVITS2Settings = ({
       <div className="mt-4 font-bold">{t('StyleBeatVITS2ApiKey')}</div>
       <div className="mt-2">
         <input
-          className="text-ellipsis px-4 py-2 w-full bg-white hover:bg-white-hover rounded-lg"
+          className={settingsControlClass.long}
           type="text"
           placeholder="..."
           value={stylebertvits2ApiKey}
@@ -65,7 +66,7 @@ export const StyleBertVITS2Settings = ({
       <div className="mt-4 font-bold">{t('StyleBeatVITS2ModelID')}</div>
       <div className="mt-2">
         <input
-          className="text-ellipsis px-4 py-2 w-full bg-white hover:bg-white-hover rounded-lg"
+          className={settingsControlClass.numeric}
           type="number"
           placeholder="..."
           value={stylebertvits2ModelId}
@@ -79,7 +80,7 @@ export const StyleBertVITS2Settings = ({
       <div className="mt-4 font-bold">{t('StyleBeatVITS2Style')}</div>
       <div className="mt-2">
         <input
-          className="text-ellipsis px-4 py-2 w-full bg-white hover:bg-white-hover rounded-lg"
+          className={settingsControlClass.medium}
           type="text"
           placeholder="..."
           value={stylebertvits2Style}

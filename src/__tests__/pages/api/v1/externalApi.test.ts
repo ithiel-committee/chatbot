@@ -97,6 +97,98 @@ describe('/api/v1 external API', () => {
     })
   })
 
+  it('lists active receiver instances without exposing legacy duplicates', () => {
+    const { updateClientStatus } = require('@/features/api/messageGateway')
+    const receivers = require('@/pages/api/v1/receivers').default
+    const commonStatus = {
+      connected: true,
+      isSpeaking: false,
+      chatProcessing: false,
+      messageReceiverEnabled: true,
+    }
+
+    updateClientStatus('aituber-receiver-tab-1', {
+      ...commonStatus,
+      configuredClientId: 'stage',
+      receiverDisplayName: 'Chrome tab-1',
+      receiverKind: 'browser',
+      receiverCapabilities: ['presentation', 'chat', 'speech'],
+    })
+    updateClientStatus('stage', {
+      ...commonStatus,
+      configuredClientId: 'stage',
+      receiverDisplayName: 'AITuberKit legacy receiver',
+      receiverKind: 'legacy',
+    })
+
+    const res = createMockRes()
+    receivers(
+      createMockReq({
+        method: 'GET',
+        headers: { authorization: 'Bearer test-api-key' },
+      }),
+      res
+    )
+
+    expect(res._status).toBe(200)
+    expect(res._json).toEqual({
+      ok: true,
+      receivers: [
+        expect.objectContaining({
+          receiverId: 'aituber-receiver-tab-1',
+          configuredClientId: 'stage',
+          displayName: 'Chrome tab-1',
+          kind: 'browser',
+          capabilities: ['presentation', 'chat', 'speech'],
+          connected: true,
+          isSpeaking: false,
+          lastSeenAt: expect.any(String),
+        }),
+      ],
+    })
+  })
+
+  it('accepts receiverId as the preferred routing parameter', () => {
+    const speak = require('@/pages/api/v1/speak').default
+    const messages = require('@/pages/api/v1/client/messages').default
+    const speakRes = createMockRes()
+
+    speak(
+      createMockReq({
+        method: 'POST',
+        headers: { authorization: 'Bearer test-api-key' },
+        query: { receiverId: 'aituber-receiver-tab-1' },
+        body: { text: 'receiver routed message' },
+      }),
+      speakRes
+    )
+
+    const unauthenticatedRes = createMockRes()
+    messages(
+      createMockReq({
+        method: 'GET',
+        query: { receiverId: 'aituber-receiver-tab-1' },
+      }),
+      unauthenticatedRes
+    )
+    expect(unauthenticatedRes._status).toBe(401)
+
+    const messagesRes = createMockRes()
+    messages(
+      createMockReq({
+        method: 'GET',
+        headers: { authorization: 'Bearer test-api-key' },
+        query: { receiverId: 'aituber-receiver-tab-1' },
+      }),
+      messagesRes
+    )
+
+    expect(speakRes._status).toBe(202)
+    expect((messagesRes._json as { messages: unknown[] }).messages).toEqual([
+      expect.objectContaining({ message: 'receiver routed message' }),
+    ])
+  })
+
   it('does not accept public env keys or query string API keys for v1 authentication', () => {
     delete process.env.AITUBERKIT_API_KEY
     process.env.NEXT_PUBLIC_AITUBERKIT_API_KEY = 'public-key'
@@ -150,6 +242,7 @@ describe('/api/v1 external API', () => {
           text: 'hello from v1',
           emotion: 'happy',
           priority: 'high',
+          speechSessionId: 'answer-stream-1',
         },
       }),
       speakRes
@@ -179,10 +272,50 @@ describe('/api/v1 external API', () => {
         message: 'hello from v1',
         type: 'direct_send',
         emotion: 'happy',
+        speechSessionId: 'answer-stream-1',
         priority: 'high',
         source: 'v1',
       })
     )
+  })
+
+  it('同一発話セッションの高優先度チャンクをFIFOで取得する', () => {
+    const speak = require('@/pages/api/v1/speak').default
+    const messages = require('@/pages/api/v1/client/messages').default
+    const enqueue = (text: string, speechSessionId: string) =>
+      speak(
+        createMockReq({
+          method: 'POST',
+          headers: { authorization: 'Bearer test-api-key' },
+          query: { clientId: 'client1' },
+          body: { text, priority: 'high', speechSessionId },
+        }),
+        createMockRes()
+      )
+
+    enqueue('先に送ったチャンク', 'answer-stream-1')
+    enqueue('別セッションの高優先度発話', 'answer-stream-2')
+    enqueue('後に送ったチャンク', 'answer-stream-1')
+
+    const res = createMockRes()
+    messages(
+      createMockReq({
+        method: 'GET',
+        headers: { authorization: 'Bearer test-api-key' },
+        query: { clientId: 'client1' },
+      }),
+      res
+    )
+
+    expect(
+      (res._json as { messages: Array<{ message: string }> }).messages.map(
+        (message) => message.message
+      )
+    ).toEqual([
+      '別セッションの高優先度発話',
+      '先に送ったチャンク',
+      '後に送ったチャンク',
+    ])
   })
 
   it('queues v1 messages requests with the legacy messages payload shape', () => {
@@ -381,8 +514,9 @@ describe('/api/v1 external API', () => {
     )
   })
 
-  it('supports ai_generate chat mode with a custom system prompt', () => {
+  it('keeps ai_generate callback secrets on the server', async () => {
     const chat = require('@/pages/api/v1/chat').default
+    const callbackRoute = require('@/pages/api/v1/chat/callback').default
     const messages = require('@/pages/api/messages').default
 
     const res = createMockRes()
@@ -396,6 +530,11 @@ describe('/api/v1 external API', () => {
           mode: 'ai_generate',
           useCurrentSystemPrompt: false,
           systemPrompt: 'Be concise',
+          responseCallback: {
+            url: 'http://127.0.0.1:9892/api/question-responses',
+            interactionId: 'qa-question-1',
+            token: 'callback-token',
+          },
         },
       }),
       res
@@ -412,13 +551,74 @@ describe('/api/v1 external API', () => {
       getRes
     )
 
-    expect((getRes._json as { messages: unknown[] }).messages[0]).toEqual(
+    const queuedMessage = (getRes._json as { messages: any[] }).messages[0]
+    expect(queuedMessage).toEqual(
       expect.objectContaining({
         type: 'ai_generate',
         systemPrompt: 'Be concise',
         useCurrentSystemPrompt: false,
+        responseCallback: {
+          handle: expect.stringMatching(/^callback_/),
+        },
       })
     )
+    expect(JSON.stringify(queuedMessage)).not.toContain('callback-token')
+    expect(JSON.stringify(queuedMessage)).not.toContain('question-responses')
+
+    const originalFetch = global.fetch
+    const callbackFetch = jest.fn().mockResolvedValue({ ok: true })
+    global.fetch = callbackFetch as typeof fetch
+    try {
+      const callbackRes = createMockRes()
+      await callbackRoute(
+        createMockReq({
+          method: 'POST',
+          headers: { authorization: 'Bearer test-api-key' },
+          body: {
+            handle: queuedMessage.responseCallback.handle,
+            status: 'completed',
+            content: 'Generated answer',
+          },
+        }),
+        callbackRes
+      )
+
+      expect(callbackRes._status).toBe(200)
+      expect(callbackFetch).toHaveBeenCalledWith(
+        new URL('http://127.0.0.1:9892/api/question-responses'),
+        expect.objectContaining({
+          method: 'POST',
+          redirect: 'error',
+          body: expect.stringContaining('callback-token'),
+        })
+      )
+    } finally {
+      global.fetch = originalFetch
+    }
+  })
+
+  it('keeps response callbacks available beyond the client queue timeout', () => {
+    const gateway = require('@/features/api/messageGateway')
+    const now = jest.spyOn(Date, 'now').mockReturnValue(1_000)
+    try {
+      const [message] = gateway.enqueueMessages({
+        clientId: 'client1',
+        messages: ['long-running response'],
+        type: 'ai_generate',
+        responseCallback: {
+          url: 'http://127.0.0.1:9892/api/question-responses',
+          interactionId: 'long-running',
+          token: 'callback-token',
+        },
+      })
+      now.mockReturnValue(1_000 + 6 * 60 * 1_000)
+
+      expect(
+        gateway.claimResponseCallback(message.responseCallback.handle)
+      ).toEqual(expect.objectContaining({ interactionId: 'long-running' }))
+    } finally {
+      now.mockRestore()
+    }
   })
 
   it('queues stop commands for the client command poller', () => {
@@ -586,7 +786,316 @@ describe('/api/v1 external API', () => {
     )
   })
 
-  it('returns recent events as a JSON snapshot', () => {
+  it('emits events when speech starts and ends', () => {
+    const {
+      getRecentApiEvents,
+      updateClientStatus,
+    } = require('@/features/api/messageGateway')
+    const baseStatus = {
+      connected: true,
+      chatProcessing: false,
+    }
+
+    updateClientStatus('client1', { ...baseStatus, isSpeaking: false })
+    updateClientStatus('client1', { ...baseStatus, isSpeaking: true })
+    updateClientStatus('client1', { ...baseStatus, isSpeaking: false })
+
+    const speechEvents = getRecentApiEvents('client1').filter(
+      (event: { type: string }) => event.type.startsWith('speech_')
+    )
+    expect(speechEvents).toEqual([
+      expect.objectContaining({
+        type: 'speech_started',
+        payload: expect.objectContaining({ isSpeaking: true }),
+      }),
+      expect.objectContaining({
+        type: 'speech_ended',
+        payload: expect.objectContaining({ isSpeaking: false }),
+      }),
+    ])
+  })
+
+  it('emits speech_started when the first client status is already speaking', () => {
+    const {
+      getRecentApiEvents,
+      updateClientStatus,
+    } = require('@/features/api/messageGateway')
+
+    updateClientStatus('client1', {
+      connected: true,
+      chatProcessing: true,
+      isSpeaking: true,
+    })
+
+    expect(
+      getRecentApiEvents('client1').filter(
+        (event: { type: string }) => event.type === 'speech_started'
+      )
+    ).toHaveLength(1)
+  })
+
+  it('emits the exact text when each synthesized speech chunk starts', () => {
+    const {
+      getRecentApiEvents,
+      updateClientStatus,
+    } = require('@/features/api/messageGateway')
+    const baseStatus = {
+      connected: true,
+      chatProcessing: false,
+      isSpeaking: true,
+    }
+
+    updateClientStatus('client1', { ...baseStatus, activeSpeech: null })
+    updateClientStatus('client1', {
+      ...baseStatus,
+      activeSpeech: { id: 'speech-1', text: '最初の音声チャンクです。' },
+    })
+    updateClientStatus('client1', {
+      ...baseStatus,
+      activeSpeech: { id: 'speech-2', text: '次の音声チャンクです。' },
+    })
+    updateClientStatus('client1', { ...baseStatus, activeSpeech: null })
+
+    const chunkEvents = getRecentApiEvents('client1').filter(
+      (event: { type: string }) => event.type.startsWith('speech_chunk_')
+    )
+    expect(chunkEvents).toEqual([
+      expect.objectContaining({
+        type: 'speech_chunk_started',
+        payload: expect.objectContaining({
+          speechChunkId: 'speech-1',
+          text: '最初の音声チャンクです。',
+        }),
+      }),
+      expect.objectContaining({
+        type: 'speech_chunk_ended',
+        payload: { speechChunkId: 'speech-1' },
+      }),
+      expect.objectContaining({
+        type: 'speech_chunk_started',
+        payload: expect.objectContaining({
+          speechChunkId: 'speech-2',
+          text: '次の音声チャンクです。',
+        }),
+      }),
+      expect.objectContaining({
+        type: 'speech_chunk_ended',
+        payload: { speechChunkId: 'speech-2' },
+      }),
+    ])
+  })
+
+  it('reports active speech through the lightweight client endpoint', () => {
+    const {
+      getRecentApiEvents,
+      updateClientStatus,
+    } = require('@/features/api/messageGateway')
+    const speechStatus = require('@/pages/api/v1/client/speech-status').default
+
+    updateClientStatus('client1', {
+      connected: true,
+      chatProcessing: false,
+      isSpeaking: true,
+      activeSpeech: null,
+    })
+
+    const startedRes = createMockRes()
+    speechStatus(
+      createMockReq({
+        method: 'POST',
+        headers: { authorization: 'Bearer test-api-key' },
+        query: { receiverId: 'client1' },
+        body: {
+          activeSpeech: {
+            id: 'speech-fast-1',
+            text: '再生開始と同時に表示します。',
+          },
+        },
+      }),
+      startedRes
+    )
+    expect(startedRes._status).toBe(200)
+
+    const endedRes = createMockRes()
+    speechStatus(
+      createMockReq({
+        method: 'POST',
+        headers: { authorization: 'Bearer test-api-key' },
+        query: { receiverId: 'client1' },
+        body: { activeSpeech: null },
+      }),
+      endedRes
+    )
+    expect(endedRes._status).toBe(200)
+
+    expect(
+      getRecentApiEvents('client1').filter((event: { type: string }) =>
+        event.type.startsWith('speech_chunk_')
+      )
+    ).toEqual([
+      expect.objectContaining({
+        type: 'speech_chunk_started',
+        payload: {
+          speechChunkId: 'speech-fast-1',
+          text: '再生開始と同時に表示します。',
+        },
+      }),
+      expect.objectContaining({
+        type: 'speech_chunk_ended',
+        payload: { speechChunkId: 'speech-fast-1' },
+      }),
+    ])
+  })
+
+  it('rejects malformed active speech without ending the current chunk', () => {
+    const {
+      getClientStatus,
+      updateClientStatus,
+    } = require('@/features/api/messageGateway')
+    const speechStatus = require('@/pages/api/v1/client/speech-status').default
+    updateClientStatus('client1', {
+      connected: true,
+      chatProcessing: false,
+      isSpeaking: true,
+      activeSpeech: { id: 'speech-current', text: '再生中です。' },
+    })
+
+    const res = createMockRes()
+    speechStatus(
+      createMockReq({
+        method: 'POST',
+        headers: { authorization: 'Bearer test-api-key' },
+        query: { receiverId: 'client1' },
+        body: { activeSpeech: { id: 'missing-text' } },
+      }),
+      res
+    )
+
+    expect(res._status).toBe(400)
+    expect(getClientStatus('client1').activeSpeech).toEqual({
+      id: 'speech-current',
+      text: '再生中です。',
+    })
+  })
+
+  it('does not overwrite active speech when a general status omits it', () => {
+    const {
+      getClientStatus,
+      getRecentApiEvents,
+      updateClientActiveSpeech,
+      updateClientStatus,
+    } = require('@/features/api/messageGateway')
+    const baseStatus = {
+      connected: true,
+      chatProcessing: false,
+      isSpeaking: true,
+    }
+
+    updateClientStatus('client1', baseStatus)
+    updateClientActiveSpeech('client1', {
+      id: 'speech-current',
+      text: '現在再生しているチャンクです。',
+    })
+    updateClientStatus('client1', {
+      ...baseStatus,
+      modelType: 'vrm',
+    })
+
+    expect(getClientStatus('client1').activeSpeech).toEqual({
+      id: 'speech-current',
+      text: '現在再生しているチャンクです。',
+    })
+    expect(
+      getRecentApiEvents('client1').filter(
+        (event: { type: string }) => event.type === 'speech_chunk_ended'
+      )
+    ).toHaveLength(0)
+  })
+
+  it('ignores an older active speech report that arrives late', () => {
+    const {
+      getClientStatus,
+      getRecentApiEvents,
+      updateClientActiveSpeech,
+      updateClientStatus,
+    } = require('@/features/api/messageGateway')
+    const staleSpeech = {
+      id: 'speech-stale',
+      text: 'すでに終了した発話です。',
+    }
+
+    updateClientStatus('client1', {
+      connected: true,
+      chatProcessing: false,
+      isSpeaking: true,
+      activeSpeech: null,
+    })
+    updateClientActiveSpeech('client1', staleSpeech, 10)
+    updateClientActiveSpeech('client1', null, 11)
+    updateClientActiveSpeech('client1', staleSpeech, 10)
+
+    expect(getClientStatus('client1').activeSpeech).toBeNull()
+    expect(
+      getRecentApiEvents('client1')
+        .filter((event: { type: string }) =>
+          event.type.startsWith('speech_chunk_')
+        )
+        .map((event: { type: string }) => event.type)
+    ).toEqual(['speech_chunk_started', 'speech_chunk_ended'])
+  })
+
+  it('emits slide_changed only after a presentation finishes loading', () => {
+    const {
+      getRecentApiEvents,
+      updateClientStatus,
+    } = require('@/features/api/messageGateway')
+    const baseStatus = {
+      connected: true,
+      chatProcessing: false,
+      isSpeaking: false,
+    }
+    const presentation = {
+      presentationId: 'new-presentation',
+      revision: 1,
+      sectionId: 'section-1',
+      slideIndex: 0,
+      isSpeaking: false,
+      lastError: null,
+      updatedAt: '2026-08-03T00:00:00.000Z',
+    }
+
+    updateClientStatus('client1', {
+      ...baseStatus,
+      presentation: {
+        ...presentation,
+        presentationId: 'old-presentation',
+        state: 'ready',
+        slideId: 'old-slide',
+      },
+    })
+    const eventCount = getRecentApiEvents('client1').length
+    updateClientStatus('client1', {
+      ...baseStatus,
+      presentation: { ...presentation, state: 'loading', slideId: null },
+    })
+    expect(
+      getRecentApiEvents('client1')
+        .slice(eventCount)
+        .map((event: { type: string }) => event.type)
+    ).not.toContain('slide_changed')
+
+    updateClientStatus('client1', {
+      ...baseStatus,
+      presentation: { ...presentation, state: 'ready', slideId: 'new-slide' },
+    })
+    expect(
+      getRecentApiEvents('client1')
+        .slice(eventCount)
+        .map((event: { type: string }) => event.type)
+    ).toEqual(expect.arrayContaining(['presentation_loaded', 'slide_changed']))
+  })
+
+  it('falls back from an empty receiverId when filtering event snapshots', () => {
     const speak = require('@/pages/api/v1/speak').default
     const events = require('@/pages/api/v1/events').default
 
@@ -594,7 +1103,7 @@ describe('/api/v1 external API', () => {
       createMockReq({
         method: 'POST',
         headers: { authorization: 'Bearer test-api-key' },
-        query: { clientId: 'client1' },
+        query: { receiverId: 'aituber-receiver-client1' },
         body: { text: 'event source' },
       }),
       createMockRes()
@@ -605,7 +1114,11 @@ describe('/api/v1 external API', () => {
       createMockReq({
         method: 'GET',
         headers: { authorization: 'Bearer test-api-key' },
-        query: { clientId: 'client1', snapshot: 'true' },
+        query: {
+          receiverId: '   ',
+          clientId: '  aituber-receiver-client1  ',
+          snapshot: 'true',
+        },
       }),
       eventsRes
     )

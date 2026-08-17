@@ -14,7 +14,7 @@ describe('synthesizeVoiceGSVIApi', () => {
     mockFetch.mockReset()
   })
 
-  it('should strip trailing slash and send correct request', async () => {
+  it('should send the configured server URL through the AITuberKit API', async () => {
     const mockBuffer = new ArrayBuffer(8)
     mockFetch.mockResolvedValue({
       ok: true,
@@ -32,16 +32,15 @@ describe('synthesizeVoiceGSVIApi', () => {
       1.0
     )
 
-    expect(mockFetch).toHaveBeenCalledWith('http://localhost:5000', {
+    expect(mockFetch).toHaveBeenCalledWith('/api/tts-gsvi', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
+        message: 'Hello world',
+        serverUrl: 'http://localhost:5000/',
         character: 'character-1',
-        emotion: 'default',
-        text: 'Hello world',
-        batch_size: 2,
-        speed: '1',
-        stream: true,
+        batchSize: 2,
+        speed: 1,
       }),
     })
   })

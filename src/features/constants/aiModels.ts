@@ -27,118 +27,133 @@ interface ModelInfo {
 const modelDefinitions: Record<AIService, ModelInfo[]> = {
   openai: [
     {
+      name: 'gpt-5.6-sol',
+      multiModal: true,
+      reasoningEfforts: ['none', 'low', 'medium', 'high', 'xhigh'],
+    },
+    {
+      name: 'gpt-5.6-terra',
+      multiModal: true,
+      reasoningEfforts: ['none', 'low', 'medium', 'high', 'xhigh'],
+    },
+    {
+      name: 'gpt-5.6-luna',
+      multiModal: true,
+      reasoningEfforts: ['none', 'low', 'medium', 'high', 'xhigh'],
+    },
+    {
       name: 'gpt-5.5',
       multiModal: true,
-      reasoningEfforts: ['minimal', 'low', 'medium', 'high'],
+      reasoningEfforts: ['none', 'low', 'medium', 'high', 'xhigh'],
     },
     {
       name: 'gpt-5.5-2026-04-23',
       multiModal: true,
-      reasoningEfforts: ['minimal', 'low', 'medium', 'high'],
+      reasoningEfforts: ['none', 'low', 'medium', 'high', 'xhigh'],
     },
     {
       name: 'gpt-5.4-pro',
       multiModal: true,
-      reasoningEfforts: ['minimal', 'low', 'medium', 'high'],
+      reasoningEfforts: ['medium', 'high', 'xhigh'],
     },
     {
       name: 'gpt-5.4-pro-2026-03-05',
       multiModal: true,
-      reasoningEfforts: ['minimal', 'low', 'medium', 'high'],
+      reasoningEfforts: ['medium', 'high', 'xhigh'],
     },
     {
       name: 'gpt-5.4',
       multiModal: true,
-      reasoningEfforts: ['minimal', 'low', 'medium', 'high'],
+      reasoningEfforts: ['none', 'low', 'medium', 'high', 'xhigh'],
     },
     {
       name: 'gpt-5.4-2026-03-05',
       multiModal: true,
-      reasoningEfforts: ['minimal', 'low', 'medium', 'high'],
+      reasoningEfforts: ['none', 'low', 'medium', 'high', 'xhigh'],
     },
     {
       name: 'gpt-5.4-mini',
       multiModal: true,
       isDefault: true,
-      reasoningEfforts: ['minimal', 'low', 'medium', 'high'],
+      reasoningEfforts: ['none', 'low', 'medium', 'high', 'xhigh'],
     },
     {
       name: 'gpt-5.4-mini-2026-03-17',
       multiModal: true,
-      reasoningEfforts: ['minimal', 'low', 'medium', 'high'],
+      reasoningEfforts: ['none', 'low', 'medium', 'high', 'xhigh'],
     },
     {
       name: 'gpt-5.4-nano',
       multiModal: true,
-      reasoningEfforts: ['minimal', 'low', 'medium', 'high'],
+      reasoningEfforts: ['none', 'low', 'medium', 'high', 'xhigh'],
     },
     {
       name: 'gpt-5.4-nano-2026-03-17',
       multiModal: true,
-      reasoningEfforts: ['minimal', 'low', 'medium', 'high'],
+      reasoningEfforts: ['none', 'low', 'medium', 'high', 'xhigh'],
     },
     { name: 'gpt-5.3-chat-latest', multiModal: true },
     {
       name: 'gpt-5.3-codex',
-      reasoningEfforts: ['minimal', 'low', 'medium', 'high'],
+      reasoningEfforts: ['none', 'low', 'medium', 'high', 'xhigh'],
     },
     {
       name: 'gpt-5.2-pro',
       multiModal: true,
-      reasoningEfforts: ['minimal', 'low', 'medium', 'high'],
+      reasoningEfforts: ['medium', 'high', 'xhigh'],
     },
     {
       name: 'gpt-5.2-pro-2025-12-11',
       multiModal: true,
-      reasoningEfforts: ['minimal', 'low', 'medium', 'high'],
+      reasoningEfforts: ['medium', 'high', 'xhigh'],
     },
     { name: 'gpt-5.2-chat-latest', multiModal: true },
     {
       name: 'gpt-5.2',
       multiModal: true,
-      reasoningEfforts: ['minimal', 'low', 'medium', 'high'],
+      reasoningEfforts: ['none', 'low', 'medium', 'high', 'xhigh'],
     },
     {
       name: 'gpt-5.2-2025-12-11',
       multiModal: true,
-      reasoningEfforts: ['minimal', 'low', 'medium', 'high'],
+      reasoningEfforts: ['none', 'low', 'medium', 'high', 'xhigh'],
     },
     {
       name: 'gpt-5.2-codex',
-      reasoningEfforts: ['minimal', 'low', 'medium', 'high'],
+      reasoningEfforts: ['low', 'medium', 'high', 'xhigh'],
     },
     {
       name: 'gpt-5.1-codex-mini',
-      reasoningEfforts: ['none', 'minimal', 'low', 'medium', 'high'],
+      reasoningEfforts: ['low', 'medium', 'high'],
     },
     {
       name: 'gpt-5.1-codex',
-      reasoningEfforts: ['none', 'minimal', 'low', 'medium', 'high'],
+      reasoningEfforts: ['low', 'medium', 'high'],
     },
     {
       name: 'gpt-5.1-codex-max',
-      reasoningEfforts: ['none', 'minimal', 'low', 'medium', 'high'],
+      reasoningEfforts: ['low', 'medium', 'high', 'xhigh'],
     },
     { name: 'gpt-5.1-chat-latest', multiModal: true },
     {
       name: 'gpt-5.1',
       multiModal: true,
-      reasoningEfforts: ['none', 'minimal', 'low', 'medium', 'high'],
+      reasoningEfforts: ['none', 'low', 'medium', 'high'],
     },
     {
       name: 'gpt-5.1-2025-11-13',
       multiModal: true,
-      reasoningEfforts: ['none', 'minimal', 'low', 'medium', 'high'],
+      reasoningEfforts: ['none', 'low', 'medium', 'high'],
     },
     {
       name: 'gpt-5-pro',
       multiModal: true,
-      reasoningEfforts: ['minimal', 'low', 'medium', 'high'],
+      reasoningEfforts: ['high'],
     },
     {
       name: 'gpt-5-pro-2025-10-06',
       multiModal: true,
-      reasoningEfforts: ['minimal', 'low', 'medium', 'high'],
+      reasoningEfforts: ['high'],
     },
     {
       name: 'gpt-5',
@@ -172,7 +187,7 @@ const modelDefinitions: Record<AIService, ModelInfo[]> = {
     },
     {
       name: 'gpt-5-codex',
-      reasoningEfforts: ['minimal', 'low', 'medium', 'high'],
+      reasoningEfforts: ['low', 'medium', 'high'],
     },
     { name: 'gpt-5-chat-latest', multiModal: true },
     { name: 'gpt-4.1', multiModal: true },
@@ -193,42 +208,42 @@ const modelDefinitions: Record<AIService, ModelInfo[]> = {
     {
       name: 'o4-mini',
       multiModal: true,
-      reasoningEfforts: ['minimal', 'low', 'medium', 'high'],
+      reasoningEfforts: ['low', 'medium', 'high'],
     },
     {
       name: 'o4-mini-2025-04-16',
       multiModal: true,
-      reasoningEfforts: ['minimal', 'low', 'medium', 'high'],
+      reasoningEfforts: ['low', 'medium', 'high'],
     },
     {
       name: 'o3',
       multiModal: true,
-      reasoningEfforts: ['minimal', 'low', 'medium', 'high'],
+      reasoningEfforts: ['low', 'medium', 'high'],
     },
     {
       name: 'o3-2025-04-16',
       multiModal: true,
-      reasoningEfforts: ['minimal', 'low', 'medium', 'high'],
+      reasoningEfforts: ['low', 'medium', 'high'],
     },
     {
       name: 'o3-mini',
       multiModal: true,
-      reasoningEfforts: ['minimal', 'low', 'medium', 'high'],
+      reasoningEfforts: ['low', 'medium', 'high'],
     },
     {
       name: 'o3-mini-2025-01-31',
       multiModal: true,
-      reasoningEfforts: ['minimal', 'low', 'medium', 'high'],
+      reasoningEfforts: ['low', 'medium', 'high'],
     },
     {
       name: 'o1',
       multiModal: true,
-      reasoningEfforts: ['minimal', 'low', 'medium', 'high'],
+      reasoningEfforts: ['low', 'medium', 'high'],
     },
     {
       name: 'o1-2024-12-17',
       multiModal: true,
-      reasoningEfforts: ['minimal', 'low', 'medium', 'high'],
+      reasoningEfforts: ['low', 'medium', 'high'],
     },
   ],
   anthropic: [
@@ -465,6 +480,11 @@ const modelDefinitions: Record<AIService, ModelInfo[]> = {
   azure: [],
   xai: [
     {
+      name: 'grok-4.5',
+      multiModal: true,
+      reasoningEfforts: ['low', 'medium', 'high'],
+    },
+    {
       name: 'grok-4-1-fast-reasoning',
       reasoningEfforts: ['low', 'high'],
     },
@@ -657,7 +677,7 @@ export const defaultModels: Record<
     ])
   ),
   openaiAudio: 'gpt-audio-mini',
-  openaiRealtime: 'gpt-realtime',
+  openaiRealtime: 'gpt-realtime-2.1',
 } as Record<AIService | 'openaiAudio' | 'openaiRealtime', string>
 
 /**
@@ -712,8 +732,8 @@ export function getMultiModalModels(service: AIService): string[] {
  * OpenAIのリアルタイムAPIモードで使用するモデル一覧
  */
 export const openAIRealtimeModels = [
-  'gpt-realtime',
-  'gpt-realtime-mini',
+  'gpt-realtime-2.1',
+  'gpt-realtime-2.1-mini',
 ] as const
 
 /**
@@ -748,13 +768,22 @@ export function getOpenAIAudioModels(): string[] {
  * OpenAIのWhisper(音声認識)用モデル一覧
  */
 export const openAIWhisperModels = [
+  'gpt-transcribe',
   'whisper-1',
   'gpt-4o-transcribe',
   'gpt-4o-transcribe-diarize',
   'gpt-4o-mini-transcribe',
-  'gpt-4o-mini-transcribe-2025-03-20',
   'gpt-4o-mini-transcribe-2025-12-15',
 ] as const
+
+export const defaultOpenAITranscriptionModel = 'gpt-transcribe' as const
+
+export function migrateOpenAITranscriptionModel(modelName: string): string {
+  if (modelName === 'gpt-4o-mini-transcribe-2025-03-20') {
+    return 'gpt-4o-mini-transcribe-2025-12-15'
+  }
+  return modelName
+}
 
 /**
  * OpenAIのWhisperモデル一覧を取得する

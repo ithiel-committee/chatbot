@@ -6,6 +6,10 @@ import settingsStore from '@/features/stores/settings'
 import { useRestrictedMode } from '@/hooks/useRestrictedMode'
 import { Link } from '../../link'
 import { getSpeakerUpdateErrorMessage } from './speakerUpdateError'
+import {
+  settingsActionWidth,
+  settingsControlClass,
+} from '@/components/settings/formStyles'
 
 interface AivisSpeechSettingsProps {
   selectVoice: string
@@ -67,7 +71,7 @@ export const AivisSpeechSettings = ({
       <div className="mt-4 font-bold">{t('AivisSpeechServerUrl')}</div>
       <div className="mt-2">
         <input
-          className="text-ellipsis px-4 py-2 w-full bg-white hover:bg-white-hover rounded-lg"
+          className={settingsControlClass.long}
           type="text"
           placeholder="http://localhost:10101"
           value={aivisSpeechServerUrl}
@@ -87,7 +91,7 @@ export const AivisSpeechSettings = ({
               aivisSpeechSpeaker: e.target.value,
             })
           }
-          className="px-4 py-2 bg-white hover:bg-white-hover rounded-lg"
+          className={settingsControlClass.medium}
         >
           <option value="">{t('Select')}</option>
           {speakers_aivis.map((speaker) => (
@@ -125,7 +129,7 @@ export const AivisSpeechSettings = ({
             }
           }}
           disabled={isUpdatingSpeakers || isRestrictedMode}
-          className="w-full px-4 py-2 text-sm font-medium text-theme bg-primary hover:bg-primary-hover active:bg-primary-press disabled:bg-primary-disabled disabled:cursor-not-allowed rounded-lg transition-colors duration-200 flex items-center justify-center gap-2"
+          className={`${settingsActionWidth} flex items-center justify-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-theme transition-colors duration-200 hover:bg-primary-hover active:bg-primary-press disabled:cursor-not-allowed disabled:bg-primary-disabled`}
         >
           <svg
             className="w-4 h-4"

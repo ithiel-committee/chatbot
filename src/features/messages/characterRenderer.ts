@@ -4,12 +4,27 @@ import { Talk } from './messages'
 import { Live2DHandler } from './live2dHandler'
 import { PNGTuberHandler } from '@/features/pngTuber/pngTuberHandler'
 
+export type PlaybackObserver = {
+  onPlaybackStart?: () => void
+}
+
 /**
  * VRM / Live2D / PNGTuber の3実装が慣習のみで共有していた speak() 系メソッドの共通インターフェース。
  * PNGTuberは talk.emotion / talk.motion を無視するが、型としては同じシグネチャで受け取る（対応しないだけ）。
  */
 export interface CharacterRenderer {
-  speak(buffer: ArrayBuffer, talk: Talk, isNeedDecode?: boolean): Promise<void>
+  speak(
+    buffer: ArrayBuffer,
+    talk: Talk,
+    isNeedDecode?: boolean,
+    observer?: PlaybackObserver
+  ): Promise<void>
+  speakPcm16Stream?(
+    stream: ReadableStream<Uint8Array>,
+    talk: Talk,
+    sampleRate: number,
+    observer?: PlaybackObserver
+  ): Promise<void>
   stopSpeaking(): void | Promise<void>
   resetToIdle(): void | Promise<void>
 }
@@ -23,8 +38,10 @@ export function getCharacterRenderer(): CharacterRenderer | null {
 
   if (ss.modelType === 'live2d') {
     return {
-      speak: (buffer, talk, isNeedDecode) =>
-        Live2DHandler.speak(buffer, talk, isNeedDecode),
+      speak: (buffer, talk, isNeedDecode, observer) =>
+        observer
+          ? Live2DHandler.speak(buffer, talk, isNeedDecode, observer)
+          : Live2DHandler.speak(buffer, talk, isNeedDecode),
       stopSpeaking: () => Live2DHandler.stopSpeaking(),
       resetToIdle: () => Live2DHandler.resetToIdle(),
     }
@@ -32,8 +49,10 @@ export function getCharacterRenderer(): CharacterRenderer | null {
 
   if (ss.modelType === 'pngtuber') {
     return {
-      speak: (buffer, talk, isNeedDecode) =>
-        PNGTuberHandler.speak(buffer, talk, isNeedDecode),
+      speak: (buffer, talk, isNeedDecode, observer) =>
+        observer
+          ? PNGTuberHandler.speak(buffer, talk, isNeedDecode, observer)
+          : PNGTuberHandler.speak(buffer, talk, isNeedDecode),
       stopSpeaking: () => PNGTuberHandler.stopSpeaking(),
       resetToIdle: () => PNGTuberHandler.resetToIdle(),
     }
@@ -43,8 +62,12 @@ export function getCharacterRenderer(): CharacterRenderer | null {
   if (!model) return null
 
   return {
-    speak: (buffer, talk, isNeedDecode) =>
-      model.speak(buffer, talk, isNeedDecode),
+    speak: (buffer, talk, isNeedDecode, observer) =>
+      observer
+        ? model.speak(buffer, talk, isNeedDecode, observer)
+        : model.speak(buffer, talk, isNeedDecode),
+    speakPcm16Stream: (stream, talk, sampleRate, observer) =>
+      model.speakPcm16Stream(stream, talk, sampleRate, observer),
     stopSpeaking: () => {
       model.stopSpeaking()
       if (model.poseManager?.isActive) {

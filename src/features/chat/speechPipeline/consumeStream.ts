@@ -5,6 +5,7 @@ import { SegmenterEvent } from './types'
 
 export type StreamConsumerHandlers = {
   onThinking: (chunk: string) => void
+  onTextChunk?: (chunk: string) => void
   onEvent: (event: SegmenterEvent) => void
 }
 
@@ -29,6 +30,7 @@ export const consumeStream = async (
         if (value.startsWith(THINKING_MARKER)) {
           handlers.onThinking(value.substring(THINKING_MARKER.length))
         } else {
+          handlers.onTextChunk?.(value)
           for (const event of segmenter.push(value)) {
             handlers.onEvent(event)
           }

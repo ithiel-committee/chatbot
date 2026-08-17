@@ -47,6 +47,8 @@ describe('speechDispatcher', () => {
       'session-1',
       { message: 'こんにちは。', emotion: 'happy', motion: 'wave' },
       expect.any(Function),
+      expect.any(Function),
+      undefined,
       expect.any(Function)
     )
     expect(d.anyDispatched).toBe(true)
@@ -59,6 +61,8 @@ describe('speechDispatcher', () => {
       'session-1',
       { message: 'やあ。', emotion: 'neutral', motion: undefined },
       expect.any(Function),
+      expect.any(Function),
+      undefined,
       expect.any(Function)
     )
   })
@@ -122,14 +126,20 @@ describe('speechDispatcher', () => {
     expect(speakCharacter).toHaveBeenCalledTimes(1)
   })
 
-  it('onStart/onCompleteでスライド字幕とchatProcessingCountを連動する', () => {
+  it('実再生開始と完了でスライド字幕を切り替える', () => {
     const d = createSpeechDispatcher('session-1')
     d.dispatch(speech('一文目。'))
-    const [, , onStart, onComplete] = (speakCharacter as jest.Mock).mock
-      .calls[0]
+    const [, , onStart, onComplete, , onPlaybackStart] = (
+      speakCharacter as jest.Mock
+    ).mock.calls[0]
 
     onStart()
     expect(mockHomeState.incrementChatProcessingCount).toHaveBeenCalled()
+    expect(homeStore.setState).not.toHaveBeenCalledWith({
+      slideMessages: ['一文目。'],
+    })
+
+    onPlaybackStart()
     expect(homeStore.setState).toHaveBeenCalledWith({
       slideMessages: ['一文目。'],
     })
@@ -137,5 +147,83 @@ describe('speechDispatcher', () => {
     onComplete()
     expect(mockHomeState.decrementChatProcessingCount).toHaveBeenCalled()
     expect(homeStore.setState).toHaveBeenLastCalledWith({ slideMessages: [] })
+  })
+
+  it('発話文と異なる表示文を字幕へ維持する', () => {
+    const d = createSpeechDispatcher('session-1', {
+      displayMessages: ['Bunkerkidsを', '紹介します。'],
+    })
+    d.dispatch(speech('バンカーキッズを'))
+    d.dispatch(speech('紹介します。'))
+    const [
+      ,
+      ,
+      firstOnStart,
+      firstOnComplete,
+      firstDisplayText,
+      firstOnPlaybackStart,
+    ] = (speakCharacter as jest.Mock).mock.calls[0]
+    const [
+      ,
+      ,
+      secondOnStart,
+      secondOnComplete,
+      secondDisplayText,
+      secondOnPlaybackStart,
+    ] = (speakCharacter as jest.Mock).mock.calls[1]
+
+    expect(firstDisplayText).toBe('Bunkerkidsを')
+    expect(secondDisplayText).toBe('紹介します。')
+
+    firstOnStart()
+    secondOnStart()
+    expect(homeStore.setState).not.toHaveBeenCalledWith({
+      slideMessages: ['Bunkerkidsを', '紹介します。'],
+    })
+    firstOnPlaybackStart()
+    secondOnPlaybackStart()
+    expect(homeStore.setState).toHaveBeenLastCalledWith({
+      slideMessages: ['Bunkerkidsを', '紹介します。'],
+    })
+    ;(homeStore.setState as jest.Mock).mockClear()
+    firstOnComplete()
+    expect(homeStore.setState).toHaveBeenLastCalledWith({
+      slideMessages: ['紹介します。'],
+    })
+
+    secondOnComplete()
+    expect(homeStore.setState).toHaveBeenLastCalledWith({ slideMessages: [] })
+  })
+
+  it('空の表示文を発話文へフォールバックしない', () => {
+    const d = createSpeechDispatcher('session-1', { displayMessages: [''] })
+    d.dispatch(speech('バンカーキッズを紹介します。'))
+    const [, , onStart, onComplete, displayText, onPlaybackStart] = (
+      speakCharacter as jest.Mock
+    ).mock.calls[0]
+
+    expect(displayText).toBe('')
+
+    onStart()
+    expect(homeStore.setState).not.toHaveBeenCalledWith({ slideMessages: [''] })
+
+    onPlaybackStart()
+    expect(homeStore.setState).toHaveBeenCalledWith({ slideMessages: [''] })
+
+    onComplete()
+    expect(homeStore.setState).toHaveBeenLastCalledWith({ slideMessages: [] })
+  })
+
+  it('再生前に破棄された発話は字幕キューを進めない', () => {
+    const d = createSpeechDispatcher('session-1')
+    d.dispatch(speech('再生されない文。'))
+    const [, , onStart, onComplete] = (speakCharacter as jest.Mock).mock
+      .calls[0]
+
+    onStart()
+    onComplete()
+
+    expect(mockHomeState.decrementChatProcessingCount).toHaveBeenCalled()
+    expect(homeStore.setState).not.toHaveBeenCalled()
   })
 })

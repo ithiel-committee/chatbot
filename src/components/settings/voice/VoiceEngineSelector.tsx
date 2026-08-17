@@ -2,6 +2,7 @@ import { useTranslation } from 'react-i18next'
 
 import { AIVoice } from '@/features/constants/settings'
 import settingsStore from '@/features/stores/settings'
+import { settingsControlClass } from '@/components/settings/formStyles'
 
 interface VoiceEngineSelectorProps {
   selectVoice: AIVoice
@@ -26,7 +27,7 @@ export const VoiceEngineSelector = ({
           onChange={(e) =>
             settingsStore.setState({ selectVoice: e.target.value as AIVoice })
           }
-          className="px-4 py-2 bg-white hover:bg-white-hover rounded-lg"
+          className={settingsControlClass.medium}
         >
           <option value="voicevox">{t('UsingVoiceVox')}</option>
           <option value="koeiromap">{t('UsingKoeiromap')}</option>

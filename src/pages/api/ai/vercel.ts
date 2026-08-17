@@ -18,6 +18,7 @@ import { pipeResponse } from '@/utils/pipeResponse'
 import { withAccessPolicy } from '@/lib/accessPolicy/withAccessPolicy'
 import type { PolicyGate } from '@/lib/accessPolicy/withAccessPolicy'
 import { routePolicies } from '@/lib/accessPolicy/routePolicies'
+import { guardLocalLlmUrl } from '@/lib/accessPolicy/guardLocalLlmUrl'
 
 export const config = {
   api: {
@@ -47,6 +48,7 @@ async function handler(
     reasoningMode = false,
     reasoningEffort = 'medium',
     reasoningTokenBudget = 8192,
+    customModel = false,
   } = req.body
 
   // APIキーの取得と検証
@@ -80,6 +82,9 @@ async function handler(
         error: 'Empty Local LLM URL',
         errorCode: 'EmptyLocalLLMURL',
       })
+    }
+    if (!guardLocalLlmUrl(res, gate, localLlmUrl)) {
+      return
     }
   }
 
@@ -158,7 +163,8 @@ async function handler(
       modifiedModel,
       reasoningMode,
       reasoningEffort,
-      reasoningTokenBudget
+      reasoningTokenBudget,
+      customModel
     )
 
     // ストリーミングレスポンスまたは一括レスポンスの生成

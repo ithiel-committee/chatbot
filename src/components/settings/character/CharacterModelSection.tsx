@@ -10,6 +10,7 @@ import { ToggleSwitch } from '../../toggleSwitch'
 import { useLive2DEnabled } from '@/hooks/useLive2DEnabled'
 import { useRestrictedMode } from '@/hooks/useRestrictedMode'
 import { Live2DSettingsForm } from './Live2DSettingsForm'
+import { settingsControlClass } from '@/components/settings/formStyles'
 
 interface CharacterModelSectionProps {
   modelType: SettingsState['modelType']
@@ -191,7 +192,7 @@ export const CharacterModelSection = ({
       {modelType === 'vrm' && (
         <>
           <select
-            className="text-ellipsis px-4 py-2 w-full sm:w-col-span-2 bg-white hover:bg-white-hover rounded-lg"
+            className={settingsControlClass.medium}
             value={selectedVrmPath}
             onChange={(e) => {
               const path = e.target.value
@@ -244,7 +245,7 @@ export const CharacterModelSection = ({
             {t('Live2D.FileInfo')}
           </div>
           <select
-            className="text-ellipsis px-4 py-2 w-full sm:w-col-span-2 bg-white hover:bg-white-hover rounded-lg mb-2"
+            className={`${settingsControlClass.medium} mb-2`}
             value={selectedLive2DPath}
             onChange={(e) => {
               const path = e.target.value
@@ -283,7 +284,7 @@ export const CharacterModelSection = ({
             {i18n.language === 'ja' ? ' を参照してください。' : '.'}
           </div>
           <select
-            className="text-ellipsis px-4 py-2 w-full sm:w-col-span-2 bg-white hover:bg-white-hover rounded-lg mb-2"
+            className={`${settingsControlClass.medium} mb-2`}
             value={selectedPNGTuberPath}
             onChange={(e) => {
               const path = e.target.value

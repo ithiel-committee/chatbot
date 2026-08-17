@@ -57,11 +57,14 @@ export const extractMotionTag = (
  * @returns 抽出された文と残りのテキスト
  */
 export const extractSentence = (
-  text: string
+  text: string,
+  { commaMinChars = 10 }: { commaMinChars?: number } = {}
 ): { sentence: string; remainingText: string } => {
-  const sentenceMatch = text.match(
-    /^(.{1,9}?(?:[。．.!?！？\n]|(?=\[))|.{10,}?(?:[、,。．.!?！？\n]|(?=\[)))/
+  const normalizedCommaMinChars = Math.max(2, Math.floor(commaMinChars))
+  const sentencePattern = new RegExp(
+    `^(.{1,${normalizedCommaMinChars - 1}}?(?:[。．!?！？\\n]|(?<!\\d)\\.|\\.(?=[^\\d])|(?=\\[))|.{${normalizedCommaMinChars},}?(?:[、。．!?！？\\n]|(?<!\\d)[,.]|[,.](?=[^\\d])|(?=\\[)))`
   )
+  const sentenceMatch = text.match(sentencePattern)
   if (sentenceMatch?.[0]) {
     return {
       sentence: sentenceMatch[0],

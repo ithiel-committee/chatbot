@@ -7,6 +7,10 @@ import { useRestrictedMode } from '@/hooks/useRestrictedMode'
 import { Link } from '../../link'
 import speakers from '../../speakers.json'
 import { getSpeakerUpdateErrorMessage } from './speakerUpdateError'
+import {
+  settingsActionWidth,
+  settingsControlClass,
+} from '@/components/settings/formStyles'
 
 interface VoicevoxSettingsProps {
   selectVoice: string
@@ -64,7 +68,7 @@ export const VoicevoxSettings = ({
       <div className="mt-4 font-bold">{t('VoicevoxServerUrl')}</div>
       <div className="mt-2">
         <input
-          className="text-ellipsis px-4 py-2 w-full bg-white hover:bg-white-hover rounded-lg"
+          className={settingsControlClass.long}
           type="text"
           placeholder="http://localhost:50021"
           value={voicevoxServerUrl}
@@ -84,7 +88,7 @@ export const VoicevoxSettings = ({
               voicevoxSpeaker: e.target.value,
             })
           }
-          className="px-4 py-2 bg-white hover:bg-white-hover rounded-lg"
+          className={settingsControlClass.medium}
         >
           <option value="">{t('Select')}</option>
           {(speakers_voicevox.length > 0 ? speakers_voicevox : speakers).map(
@@ -124,7 +128,7 @@ export const VoicevoxSettings = ({
             }
           }}
           disabled={isUpdatingVoicevoxSpeakers || isRestrictedMode}
-          className="w-full px-4 py-2 text-sm font-medium text-theme bg-primary hover:bg-primary-hover active:bg-primary-press disabled:bg-primary-disabled disabled:cursor-not-allowed rounded-lg transition-colors duration-200 flex items-center justify-center gap-2"
+          className={`${settingsActionWidth} flex items-center justify-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-theme transition-colors duration-200 hover:bg-primary-hover active:bg-primary-press disabled:cursor-not-allowed disabled:bg-primary-disabled`}
         >
           <svg
             className="w-4 h-4"

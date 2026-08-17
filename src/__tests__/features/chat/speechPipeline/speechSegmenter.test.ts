@@ -1,4 +1,7 @@
-import { SpeechSegmenter } from '@/features/chat/speechPipeline/speechSegmenter'
+import {
+  getFirstSpeechCommaMinChars,
+  SpeechSegmenter,
+} from '@/features/chat/speechPipeline/speechSegmenter'
 import { SegmenterEvent } from '@/features/chat/speechPipeline/types'
 
 const pushAll = (segmenter: SpeechSegmenter, chunks: string[]) => {
@@ -20,6 +23,22 @@ const codes = (events: SegmenterEvent[]) =>
   events.filter((e) => e.kind === 'code')
 
 describe('SpeechSegmenter', () => {
+  describe('低遅延TTS設定', () => {
+    it.each([
+      'voicevox',
+      'aivis_speech',
+      'google',
+      'openai',
+      'aivis_cloud_api',
+    ])('%sは初回の短い読点区切りを使う', (voice) => {
+      expect(getFirstSpeechCommaMinChars(voice)).toBe(5)
+    })
+
+    it('その他のTTSは通常の閾値を維持する', () => {
+      expect(getFirstSpeechCommaMinChars('azure')).toBe(10)
+    })
+  })
+
   describe('文分割', () => {
     it('句点で文を確定する', () => {
       const seg = new SpeechSegmenter()
@@ -45,6 +64,46 @@ describe('SpeechSegmenter', () => {
       ).toEqual(['やあ。', '元気？'])
     })
 
+    it('最初の発話だけ6文字以上の読点で早期確定する', () => {
+      const seg = new SpeechSegmenter({ firstSpeechCommaMinChars: 5 })
+      const events = seg.push('こんにちは、マスター。')
+      expect(
+        speeches(events).map((e) => e.kind === 'speech' && e.text)
+      ).toEqual(['こんにちは、', 'マスター。'])
+    })
+
+    it('短すぎる読点では初回発話を分割しない', () => {
+      const seg = new SpeechSegmenter({ firstSpeechCommaMinChars: 5 })
+      const events = seg.push('はい、承知しました。')
+      expect(
+        speeches(events).map((e) => e.kind === 'speech' && e.text)
+      ).toEqual(['はい、承知しました。'])
+    })
+
+    it('2発話目以降は従来どおり10文字未満の読点で分割しない', () => {
+      const seg = new SpeechSegmenter({ firstSpeechCommaMinChars: 5 })
+      const events = seg.push('最初です。こんにちは、マスター。')
+      expect(
+        speeches(events).map((e) => e.kind === 'speech' && e.text)
+      ).toEqual(['最初です。', 'こんにちは、マスター。'])
+    })
+
+    it('早期確定する読点がチャンクを跨いでも一度だけ発話する', () => {
+      const seg = new SpeechSegmenter({ firstSpeechCommaMinChars: 5 })
+      const events = pushAll(seg, ['こんに', 'ちは、', 'マスター。'])
+      expect(
+        speeches(events).map((e) => e.kind === 'speech' && e.text)
+      ).toEqual(['こんにちは、', 'マスター。'])
+    })
+
+    it('オプション未指定では従来の10文字閾値を維持する', () => {
+      const seg = new SpeechSegmenter()
+      const events = seg.push('こんにちは、マスター。')
+      expect(
+        speeches(events).map((e) => e.kind === 'speech' && e.text)
+      ).toEqual(['こんにちは、マスター。'])
+    })
+
     it('flushで文として未確定の残余を発話として確定する', () => {
       const seg = new SpeechSegmenter()
       const pushed = seg.push('句点のないテキスト')
@@ -53,6 +112,44 @@ describe('SpeechSegmenter', () => {
       expect(
         speeches(flushed).map((e) => e.kind === 'speech' && e.text)
       ).toEqual(['句点のないテキスト'])
+    })
+
+    it('チャンク境界にある小数点で発話を分割しない', () => {
+      const seg = new SpeechSegmenter()
+      const events = [
+        ...pushAll(seg, [
+          '価格も、外部サービスの利用が1分0.',
+          '10から0.',
+          '37ドル、自前構成の計算費用が0.',
+          '06から0.',
+          '12ドルという記事上の目安があります。',
+        ]),
+        ...seg.flush(),
+      ]
+      const spoken = speeches(events).map(
+        (event) => event.kind === 'speech' && event.text
+      )
+
+      expect(spoken.join('')).toBe(
+        '価格も、外部サービスの利用が1分0.10から0.37ドル、自前構成の計算費用が0.06から0.12ドルという記事上の目安があります。'
+      )
+      expect(
+        spoken.some((text) => typeof text === 'string' && /\d\.$/.test(text))
+      ).toBe(false)
+    })
+
+    it('チャンク境界にある桁区切りのカンマで発話を分割しない', () => {
+      const seg = new SpeechSegmenter()
+      const events = [
+        ...pushAll(seg, ['動画の累計再生回数は5,', '200万回でした。']),
+        ...seg.flush(),
+      ]
+      const spoken = speeches(events).map(
+        (event) => event.kind === 'speech' && event.text
+      )
+
+      expect(spoken.join('')).toBe('動画の累計再生回数は5,200万回でした。')
+      expect(spoken).not.toContain('動画の累計再生回数は5,')
     })
   })
 

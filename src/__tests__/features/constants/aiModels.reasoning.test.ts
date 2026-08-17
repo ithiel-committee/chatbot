@@ -118,33 +118,83 @@ describe('isReasoningModel', () => {
 })
 
 describe('getReasoningEfforts', () => {
-  it('OpenAI GPT-5はminimal/low/medium/highの4択', () => {
-    expect(getReasoningEfforts('openai', 'gpt-5')).toEqual([
-      'minimal',
-      'low',
-      'medium',
-      'high',
-    ])
-  })
+  const openAIReasoningEfforts = [
+    [
+      ['gpt-5.6-sol', 'gpt-5.6-terra', 'gpt-5.6-luna'],
+      ['none', 'low', 'medium', 'high', 'xhigh'],
+    ],
+    [
+      ['gpt-5.5', 'gpt-5.5-2026-04-23'],
+      ['none', 'low', 'medium', 'high', 'xhigh'],
+    ],
+    [
+      ['gpt-5.4-pro', 'gpt-5.4-pro-2026-03-05'],
+      ['medium', 'high', 'xhigh'],
+    ],
+    [
+      [
+        'gpt-5.4',
+        'gpt-5.4-2026-03-05',
+        'gpt-5.4-mini',
+        'gpt-5.4-mini-2026-03-17',
+        'gpt-5.4-nano',
+        'gpt-5.4-nano-2026-03-17',
+        'gpt-5.3-codex',
+        'gpt-5.2',
+        'gpt-5.2-2025-12-11',
+      ],
+      ['none', 'low', 'medium', 'high', 'xhigh'],
+    ],
+    [
+      ['gpt-5.2-pro', 'gpt-5.2-pro-2025-12-11'],
+      ['medium', 'high', 'xhigh'],
+    ],
+    [['gpt-5.2-codex'], ['low', 'medium', 'high', 'xhigh']],
+    [
+      ['gpt-5.1-codex-mini', 'gpt-5.1-codex'],
+      ['low', 'medium', 'high'],
+    ],
+    [['gpt-5.1-codex-max'], ['low', 'medium', 'high', 'xhigh']],
+    [
+      ['gpt-5.1', 'gpt-5.1-2025-11-13'],
+      ['none', 'low', 'medium', 'high'],
+    ],
+    [['gpt-5-pro', 'gpt-5-pro-2025-10-06'], ['high']],
+    [
+      [
+        'gpt-5',
+        'gpt-5-2025-08-07',
+        'gpt-5-mini',
+        'gpt-5-mini-2025-08-07',
+        'gpt-5-nano',
+        'gpt-5-nano-2025-08-07',
+      ],
+      ['minimal', 'low', 'medium', 'high'],
+    ],
+    [
+      [
+        'gpt-5-codex',
+        'o4-mini',
+        'o4-mini-2025-04-16',
+        'o3',
+        'o3-2025-04-16',
+        'o3-mini',
+        'o3-mini-2025-01-31',
+        'o1',
+        'o1-2024-12-17',
+      ],
+      ['low', 'medium', 'high'],
+    ],
+  ] as const
 
-  it('OpenAI GPT-5.1はnone/minimal/low/medium/highの5択', () => {
-    expect(getReasoningEfforts('openai', 'gpt-5.1')).toEqual([
-      'none',
-      'minimal',
-      'low',
-      'medium',
-      'high',
-    ])
-  })
-
-  it('OpenAI GPT-5.2-proはminimal/low/medium/highの4択', () => {
-    expect(getReasoningEfforts('openai', 'gpt-5.2-pro')).toEqual([
-      'minimal',
-      'low',
-      'medium',
-      'high',
-    ])
-  })
+  it.each(openAIReasoningEfforts)(
+    'OpenAIモデル群 %j は対応するeffortだけを返す',
+    (models, expected) => {
+      for (const model of models) {
+        expect(getReasoningEfforts('openai', model)).toEqual(expected)
+      }
+    }
+  )
 
   it('OpenAI GPT-4.1は空配列（推論非対応）', () => {
     expect(getReasoningEfforts('openai', 'gpt-4.1')).toEqual([])

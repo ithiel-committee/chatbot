@@ -14,6 +14,7 @@ import { EmoteController } from '../emoteController/emoteController'
 import { Talk } from '../messages/messages'
 import { PoseManager } from '@/lib/VRMAnimation/poseManager'
 import settingsStore from '@/features/stores/settings'
+import type { PlaybackObserver } from '../messages/characterRenderer'
 
 /**
  * 3Dキャラクターを管理するクラス
@@ -86,7 +87,8 @@ export class Model {
   public async speak(
     buffer: ArrayBuffer,
     talk: Talk,
-    isNeedDecode: boolean = true
+    isNeedDecode: boolean = true,
+    observer?: PlaybackObserver
   ) {
     this.emoteController?.playEmotion(talk.emotion)
 
@@ -110,9 +112,41 @@ export class Model {
         () => {
           resolve(true)
         },
-        isNeedDecode
+        isNeedDecode,
+        24000,
+        observer?.onPlaybackStart
       )
     })
+  }
+
+  /** ヘッダーなしPCM16を到着したチャンクから順に再生する。 */
+  public async speakPcm16Stream(
+    stream: ReadableStream<Uint8Array>,
+    talk: Talk,
+    sampleRate: number,
+    observer?: PlaybackObserver
+  ) {
+    this.emoteController?.playEmotion(talk.emotion)
+
+    if (talk.motion) {
+      const poseConfig = settingsStore
+        .getState()
+        .poseConfigs.find((p) => p.id === talk.motion)
+      if (poseConfig) {
+        void this.poseManager
+          .applyPose(this, talk.motion, poseConfig)
+          .catch((e) => logger.error('Failed to apply pose:', e))
+      }
+    } else if (this.poseManager.isActive) {
+      this.poseManager.resetToIdle(this)
+    }
+
+    await this._lipSync?.playPcm16Stream(
+      stream,
+      undefined,
+      sampleRate,
+      observer?.onPlaybackStart
+    )
   }
 
   /**

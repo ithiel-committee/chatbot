@@ -54,6 +54,8 @@ describe('/api/youtube/continuation handler', () => {
     mockCreateRun.mockReset()
     mockGetWorkflow.mockReset()
     process.env = { ...originalEnv }
+    delete process.env.AITUBERKIT_SERVER_SECRET_ACCESS_MODE
+    delete process.env.AITUBERKIT_ALLOWED_LLM_SERVER_ORIGINS
     mockCreateAIRegistry.mockReturnValue({ languageModel: jest.fn() } as any)
     mockGetLanguageModel.mockReturnValue('mock-language-model' as any)
     mockStart.mockResolvedValue({
@@ -126,6 +128,83 @@ describe('/api/youtube/continuation handler', () => {
       error: 'Empty Local LLM URL',
       errorCode: 'EmptyLocalLLMURL',
     })
+  })
+
+  it.each(['ollama', 'lmstudio'])(
+    'allows same-machine %s loopback URLs by default',
+    async (aiService) => {
+      const localLlmUrl =
+        aiService === 'ollama'
+          ? 'http://127.0.0.1:11434'
+          : 'http://localhost:1234/v1'
+      const { req, res } = createMocks({
+        method: 'POST',
+        headers: { host: 'localhost:3000' },
+        body: buildRequestBody({
+          aiService,
+          apiKey: '',
+          model: 'local-model',
+          localLlmUrl,
+        }),
+      })
+      req.socket.remoteAddress = '127.0.0.1'
+
+      await handler(req as any, res as any)
+
+      expect(res._getStatusCode()).toBe(200)
+      expect(mockCreateAIRegistry).toHaveBeenCalledWith(aiService, {
+        apiKey: '',
+        baseURL: localLlmUrl,
+        resourceName: '',
+      })
+      expect(mockStart).toHaveBeenCalled()
+    }
+  )
+
+  it('rejects remote requests to local LLM loopback URLs by default', async () => {
+    const { req, res } = createMocks({
+      method: 'POST',
+      headers: { host: 'aituberkit.example.com' },
+      body: buildRequestBody({
+        aiService: 'ollama',
+        apiKey: '',
+        model: 'llama3',
+        localLlmUrl: 'http://127.0.0.1:11434',
+      }),
+    })
+    req.socket.remoteAddress = '198.51.100.20'
+
+    await handler(req as any, res as any)
+
+    expect(res._getStatusCode()).toBe(403)
+    expect(JSON.parse(res._getData())).toEqual(
+      expect.objectContaining({
+        errorCode: 'ServerSecretAccessDenied',
+        feature: 'youtube/continuation',
+      })
+    )
+    expect(mockCreateAIRegistry).not.toHaveBeenCalled()
+  })
+
+  it('rejects non-allowlisted public local LLM URLs', async () => {
+    const { req, res } = createMocks({
+      method: 'POST',
+      body: buildRequestBody({
+        aiService: 'lmstudio',
+        apiKey: '',
+        model: 'local-model',
+        localLlmUrl: 'https://llm.example/v1',
+      }),
+    })
+
+    await handler(req as any, res as any)
+
+    expect(res._getStatusCode()).toBe(400)
+    expect(JSON.parse(res._getData())).toEqual({
+      error: 'Local LLM URL is not allowed',
+      errorCode: 'AIInvalidProperty',
+    })
+    expect(mockCreateAIRegistry).not.toHaveBeenCalled()
   })
 
   it('returns 400 when registry creation fails', async () => {

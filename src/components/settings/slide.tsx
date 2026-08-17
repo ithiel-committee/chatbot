@@ -8,10 +8,12 @@ import { isMultiModalAvailable } from '@/features/constants/aiModels'
 import menuStore from '@/features/stores/menu'
 import slideStore from '@/features/stores/slide'
 import { TextButton } from '../textButton'
+import { settingsControlClass } from '@/components/settings/formStyles'
 import { ToggleSwitch } from '../toggleSwitch'
 import SlideConvert from './slideConvert'
 import { useRestrictedMode } from '@/hooks/useRestrictedMode'
 import { DisabledSettingNote } from '@/components/settings/disabledSettingNote'
+import presentationStore from '@/features/stores/presentation'
 
 const Slide = () => {
   const { t } = useTranslation()
@@ -24,6 +26,10 @@ const Slide = () => {
   const slideMode = settingsStore((s) => s.slideMode)
 
   const selectedSlideDocs = slideStore((s) => s.selectedSlideDocs)
+  const externalDocument = presentationStore((s) => s.document)
+  const externalPresentationId = presentationStore((s) => s.presentationId)
+  const externalRevision = presentationStore((s) => s.revision)
+  const externalState = presentationStore((s) => s.state)
   const [slideFolders, setSlideFolders] = useState<string[]>([])
   const [updateKey, setUpdateKey] = useState(0)
 
@@ -42,7 +48,7 @@ const Slide = () => {
   const toggleSlideMode = () => {
     const newSlideMode = !slideMode
     settingsStore.setState({ slideMode: newSlideMode })
-    menuStore.setState({ slideVisible: newSlideMode })
+    menuStore.setState({ slideVisible: newSlideMode, thumbnailVisible: false })
   }
 
   const handleFolderChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
@@ -88,12 +94,30 @@ const Slide = () => {
       <div className="mt-6 mb-4 text-xl font-bold">
         {t('SelectedSlideDocs')}
       </div>
-      {/* プルダウンと編集ボタンを横並びにする */}
-      <div className="flex items-center gap-2">
+      {externalPresentationId && (
+        <div
+          className="mb-4 rounded-lg border border-primary p-3 text-sm"
+          data-testid="external-presentation-status"
+        >
+          <div className="font-bold">{t('ExternalPresentation')}</div>
+          <div>{externalDocument?.title ?? externalPresentationId}</div>
+          <div>
+            {t('ExternalPresentationRevision')}: {externalRevision}
+          </div>
+          <div>
+            {t('ExternalPresentationState')}: {externalState}
+          </div>
+          <div className="mt-1 text-xs">
+            {t('ExternalPresentationPriorityInfo')}
+          </div>
+        </div>
+      )}
+      {/* モバイルでは縦積み、sm以上では横並びにする */}
+      <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
         <select
           id="folder-select"
           data-testid="slide-folder-select"
-          className="px-4 py-2 bg-white hover:bg-white-hover rounded-lg w-full md:w-1/2"
+          className={settingsControlClass.medium}
           value={selectedSlideDocs || ''}
           onChange={handleFolderChange}
           key={updateKey}

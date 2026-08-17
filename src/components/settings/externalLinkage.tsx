@@ -1,6 +1,7 @@
 import { useTranslation } from 'react-i18next'
 import settingsStore from '@/features/stores/settings'
 import { ToggleSwitch } from '../toggleSwitch'
+import { settingsControlClass } from '@/components/settings/formStyles'
 import { useCallback } from 'react'
 import { useRestrictedMode } from '@/hooks/useRestrictedMode'
 import externalLinkageWebSocketStore from '@/features/stores/externalLinkageWebSocketStore'
@@ -92,7 +93,7 @@ const ExternalLinkage = () => {
               {t('ExternalLinkageUrl')}
             </div>
             <input
-              className="theme-surface-control text-ellipsis px-4 py-2 w-full sm:w-col-span-2 rounded-lg"
+              className={`${settingsControlClass.long} theme-surface-control`}
               type="text"
               value={externalLinkageUrl}
               onChange={(e) =>

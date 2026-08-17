@@ -7,6 +7,7 @@ import {
   isMultiModalAvailable,
 } from '@/features/constants/aiModels'
 import { TextButton } from '../textButton'
+import { settingsControlClass } from '@/components/settings/formStyles'
 import toastStore from '@/features/stores/toast'
 
 interface SlideConvertProps {
@@ -159,13 +160,13 @@ const SlideConvert: React.FC<SlideConvertProps> = ({ onFolderUpdate }) => {
           value={folderName}
           onChange={(e) => setFolderName(e.target.value)}
           required
-          className="text-ellipsis px-4 py-2 w-full bg-white hover:bg-white-hover rounded-lg"
+          className={settingsControlClass.medium}
         />
         <div className="my-4 font-bold">{t('PdfConvertModelSelect')}</div>
         <select
           value={model}
           onChange={(e) => setModel(e.target.value)}
-          className="text-ellipsis px-4 py-2 w-full bg-white hover:bg-white-hover rounded-lg"
+          className={settingsControlClass.medium}
         >
           {aiService &&
             getMultiModalModels(aiService).map((model) => (

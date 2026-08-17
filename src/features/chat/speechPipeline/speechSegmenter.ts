@@ -9,6 +9,28 @@ const CODE_DELIMITER = '```'
 // 防御的な反復上限。push/flushは常に入力を消費して返る構造のため
 // 原理的には到達しないが、正規表現の変更等による退行時のフリーズを防ぐ。
 const MAX_ITERATIONS = 100000
+const DEFAULT_COMMA_MIN_CHARS = 10
+
+export type SpeechSegmenterOptions = {
+  /** 読点より前の最小文字数。低遅延TTSでは5（読点込み6文字）を指定する。 */
+  firstSpeechCommaMinChars?: number
+}
+
+const SHORT_FIRST_SEGMENT_VOICES = new Set([
+  'voicevox',
+  'aivis_speech',
+  'google',
+  'openai',
+  'aivis_cloud_api',
+])
+
+/**
+ * 一括合成に時間がかかるTTSは、最初の読点だけ短く区切って初回再生を前倒しする。
+ * 2文目以降は通常の10文字閾値へ戻るため、細切れ化を最小限に抑える。
+ */
+export function getFirstSpeechCommaMinChars(voice: string): number {
+  return SHORT_FIRST_SEGMENT_VOICES.has(voice) ? 5 : DEFAULT_COMMA_MIN_CHARS
+}
 
 /**
  * ストリーミングテキストを表示・発話・コードブロックの3種イベントへ
@@ -33,6 +55,13 @@ export class SpeechSegmenter {
   private tagExplicitPending = false
   // コードブロック開始直後の言語指定行（```js 等）の除去待ちフラグ
   private awaitingLangLine = false
+  private hasEmittedSpeech = false
+  private readonly firstSpeechCommaMinChars: number
+
+  constructor(options: SpeechSegmenterOptions = {}) {
+    this.firstSpeechCommaMinChars =
+      options.firstSpeechCommaMinChars ?? DEFAULT_COMMA_MIN_CHARS
+  }
 
   push(chunk: string): SegmenterEvent[] {
     const events: SegmenterEvent[] = []
@@ -165,8 +194,14 @@ export class SpeechSegmenter {
         extractMotionTag(afterEmotion)
       if (motionTag) this.motionTag = motionTag
 
-      const { sentence, remainingText: afterSentence } =
-        extractSentence(afterMotion)
+      const { sentence, remainingText: afterSentence } = extractSentence(
+        afterMotion,
+        {
+          commaMinChars: this.hasEmittedSpeech
+            ? DEFAULT_COMMA_MIN_CHARS
+            : this.firstSpeechCommaMinChars,
+        }
+      )
 
       if (sentence) {
         this.emitSpeech(events, sentence)
@@ -205,5 +240,6 @@ export class SpeechSegmenter {
       emotionTagExplicit: this.tagExplicitPending,
     })
     this.tagExplicitPending = false
+    this.hasEmittedSpeech = true
   }
 }

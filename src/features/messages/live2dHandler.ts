@@ -2,6 +2,7 @@ import { logger } from '@/lib/logger'
 import { Talk } from './messages'
 import homeStore from '@/features/stores/home'
 import settingsStore from '@/features/stores/settings'
+import type { PlaybackObserver } from './characterRenderer'
 
 export class Live2DHandler {
   private static idleMotionInterval: NodeJS.Timeout | null = null // インターバルIDを保持
@@ -9,7 +10,8 @@ export class Live2DHandler {
   static async speak(
     audioBuffer: ArrayBuffer,
     talk: Talk,
-    isNeedDecode: boolean = true
+    isNeedDecode: boolean = true,
+    observer?: PlaybackObserver
   ) {
     const hs = homeStore.getState()
     const ss = settingsStore.getState()
@@ -125,6 +127,7 @@ export class Live2DHandler {
           finish()
         },
       })
+      observer?.onPlaybackStart?.()
 
       // フォールバック: 音声の理論上の再生時間 + 1 秒で強制解決
       const fallbackTimeout = (decodedAudio.duration || 0) * 1000 + 1000

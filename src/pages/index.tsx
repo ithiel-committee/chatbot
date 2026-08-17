@@ -26,11 +26,12 @@ import { MemoryServiceInitializer } from '@/components/memoryServiceInitializer'
 import toastStore from '@/features/stores/toast'
 import { usePresetLoader } from '@/features/presets/usePresetLoader'
 import { useLive2DEnabled } from '@/hooks/useLive2DEnabled'
+import { SeoSummary } from '@/components/seoSummary'
 
 const Home = () => {
   const webcamStatus = homeStore((s) => s.webcamStatus)
   const captureStatus = homeStore((s) => s.captureStatus)
-  const backgroundImageUrl = homeStore((s) => s.backgroundImageUrl)
+  const backgroundImageUrl = settingsStore((s) => s.backgroundImageUrl)
   const useVideoAsBackground = settingsStore((s) => s.useVideoAsBackground)
   const bgUrl =
     (webcamStatus || captureStatus) && useVideoAsBackground
@@ -39,6 +40,10 @@ const Home = () => {
         ? ''
         : `url(${buildUrl(backgroundImageUrl)})`
   const messageReceiverEnabled = settingsStore((s) => s.messageReceiverEnabled)
+  const clientId = settingsStore((s) => s.clientId)
+  const externalControlEnabled = Boolean(
+    clientId && process.env.NEXT_PUBLIC_AITUBERKIT_API_KEY
+  )
   const modelType = settingsStore((s) => s.modelType)
   const { isLive2DEnabled } = useLive2DEnabled()
   const characterPreset1 = settingsStore((s) => s.characterPreset1)
@@ -110,6 +115,7 @@ const Home = () => {
   return (
     <div className="h-[100svh] bg-cover" style={backgroundStyle}>
       <Meta />
+      <SeoSummary />
       <Introduction />
       {modelType === 'live2d' && isLive2DEnabled ? (
         <Live2DViewer />
@@ -121,7 +127,9 @@ const Home = () => {
       <Form />
       <Menu />
       <ModalImage />
-      {messageReceiverEnabled && <MessageReceiver />}
+      {(messageReceiverEnabled || externalControlEnabled) && (
+        <MessageReceiver />
+      )}
       <Toasts />
       <WebSocketManager />
       <YoutubeManager />

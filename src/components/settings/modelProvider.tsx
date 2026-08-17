@@ -18,6 +18,7 @@ import {
 } from './modelProvider/utils/aiServiceConfigs'
 import { AIService, ReasoningEffort } from '@/features/constants/settings'
 import { DisabledSettingNote } from '@/components/settings/disabledSettingNote'
+import { settingsControlClass } from '@/components/settings/formStyles'
 
 const ModelProvider = () => {
   const { t } = useTranslation()
@@ -111,7 +112,7 @@ const ModelProvider = () => {
                 )}
               </div>
               <input
-                className="text-ellipsis px-4 py-2 w-full sm:w-col-span-2 bg-white hover:bg-white-hover rounded-lg"
+                className={settingsControlClass.long}
                 type="text"
                 placeholder="..."
                 value={state.localLlmUrl}
@@ -123,7 +124,7 @@ const ModelProvider = () => {
             <div className="my-6">
               <div className="my-4 text-xl font-bold">{t('SelectModel')}</div>
               <input
-                className="text-ellipsis px-4 py-2 w-full sm:w-col-span-2 bg-white hover:bg-white-hover rounded-lg"
+                className={settingsControlClass.medium}
                 type="text"
                 placeholder="..."
                 value={state.selectAIModel}
@@ -154,7 +155,7 @@ const ModelProvider = () => {
                 {t('DifyAPIKeyLabel')}
               </div>
               <input
-                className="text-ellipsis px-4 py-2 w-full sm:w-col-span-2 bg-white hover:bg-white-hover rounded-lg"
+                className={settingsControlClass.long}
                 type="password"
                 placeholder="..."
                 value={state.difyKey}
@@ -169,7 +170,7 @@ const ModelProvider = () => {
                 {t('DifyInfo3')}
               </div>
               <input
-                className="text-ellipsis px-4 py-2 w-full sm:w-col-span-2 bg-white hover:bg-white-hover rounded-lg"
+                className={settingsControlClass.long}
                 type="text"
                 placeholder="..."
                 value={state.difyUrl}
@@ -192,7 +193,7 @@ const ModelProvider = () => {
                 {t('CustomAPIEndpointInfo')}
               </div>
               <input
-                className="text-ellipsis px-4 py-2 w-full sm:w-col-span-2 bg-white hover:bg-white-hover rounded-lg"
+                className={settingsControlClass.long}
                 type="text"
                 placeholder="https://example.com/api/chat"
                 value={state.customApiUrl}
@@ -422,7 +423,7 @@ const ModelProvider = () => {
                               {t('ReasoningEffortInfo')}
                             </div>
                             <select
-                              className="px-4 py-2 w-full sm:w-col-span-2 bg-white hover:bg-white-hover rounded-lg"
+                              className={settingsControlClass.compact}
                               value={state.reasoningEffort}
                               onChange={(e) =>
                                 settingsStore.setState({
@@ -453,7 +454,7 @@ const ModelProvider = () => {
                               type="number"
                               min="1024"
                               max="131072"
-                              className="px-4 py-2 w-140 bg-white hover:bg-white-hover rounded-lg"
+                              className={settingsControlClass.numericWide}
                               value={state.reasoningTokenBudget}
                               onChange={(e) => {
                                 const value = parseInt(e.target.value)
@@ -516,7 +517,7 @@ const ModelProvider = () => {
                     <input
                       type="number"
                       min="1"
-                      className="px-4 py-2 w-140 bg-white hover:bg-white-hover rounded-lg"
+                      className={settingsControlClass.numericWide}
                       value={state.maxTokens}
                       onChange={(e) => {
                         const value = parseInt(e.target.value)
@@ -570,7 +571,7 @@ const ModelProvider = () => {
           </div>
           <div className="my-2">
             <select
-              className="px-4 py-2 w-full sm:w-col-span-2 bg-white hover:bg-white-hover rounded-lg"
+              className={settingsControlClass.compact}
               value={state.imageDisplayPosition}
               onChange={(e) =>
                 settingsStore.setState({

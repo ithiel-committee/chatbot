@@ -29,8 +29,12 @@ zustand `persist` ミドルウェアが標準で提供する `version` + `migrat
 | 2       | `presenceGreetingMessage`/`presenceDepartureMessage` → `*Phrases` 配列への変換 |
 | 3       | `multiModalMode` → `enableMultiModal` への変換                                 |
 | 4       | ゲーム実況設定のデフォルト補完 + 廃止フィールド（video buffer/delay）の削除    |
+| 5       | OpenAI Audioモデル名の移行（`migrateOpenAIModelName`）                         |
+| 6       | 保存済みOpenAI `reasoningEffort`を選択モデルの対応値へ補正                     |
+| 7       | 廃止予定の文字起こしモデルを後継スナップショットへ移行                         |
+| 8       | 廃止予定のRealtime APIモデルを2.1系の後継モデルへ移行                          |
 
-既存ユーザーは全員 `version: 0`（zustandがオプション未指定時に自動付与する値）でlocalStorageに保存されているため、初回起動時に1→4を順に適用し、以降は `version: 4` として保存され再評価されない。
+導入前のユーザーは `version: 0`（zustandがオプション未指定時に自動付与する値）から全ステップを順に適用する。現在は `version: 8` として保存され、以降は新しいステップが追加されるまで再評価されない。
 
 ### 後方互換性
 
@@ -41,7 +45,7 @@ zustand `persist` ミドルウェアが標準で提供する `version` + `migrat
 ## 完了条件（本ドキュメントのスコープ）
 
 - [x] `version`/`migrate` を導入し、既存4条件をステップ関数に分解
-- [x] 世代ごとのlocalStorageフィクスチャテスト（version 0/1/2/3 → 4への遷移を検証）
+- [x] 世代ごとのlocalStorageフィクスチャテスト（version 0〜5 → 6への遷移を検証）
 - [x] 最新バージョンのデータに対して `migrate` が呼ばれない（=不要な再計算をしない）ことのテスト
 - [x] `.env.example` とsettingsStoreのデフォルト値（`NEXT_PUBLIC_*`）の整合性を検出する静的テスト（S14）
 

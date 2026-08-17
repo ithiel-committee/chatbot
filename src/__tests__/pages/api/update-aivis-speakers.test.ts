@@ -21,6 +21,17 @@ import handler from '@/pages/api/update-aivis-speakers'
 
 const originalEnv = { ...process.env }
 
+function createLocalMocks() {
+  const mocks = createMocks({
+    method: 'POST',
+    headers: { host: 'localhost:3000' },
+  })
+  Object.defineProperty(mocks.req.socket, 'remoteAddress', {
+    value: '127.0.0.1',
+  })
+  return mocks
+}
+
 describe('/api/update-aivis-speakers', () => {
   beforeEach(() => {
     jest.clearAllMocks()
@@ -43,19 +54,27 @@ describe('/api/update-aivis-speakers', () => {
     process.env = originalEnv
   })
 
-  it('rejects speaker file updates by default', async () => {
+  it('updates the dynamic speaker file from a same-machine AivisSpeech by default', async () => {
     delete process.env.AITUBERKIT_SERVER_SECRET_ACCESS_MODE
-    const { req, res } = createMocks({ method: 'POST' })
+    const { req, res } = createLocalMocks()
+
+    await handler(req as any, res as any)
+
+    expect(res._getStatusCode()).toBe(200)
+    expect(global.fetch).toHaveBeenCalledWith('http://127.0.0.1:10101/speakers')
+    expect(mockWriteFile).toHaveBeenCalled()
+  })
+
+  it('rejects speaker file updates from remote requests by default', async () => {
+    delete process.env.AITUBERKIT_SERVER_SECRET_ACCESS_MODE
+    const { req, res } = createMocks({
+      method: 'POST',
+      headers: { host: 'aituberkit.example.com' },
+    })
 
     await handler(req as any, res as any)
 
     expect(res._getStatusCode()).toBe(403)
-    expect(res._getJSONData()).toEqual(
-      expect.objectContaining({
-        errorCode: 'ServerSecretAccessDenied',
-        feature: 'update-aivis-speakers',
-      })
-    )
     expect(global.fetch).not.toHaveBeenCalled()
     expect(mockWriteFile).not.toHaveBeenCalled()
   })

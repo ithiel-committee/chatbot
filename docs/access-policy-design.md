@@ -4,7 +4,7 @@
 
 ## 1. 背景と問題
 
-AITuberKitのAPIルート（`src/pages/api/**`、全46ルート）には現在、互いを知らない4つの防御機構が併存している。
+AITuberKitのAPIルート（`src/pages/api/**`、全47ルート）には現在、互いを知らない4つの防御機構が併存している。
 
 | #   | 機構                      | 実装                                         | 保護対象                   | 適用ルート数   |
 | --- | ------------------------- | -------------------------------------------- | -------------------------- | -------------- |
@@ -77,6 +77,8 @@ AITuberKitのAPIルート（`src/pages/api/**`、全46ルート）には現在�
 
 kioskモードはパスコード・NGワード等クライアントUI層の制御であり、API側の防御には寄与しない（＝kiosk有効でもAPI防御は他フラグで決まる）ことをここで明文化する。
 
+VOICEVOX・AivisSpeech・Style-Bert-VITS2・GSVI TTS・LM Studio・Ollamaで使う既定ループバックURLは互換性のため例外とする。`disabled` でも、AITuberKitへの接続元・接続先URLの両方がループバックである同一マシン利用に限って許可し、リモート要求やプライベートネットワーク宛てURLは従来どおりガードする。GSVI TTSはブラウザから直接接続せず、`/api/tts-gsvi`を経由する。VOICEVOXの話者一覧更新では既存の固定JSONをフォールバックとして残す。
+
 デプロイ文脈の解決は既存ガード関数が各自envを読む現行構造を維持する（enforce内に第二のenv解釈レイヤーを作らない — レビューm2）。プロファイル表はテストとドキュメントの語彙であり、実行時の分岐点ではない。
 
 ### 3.3 呼び出し元
@@ -92,10 +94,11 @@ kioskモードはパスコード・NGワード等クライアントUI層の制�
 
 ```
 src/lib/accessPolicy/
-├── types.ts           # ApiResource / RoutePolicy / SecretPolicy / PolicyGate
-├── routePolicies.ts   # ★全46ルートの宣言テーブル（単一の真実の源）
-├── secretPairs.ts     # computeUsesServerSecret() 共通ヘルパー（S7吸収）
-└── withAccessPolicy.ts # 高階関数エントリポイント
+├── types.ts             # ApiResource / RoutePolicy / SecretPolicy
+├── routePolicies.ts     # ★全47ルートの宣言テーブル（単一の真実の源）
+├── secretPairs.ts       # computeUsesServerSecret() 共通ヘルパー（S7吸収）
+├── guardLocalLlmUrl.ts  # LM Studio / Ollamaの動的URL検証
+└── withAccessPolicy.ts  # PolicyGate / 高階関数エントリポイント
 
 scripts/waf/
 ├── waf.config.json         # デプロイ固有値（hosts, embedオリジン, 静的パス等）
@@ -127,6 +130,7 @@ interface RoutePolicy {
     source: 'body' | 'query'
     key: string // 例: 'serverUrl'
     envVar: string // 例: 'VOICEVOX_SERVER_URL'
+    allowLocalLoopback?: true // プロキシを介さない同一マシン利用に限る互換例外
   }
   restrictedBehavior: 'deny' | 'in-route' | 'none'
   // 'deny': ラッパー内で403（feature_disabled_in_restricted_mode）
@@ -155,7 +159,10 @@ interface PolicyGate {
   usesServerSecret: boolean // pairs/always評価の結果（dynamicでは常にfalse）
   serverUrl?: URL // serverUrl宣言があるルート: 解決済みURL
   isProtectedServerResource: boolean // serverUrl宣言があるルートのみ意味を持つ
-  guardServerSecret(usesServerSecret: boolean): boolean
+  guardServerSecret(
+    usesServerSecret: boolean,
+    options?: { allowLocalLoopbackUrl?: URL }
+  ): boolean
   // dynamicルート専用の遅延ガード。falseなら403/429送信済みなので即return
 }
 
@@ -178,10 +185,13 @@ function withAccessPolicy(
    - env設定URL（`envVar`）が存在してパース不能 → 400（現行 `tts-voicevox.ts` の挙動を保存 — レビューm8）
    - クライアント提供URLを `isHttpUrl` で検証 → 不正は400
    - `isAllowedConfiguredOrListedUrl` で `isProtectedServerResource` / `isAllowedPublicUrl` を判定 → 許可外のpublic URLは400
+   - LM Studio / Ollamaは、プライベートIPに加えて単一ラベルのLANマシン名、`.local` mDNS名、同一マシンのOSホスト名も保護対象URLとして扱う。それ以外の公開FQDNはallowlist未登録なら400
 5. **server-secret**:
    - `kind: 'pairs'`: `computeUsesServerSecret(pairs)` または `isProtectedServerResource` が真なら `guardServerSecretAccess()`
    - `kind: 'always'`: 無条件で `guardServerSecretAccess()`
-   - `kind: 'dynamic'`: ここでは何もしない。ルートが `gate.guardServerSecret()` を呼ぶ（呼んでいることを静的テストで強制 — §7.2-3）
+   - `kind: 'dynamic'`: ここでは何もしない。ルートが `gate.guardServerSecret()` を呼ぶ（呼んでいることを静的テストで強制 — §7.2-3）。動的な接続先URLを扱うルートは、検証済みURLを `allowLocalLoopbackUrl` として渡せる
+   - ただし `allowLocalLoopback` を宣言したルートは、`disabled` かつリクエスト元Host・ソケット接続元がループバックで、接続先URLが同一マシン（ループバック、NICのIP、OSホスト名）を指す場合のみガードを省略する。Next.jsが直接接続にも補完する `X-Forwarded-For` / `X-Forwarded-Host` は、値がすべてループバックの場合に限り許容する
+   - 外部IPを含む `X-Forwarded-For`、非ループバックの `X-Forwarded-Host`、Next.jsが補完しない `Forwarded` / `X-Real-IP` / `CF-Connecting-IP` がある場合はプロキシ経由と判断して例外を無効化する。リバースプロキシ環境では `protected` / `demo` / `unprotected` の明示的な運用モードを使用する
 6. すべて通過 → `handler(req, res, gate)` を実行
 
 エラーレスポンスのシェイプは既存関数（`createRestrictedModeErrorResponse` / `rejectServerSecretAccess` / `requireApiKey`）をそのまま呼ぶことで保存する。
@@ -216,7 +226,7 @@ export default withAccessPolicy(
 
 `export const config`（whisperの `bodyParser: false` 等）は従来どおりルートファイルに残す。
 
-## 5. 全ルート分類表（46ルート）
+## 5. 全ルート分類表（47ルート）
 
 resources列の略記: **SS**=server-secret, **SU**=server-url, **FR**=fs-read, **FW**=fs-write, **EC**=external-control, **CP**=client-proxy
 （v2でコード突合検証済み。restricted列は実挙動で確定）
@@ -224,7 +234,7 @@ resources列の略記: **SS**=server-secret, **SU**=server-url, **FR**=fs-read, 
 | path                          | methods   | resources          | secret                                                           | restricted                                          | waf              |
 | ----------------------------- | --------- | ------------------ | ---------------------------------------------------------------- | --------------------------------------------------- | ---------------- |
 | /api/ai/custom                | POST      | SS, SU             | dynamic                                                          | none                                                | challenge, embed |
-| /api/ai/vercel                | POST      | SS                 | dynamic                                                          | none                                                | embed            |
+| /api/ai/vercel                | POST      | SS, SU             | dynamic                                                          | none                                                | embed            |
 | /api/azureOpenAITTS           | POST      | SS                 | pairs: apiKey→AZURE_TTS_KEY, endpoint→AZURE_TTS_ENDPOINT         | none                                                | —                |
 | /api/cartesia                 | POST      | SS                 | pairs: apiKey→CARTESIA_API_KEY, voiceId→CARTESIA_VOICE_ID        | none                                                | —                |
 | /api/convertMarkdown          | POST      | FR                 | none                                                             | in-route                                            | —                |
@@ -250,6 +260,7 @@ resources列の略記: **SS**=server-secret, **SU**=server-url, **FR**=fs-read, 
 | /api/tts-aivis-cloud-api      | POST      | SS                 | pairs: apiKey→AIVIS_CLOUD_API_KEY                                | none                                                | challenge, embed |
 | /api/tts-aivisspeech          | POST      | SS, SU             | pairs: serverUrl→AIVIS_SPEECH_SERVER_URL                         | none                                                | —                |
 | /api/tts-google               | POST      | SS                 | always（GOOGLE_TTS_KEY）                                         | none                                                | —                |
+| /api/tts-gsvi                 | POST      | SS, SU             | pairs: serverUrl→GSVI_TTS_URL                                    | none                                                | —                |
 | /api/tts-koeiromap            | POST      | CP                 | none                                                             | none                                                | —                |
 | /api/tts-voicevox             | POST      | SS, SU             | pairs: serverUrl→VOICEVOX_SERVER_URL                             | none                                                | —                |
 | /api/update-aivis-speakers    | POST      | FW, SS, SU         | always                                                           | deny                                                | —                |
@@ -260,7 +271,7 @@ resources列の略記: **SS**=server-secret, **SU**=server-url, **FR**=fs-read, 
 | /api/upload-image             | POST      | FW                 | none                                                             | deny                                                | —                |
 | /api/upload-vrm-list          | POST      | FW                 | none                                                             | deny                                                | —                |
 | /api/whisper                  | POST      | SS                 | dynamic（bodyParser: false）                                     | none                                                | —                |
-| /api/youtube/continuation     | POST      | SS                 | dynamic                                                          | none                                                | —                |
+| /api/youtube/continuation     | POST      | SS, SU             | dynamic                                                          | none                                                | —                |
 | /api/v1/chat                  | POST      | EC                 | none                                                             | deny                                                | —                |
 | /api/v1/events                | GET       | EC                 | none                                                             | deny                                                | —                |
 | /api/v1/messages              | POST      | EC                 | none                                                             | deny                                                | —                |
@@ -272,7 +283,7 @@ resources列の略記: **SS**=server-secret, **SU**=server-url, **FR**=fs-read, 
 
 注:
 
-- `serverUrl` 宣言を持つのは `/api/tts-voicevox`, `/api/tts-aivisspeech`（body.serverUrl）と `/api/update-voicevox-speakers`, `/api/update-aivis-speakers`（query.serverUrl）。`stylebertvits2` はdynamicとしてルート内の既存URL検証（RunPod例外含む）を維持。`difyChat` / `ai/custom` のURLはユーザーSaaS/任意API接続先のため許可リスト検証は課さない（現行どおり。SSRF面はSSリソースのガードで在圏化されている旨をここに明記）。
+- `serverUrl` 宣言を持つのは `/api/tts-voicevox`, `/api/tts-aivisspeech`, `/api/tts-gsvi`（body.serverUrl）と `/api/update-voicevox-speakers`, `/api/update-aivis-speakers`（query.serverUrl）。`stylebertvits2` はdynamicとしてルート内の既存URL検証（RunPod例外含む）を維持。`ai/vercel` / `youtube/continuation` のLM Studio・Ollama URLは `guardLocalLlmUrl` で検証する。`difyChat` / `ai/custom` のURLはユーザーSaaS/任意API接続先のため許可リスト検証は課さない（現行どおり。SSRF面はSSリソースのガードで在圏化されている旨をここに明記）。
 - `/api/messages` は認証のないlegacyキュー。現状の挙動を保存しつつ `EC(legacy)` として明示分類し、将来 `requireApiKey` 配下に統合する候補としてマークする（本タスクでは変更しない）。
 - `resources` に SU を含むルートは「`serverUrl` 宣言を持つ」か「ルート内で `serverUrlGuard` を参照している」ことを静的テストで要求する（レビューm7の一般化）。
 
@@ -363,7 +374,7 @@ WAFは `workflow_dispatch` 手動適用のままなので、`routePolicies` 変�
 ## 10. 完了条件（ロードマップF1の再掲）
 
 - [x] ポリシーモジュール1個（`src/lib/accessPolicy/`: types / routePolicies / secretPairs / withAccessPolicy）
-- [x] 全ルートの分類表（本ドキュメント§5 + `routePolicies.ts` が実体。46ルート全て移行済み、静的テストのallowlistは空）
+- [x] 全ルートの分類表（本ドキュメント§5 + `routePolicies.ts` が実体。47ルート全て移行済み、静的テストのallowlistは空）
 - [x] WAFワークフローが同一定義から生成される（`scripts/waf/generate-waf-rules.mjs` + 移行前ルールとの意味的等価テスト）
 - [x] デプロイ文脈ごとのテスト（`withAccessPolicy.test.ts` のリソース×モードマトリクス + `deployContextMatrix.test.ts` の運用プロファイル別テスト）
 - [x] 新ルート追加時: ポリシー未登録だと静的テストが落ちる（hotfixチェーンの構造的再発防止）

@@ -5,6 +5,7 @@ import Image from 'next/image'
 import settingsStore from '@/features/stores/settings'
 import toastStore from '@/features/stores/toast'
 import { ToggleSwitch } from '../toggleSwitch'
+import { settingsControlClass } from '@/components/settings/formStyles'
 import { loadPreset } from '@/features/presets/presetLoader'
 import { DisabledSettingNote } from '@/components/settings/disabledSettingNote'
 
@@ -127,7 +128,7 @@ const YouTube = () => {
             <div className="my-4 text-xl font-bold">{t('YoutubeAPIKey')}</div>
             <input
               data-testid="youtube-api-key-input"
-              className="text-ellipsis px-4 py-2 w-full sm:w-col-span-2 bg-white hover:bg-white-hover rounded-lg"
+              className={settingsControlClass.long}
               type="text"
               placeholder="..."
               value={youtubeApiKey}
@@ -140,7 +141,7 @@ const YouTube = () => {
             <div className="my-4 text-xl font-bold">{t('YoutubeLiveID')}</div>
             <input
               data-testid="youtube-live-id-input"
-              className="text-ellipsis px-4 py-2 w-full sm:w-col-span-2 bg-white hover:bg-white-hover rounded-lg"
+              className={settingsControlClass.medium}
               type="text"
               placeholder="..."
               value={youtubeLiveId}
@@ -161,7 +162,7 @@ const YouTube = () => {
             <div className="my-4 text-xl font-bold">{t('OneCommePort')}</div>
             <input
               data-testid="onecomme-port-input"
-              className="text-ellipsis px-4 py-2 w-full sm:w-col-span-2 bg-white hover:bg-white-hover rounded-lg"
+              className={settingsControlClass.numeric}
               type="number"
               placeholder="11180"
               value={onecommePort}

@@ -6,10 +6,18 @@ import { saveMessageToMemory } from '@/features/memory/memoryStoreSync'
 import homeStore from '@/features/stores/home'
 import settingsStore from '@/features/stores/settings'
 import { generateMessageId } from '@/utils/messageUtils'
-import { SpeechSegmenter } from './speechSegmenter'
+import { getFirstSpeechCommaMinChars, SpeechSegmenter } from './speechSegmenter'
 import { MessageLogWriter } from './messageLogWriter'
 import { createSpeechDispatcher } from './speechDispatcher'
 import { consumeStream } from './consumeStream'
+import {
+  markConversationLatency,
+  startConversationLatencyTrace,
+} from '../conversationLatency'
+
+export type ProcessAIResponseOptions = {
+  inputReceivedAt?: number
+}
 
 /**
  * AIからの応答ストリームを処理する。
@@ -18,8 +26,13 @@ import { consumeStream } from './consumeStream'
  * writer / dispatcher / 本関数末尾に分離されており、本関数は
  * オーケストレーションのみを行う（設計ドキュメント docs/streaming-pipeline-design.md）。
  */
-export const processAIResponse = async (messages: Message[]) => {
+export const processAIResponse = async (
+  messages: Message[],
+  options: ProcessAIResponseOptions = {}
+) => {
   const sessionId = generateMessageId()
+  startConversationLatencyTrace(sessionId, options.inputReceivedAt)
+  markConversationLatency(sessionId, 'ai_request_started')
   homeStore.setState({ chatProcessing: true })
   const thinkingPose = applyThinkingPose()
 
@@ -30,13 +43,15 @@ export const processAIResponse = async (messages: Message[]) => {
     logger.error(e)
     thinkingPose.reset()
     homeStore.setState({ chatProcessing: false })
-    return
+    markConversationLatency(sessionId, 'response_complete')
+    return null
   }
 
   if (stream == null) {
     thinkingPose.reset()
     homeStore.setState({ chatProcessing: false })
-    return
+    markConversationLatency(sessionId, 'response_complete')
+    return null
   }
 
   const writer = new MessageLogWriter()
@@ -44,15 +59,21 @@ export const processAIResponse = async (messages: Message[]) => {
 
   const { failed } = await consumeStream(
     stream.getReader(),
-    new SpeechSegmenter(),
+    new SpeechSegmenter({
+      firstSpeechCommaMinChars: getFirstSpeechCommaMinChars(
+        settingsStore.getState().selectVoice
+      ),
+    }),
     {
       onThinking: (chunk) => writer.appendThinking(chunk),
+      onTextChunk: () => markConversationLatency(sessionId, 'first_text'),
       onEvent: (event) => {
         if (event.kind === 'display') {
           writer.appendDisplay(event.text)
         } else if (event.kind === 'code') {
           writer.appendCodeBlock(event.content)
         } else {
+          markConversationLatency(sessionId, 'first_speech_segment')
           dispatcher.dispatch(event)
         }
       },
@@ -63,6 +84,7 @@ export const processAIResponse = async (messages: Message[]) => {
     thinkingPose.reset()
   }
   homeStore.setState({ chatProcessing: false })
+  markConversationLatency(sessionId, 'response_complete')
 
   const finalContent = writer.finalize()
   if (finalContent) {
@@ -77,6 +99,7 @@ export const processAIResponse = async (messages: Message[]) => {
   if (dispatcher.disabled) {
     await SpeakQueue.finalizeIfIdle()
   }
+  return finalContent || null
 }
 
 // 思考中ポーズの適用（VRMのみ）。reset() は冪等。

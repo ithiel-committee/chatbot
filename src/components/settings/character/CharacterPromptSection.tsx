@@ -2,6 +2,7 @@ import { useTranslation } from 'react-i18next'
 
 import settingsStore, { SettingsState } from '@/features/stores/settings'
 import toastStore from '@/features/stores/toast'
+import { settingsControlClass } from '@/components/settings/formStyles'
 
 // Character型の定義
 type Character = Pick<
@@ -186,7 +187,7 @@ export const CharacterPromptSection = ({
                   aria-label={t('PresetNameLabel', {
                     defaultValue: 'Preset Name',
                   })}
-                  className="px-3 py-2 bg-white border border-gray-300 rounded-md text-sm w-full"
+                  className={`${settingsControlClass.medium} border border-gray-300 text-sm`}
                   placeholder={t(`Characterpreset${index + 1}`)}
                 />
               </div>

@@ -87,6 +87,164 @@ describe('/api/elevenLabs', () => {
     expect(res._ended).toBe(true)
   })
 
+  it('should forward raw PCM chunks in streaming mode', async () => {
+    const firstChunk = new Uint8Array([1, 2, 3, 4])
+    const secondChunk = new Uint8Array([5, 6])
+    ;(global.fetch as jest.Mock).mockResolvedValue({
+      ok: true,
+      body: new ReadableStream({
+        start(controller) {
+          controller.enqueue(firstChunk)
+          controller.enqueue(secondChunk)
+          controller.close()
+        },
+      }),
+    })
+
+    const req = createMockReq({
+      query: { stream: 'true' },
+      body: { message: 'hello', apiKey: 'key', voiceId: 'v1' },
+    })
+    const res = createMockRes()
+
+    await handler(req, res)
+
+    expect(global.fetch).toHaveBeenCalledWith(
+      'https://api.elevenlabs.io/v1/text-to-speech/v1/stream?output_format=pcm_16000',
+      expect.any(Object)
+    )
+    expect(res._status).toBe(200)
+    expect(res._headers['Content-Type']).toBe('audio/pcm')
+    expect(res._headers['X-Accel-Buffering']).toBe('no')
+    expect(res._headers['Content-Length']).toBeUndefined()
+    expect(res._writes).toHaveLength(2)
+    expect(res._ended).toBe(true)
+  })
+
+  it('should wait for drain before reading the next PCM chunk', async () => {
+    ;(global.fetch as jest.Mock).mockResolvedValue({
+      ok: true,
+      body: new ReadableStream({
+        start(controller) {
+          controller.enqueue(new Uint8Array([1, 2]))
+          controller.enqueue(new Uint8Array([3, 4]))
+          controller.close()
+        },
+      }),
+    })
+    const req = createMockReq({
+      query: { stream: 'true' },
+      body: { message: 'hello', apiKey: 'key', voiceId: 'v1' },
+    })
+    const res = createMockRes()
+    let notifyFirstWrite!: () => void
+    const firstWrite = new Promise<void>((resolve) => {
+      notifyFirstWrite = resolve
+    })
+    jest
+      .spyOn(res, 'write')
+      .mockImplementationOnce((chunk) => {
+        res._writeChunks.push(chunk)
+        notifyFirstWrite()
+        return false
+      })
+      .mockImplementationOnce((chunk) => {
+        res._writeChunks.push(chunk)
+        return true
+      })
+
+    const handling = handler(req, res)
+    await firstWrite
+
+    expect(res.write).toHaveBeenCalledTimes(1)
+
+    res._emit('drain')
+    await handling
+
+    expect(res.write).toHaveBeenCalledTimes(2)
+    expect(res._ended).toBe(true)
+  })
+
+  it('should cancel the upstream stream when the client disconnects', async () => {
+    const cancel = jest.fn()
+    ;(global.fetch as jest.Mock).mockResolvedValue({
+      ok: true,
+      body: new ReadableStream({
+        start(controller) {
+          controller.enqueue(new Uint8Array([1, 2]))
+        },
+        cancel,
+      }),
+    })
+    const req = createMockReq({
+      query: { stream: 'true' },
+      body: { message: 'hello', apiKey: 'key', voiceId: 'v1' },
+    })
+    const res = createMockRes()
+    jest.spyOn(res, 'write').mockImplementation((chunk) => {
+      res._writeChunks.push(chunk)
+      res._emit('close')
+      return true
+    })
+
+    await handler(req, res)
+    await Promise.resolve()
+
+    expect(cancel).toHaveBeenCalledWith('downstream closed')
+  })
+
+  it('should abort the upstream request when the client disconnects before headers', async () => {
+    let signal!: AbortSignal
+    let notifyFetchStarted!: () => void
+    const fetchStarted = new Promise<void>((resolve) => {
+      notifyFetchStarted = resolve
+    })
+    ;(global.fetch as jest.Mock).mockImplementation(
+      (_url: string, init: RequestInit) => {
+        signal = init.signal as AbortSignal
+        notifyFetchStarted()
+        return new Promise((_resolve, reject) => {
+          signal.addEventListener('abort', () => reject(new Error('aborted')))
+        })
+      }
+    )
+    const req = createMockReq({
+      query: { stream: 'true' },
+      body: { message: 'hello', apiKey: 'key', voiceId: 'v1' },
+    })
+    const res = createMockRes()
+
+    const handling = handler(req, res)
+    await fetchStarted
+    res._emit('close')
+    await handling
+
+    expect(signal.aborted).toBe(true)
+    expect(res._json).toBeNull()
+  })
+
+  it('should end an already-started response when upstream reading fails', async () => {
+    ;(global.fetch as jest.Mock).mockResolvedValue({
+      ok: true,
+      body: new ReadableStream({
+        pull() {
+          throw new Error('stream failed')
+        },
+      }),
+    })
+    const req = createMockReq({
+      query: { stream: 'true' },
+      body: { message: 'hello', apiKey: 'key', voiceId: 'v1' },
+    })
+    const res = createMockRes()
+
+    await handler(req, res)
+
+    expect(res._status).toBe(200)
+    expect(res._json).toBeNull()
+    expect(res._ended).toBe(true)
+  })
+
   it('should reject server env key usage when guard mode is not configured', async () => {
     process.env.ELEVENLABS_API_KEY = 'server-key'
     process.env.ELEVENLABS_VOICE_ID = 'server-voice'

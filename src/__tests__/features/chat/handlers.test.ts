@@ -12,6 +12,7 @@ import externalLinkageWebSocketStore from '@/features/stores/externalLinkageWebS
 import toastStore from '@/features/stores/toast'
 import i18next from 'i18next'
 import { Message } from '@/features/messages/messages'
+import { CONVERSATION_LATENCY_SUMMARY_EVENT } from '@/features/chat/conversationLatency'
 
 jest.mock('@/features/chat/aiChatFactory', () => ({
   getAIChatResponseStream: jest.fn(),
@@ -453,11 +454,29 @@ describe('handlers', () => {
   describe('processAIResponse', () => {
     it('AIレスポンスストリームがnullの場合、処理を終了する', async () => {
       ;(getAIChatResponseStream as jest.Mock).mockResolvedValue(null)
+      const onSummary = jest.fn()
+      window.addEventListener(CONVERSATION_LATENCY_SUMMARY_EVENT, onSummary)
 
       await processAIResponse([])
 
+      window.removeEventListener(CONVERSATION_LATENCY_SUMMARY_EVENT, onSummary)
       expect(homeStore.setState).toHaveBeenCalledWith({ chatProcessing: false })
       expect(speakCharacter).not.toHaveBeenCalled()
+      expect(onSummary).toHaveBeenCalledTimes(1)
+    })
+
+    it('AIリクエスト失敗時もレイテンシ計測を完了する', async () => {
+      ;(getAIChatResponseStream as jest.Mock).mockRejectedValue(
+        new Error('request failed')
+      )
+      const onSummary = jest.fn()
+      window.addEventListener(CONVERSATION_LATENCY_SUMMARY_EVENT, onSummary)
+
+      await processAIResponse([])
+
+      window.removeEventListener(CONVERSATION_LATENCY_SUMMARY_EVENT, onSummary)
+      expect(homeStore.setState).toHaveBeenCalledWith({ chatProcessing: false })
+      expect(onSummary).toHaveBeenCalledTimes(1)
     })
   })
 })

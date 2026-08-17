@@ -12,6 +12,7 @@ import {
   RealtimeAPIModeVoice,
   RealtimeAPIModeAzureVoice,
 } from '@/features/constants/settings'
+import { settingsControlClass } from '@/components/settings/formStyles'
 
 interface AzureConfigProps {
   azureKey: string
@@ -72,7 +73,7 @@ export const AzureConfig = ({
           api-version=API_VERSION&deployment=DEPLOYMENT_NAME
         </div>
         <input
-          className="text-ellipsis px-4 py-2 w-full sm:w-col-span-2 bg-white hover:bg-white-hover rounded-lg"
+          className={settingsControlClass.long}
           type="text"
           placeholder="..."
           value={azureEndpoint}
@@ -97,7 +98,7 @@ export const AzureConfig = ({
               {t('RealtimeAPIModeContentType')}
             </div>
             <select
-              className="px-4 py-2 w-full sm:w-col-span-2 bg-white hover:bg-white-hover rounded-lg"
+              className={settingsControlClass.compact}
               value={realtimeAPIModeContentType}
               onChange={(e) => {
                 settingsStore.setState({
@@ -112,7 +113,7 @@ export const AzureConfig = ({
 
             <div className="my-4 font-bold">{t('RealtimeAPIModeVoice')}</div>
             <select
-              className="px-4 py-2 w-full sm:w-col-span-2 bg-white hover:bg-white-hover rounded-lg"
+              className={settingsControlClass.compact}
               value={realtimeAPIModeVoice}
               onChange={(e) => {
                 settingsStore.setState({

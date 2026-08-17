@@ -174,13 +174,41 @@ describe('/api/stylebertvits2', () => {
     )
   })
 
-  it('guards client-provided local Style-Bert-VITS2 URLs by default', async () => {
+  it('allows a same-machine local Style-Bert-VITS2 URL by default', async () => {
     delete process.env.AITUBERKIT_SERVER_SECRET_ACCESS_MODE
+    const fetchMock = global.fetch as jest.Mock
+    fetchMock.mockResolvedValue({
+      ok: true,
+      arrayBuffer: async () => Buffer.from('audio').buffer,
+    })
     const req = createMockReq({
       body: {
         ...runpodRequestBody,
         stylebertvits2ServerUrl: 'http://[::ffff:127.0.0.1]:5000',
       },
+      headers: { host: 'localhost:3000' },
+      socket: { remoteAddress: '127.0.0.1' } as never,
+    })
+    const res = createMockRes()
+
+    await handler(req, res)
+
+    expect(res._status).toBe(200)
+    expect(global.fetch).toHaveBeenCalledWith(
+      expect.stringContaining('http://[::ffff:127.0.0.1]:5000/voice?'),
+      expect.objectContaining({ method: 'GET' })
+    )
+  })
+
+  it('rejects a remote request to a local Style-Bert-VITS2 URL by default', async () => {
+    delete process.env.AITUBERKIT_SERVER_SECRET_ACCESS_MODE
+    const req = createMockReq({
+      body: {
+        ...runpodRequestBody,
+        stylebertvits2ServerUrl: 'http://127.0.0.1:5000',
+      },
+      headers: { host: 'aituberkit.example.com' },
+      socket: { remoteAddress: '198.51.100.20' } as never,
     })
     const res = createMockRes()
 

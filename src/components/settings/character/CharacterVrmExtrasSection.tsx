@@ -4,6 +4,7 @@ import homeStore from '@/features/stores/home'
 import settingsStore, { PoseConfigItem } from '@/features/stores/settings'
 import { ToggleSwitch } from '../../toggleSwitch'
 import { PoseConfigSettings } from './PoseConfigSettings'
+import { settingsControlClass } from '@/components/settings/formStyles'
 
 interface CharacterVrmExtrasSectionProps {
   lightingIntensity: number
@@ -67,7 +68,7 @@ export const CharacterVrmExtrasSection = ({
               {t('ThinkingPoseSelect')}
             </div>
             <select
-              className="text-ellipsis px-4 py-2 w-full sm:w-col-span-2 bg-white hover:bg-white-hover rounded-lg"
+              className={settingsControlClass.medium}
               value={thinkingPoseId}
               onChange={(e) =>
                 settingsStore.setState({ thinkingPoseId: e.target.value })

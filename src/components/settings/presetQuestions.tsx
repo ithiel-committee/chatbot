@@ -106,7 +106,7 @@ const PresetQuestions = () => {
       <div className="mt-4 mb-5">
         <div className="pr-1 grid grid-flow-col grid-cols-[1fr_min-content] gap-4 mt-6">
           <input
-            className="text-ellipsis px-4 py-2 bg-white hover:bg-white-hover rounded-lg"
+            className="w-full text-ellipsis rounded-lg bg-white px-4 py-2 hover:bg-white-hover"
             type="text"
             value={newQuestion}
             onChange={(e) => setNewQuestion(e.target.value)}

@@ -36,6 +36,10 @@ function getAccessMode(): ServerSecretAccessMode {
   return DEFAULT_ACCESS_MODE
 }
 
+export function isServerSecretAccessDisabled(): boolean {
+  return getAccessMode() === 'disabled'
+}
+
 function getHeaderValue(req: NextApiRequest, name: string): string {
   const value = req.headers?.[name.toLowerCase()]
   return Array.isArray(value) ? value[0] || '' : value || ''

@@ -12,6 +12,7 @@ import {
 import { AIService } from '@/features/constants/settings'
 import { DisabledSettingNote } from '@/components/settings/disabledSettingNote'
 import { ModelCapabilityLegend } from '@/components/settings/modelProvider/ModelCapabilityLegend'
+import { settingsControlClass } from '@/components/settings/formStyles'
 
 interface GoogleConfigProps {
   googleKey: string
@@ -69,7 +70,7 @@ export const GoogleConfig = ({
           </a>
         </div>
         <input
-          className="text-ellipsis px-4 py-2 w-full sm:w-col-span-2 bg-white hover:bg-white-hover rounded-lg"
+          className={settingsControlClass.long}
           type="password"
           placeholder="API Key"
           value={googleKey}
@@ -91,7 +92,7 @@ export const GoogleConfig = ({
           </div>
           {customModel ? (
             <input
-              className="text-ellipsis px-4 py-2 w-full sm:w-col-span-2 bg-white hover:bg-white-hover rounded-lg"
+              className={settingsControlClass.medium}
               type="text"
               placeholder={t('CustomModelPlaceholder')}
               value={selectAIModel}
@@ -107,7 +108,7 @@ export const GoogleConfig = ({
           ) : (
             <>
               <select
-                className="px-4 py-2 w-full sm:w-col-span-2 bg-white hover:bg-white-hover rounded-lg"
+                className={settingsControlClass.medium}
                 value={selectAIModel}
                 onChange={(e) => handleModelChange(e.target.value)}
               >

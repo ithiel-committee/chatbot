@@ -32,12 +32,12 @@ export interface TransientState {
   live2dViewer: Live2DViewer | null
   pngTuberViewer: PNGTuberEngine | null
   slideMessages: string[]
+  activeSpeech: { id: string; text: string } | null
   chatProcessing: boolean
   chatProcessingCount: number
   incrementChatProcessingCount: () => void
   decrementChatProcessingCount: () => void
   upsertMessage: (message: Partial<Message>) => void
-  backgroundImageUrl: string
   modalImage: string
   triggerShutter: boolean
   webcamStatus: boolean
@@ -201,6 +201,7 @@ const homeStore = create<HomeState>()(
       live2dViewer: null,
       pngTuberViewer: null,
       slideMessages: [],
+      activeSpeech: null,
       chatProcessing: false,
       chatProcessingCount: 0,
       incrementChatProcessingCount: () => {
@@ -255,9 +256,6 @@ const homeStore = create<HomeState>()(
           return { chatLog: updatedChatLog }
         })
       },
-      backgroundImageUrl:
-        process.env.NEXT_PUBLIC_BACKGROUND_IMAGE_PATH ??
-        '/backgrounds/bg-c.png',
       modalImage: '',
       triggerShutter: false,
       webcamStatus: false,

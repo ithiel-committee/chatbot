@@ -36,6 +36,7 @@ type VercelChatRequestData = {
   reasoningMode?: boolean
   reasoningEffort?: ReasoningEffort
   reasoningTokenBudget?: number
+  customModel?: boolean
 }
 
 type ApiErrorCause = { errorCode?: string }
@@ -71,6 +72,7 @@ const getAIConfig = () => {
     reasoningMode: ss.reasoningMode,
     reasoningEffort: ss.reasoningEffort,
     reasoningTokenBudget: ss.reasoningTokenBudget,
+    customModel: ss.customModel,
     customApiUrl: ss.customApiUrl,
     customApiHeaders: ss.customApiHeaders,
     customApiBody: ss.customApiBody,
@@ -108,6 +110,7 @@ export async function getVercelAIChatResponse(messages: Message[]) {
     reasoningMode,
     reasoningEffort,
     reasoningTokenBudget,
+    customModel,
     customApiUrl,
     customApiHeaders,
     customApiBody,
@@ -155,6 +158,7 @@ export async function getVercelAIChatResponse(messages: Message[]) {
         reasoningMode,
         reasoningEffort,
         reasoningTokenBudget,
+        customModel,
       })
     }
 
@@ -198,6 +202,7 @@ export async function getVercelAIChatResponseStream(
     reasoningMode,
     reasoningEffort,
     reasoningTokenBudget,
+    customModel,
     customApiUrl,
     customApiHeaders,
     customApiBody,
@@ -244,6 +249,7 @@ export async function getVercelAIChatResponseStream(
       reasoningMode,
       reasoningEffort,
       reasoningTokenBudget,
+      customModel,
     })
   }
 

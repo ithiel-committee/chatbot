@@ -13,6 +13,8 @@ export type MockApiResponse = NextApiResponse & {
   _body: unknown
   _ended: boolean
   _writes: string[]
+  _writeChunks: unknown[]
+  _emit: (event: string, ...args: unknown[]) => void
 }
 
 export function createMockReq(
@@ -29,6 +31,7 @@ export function createMockReq(
 }
 
 export function createMockRes(): MockApiResponse {
+  const listeners = new Map<string, Set<(...args: unknown[]) => void>>()
   const res = {
     _status: 200,
     _json: null as unknown,
@@ -36,13 +39,18 @@ export function createMockRes(): MockApiResponse {
     _body: null as unknown,
     _ended: false,
     _writes: [] as string[],
+    _writeChunks: [] as unknown[],
+    headersSent: false,
+    writableEnded: false,
     status(code: number) {
       res._status = code
       return res
     },
     json(data: unknown) {
+      res.headersSent = true
       res._json = data
       res._ended = true
+      res.writableEnded = true
       return res
     },
     setHeader(key: string, value: unknown) {
@@ -52,22 +60,47 @@ export function createMockRes(): MockApiResponse {
     writeHead(code: number, headers?: Record<string, unknown>) {
       res._status = code
       Object.assign(res._headers, headers || {})
+      res.headersSent = true
       return res
     },
     send(data: unknown) {
+      res.headersSent = true
       res._body = data
       res._ended = true
+      res.writableEnded = true
       return res
     },
     write(chunk: unknown) {
+      res.headersSent = true
       res._writes.push(String(chunk))
+      res._writeChunks.push(chunk)
       return true
     },
+    once(event: string, listener: (...args: unknown[]) => void) {
+      const eventListeners = listeners.get(event) ?? new Set()
+      eventListeners.add(listener)
+      listeners.set(event, eventListeners)
+      return res
+    },
+    off(event: string, listener: (...args: unknown[]) => void) {
+      listeners.get(event)?.delete(listener)
+      return res
+    },
+    _emit(event: string, ...args: unknown[]) {
+      const eventListeners = [...(listeners.get(event) ?? [])]
+      listeners.delete(event)
+      eventListeners.forEach((listener) => listener(...args))
+    },
+    flushHeaders() {
+      res.headersSent = true
+    },
     end(data?: unknown) {
+      res.headersSent = true
       if (data !== undefined) {
         res._body = data
       }
       res._ended = true
+      res.writableEnded = true
       return res
     },
   }

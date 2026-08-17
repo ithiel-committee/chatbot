@@ -2,6 +2,7 @@ import { useTranslation } from 'react-i18next'
 
 import { OpenAITTSVoice } from '@/features/constants/settings'
 import settingsStore from '@/features/stores/settings'
+import { settingsControlClass } from '@/components/settings/formStyles'
 
 interface AzureTTSSettingsProps {
   azureTTSKey: string
@@ -26,7 +27,7 @@ export const AzureTTSSettings = ({
       <div className="mt-4 font-bold">{t('AzureAPIKeyLabel')}</div>
       <div className="mt-2">
         <input
-          className="text-ellipsis px-4 py-2 w-full bg-white hover:bg-white-hover rounded-lg"
+          className={settingsControlClass.long}
           type="text"
           placeholder="..."
           value={azureTTSKey}
@@ -40,7 +41,7 @@ export const AzureTTSSettings = ({
       <div className="mt-4 font-bold">{t('AzureEndpoint')}</div>
       <div className="mt-2">
         <input
-          className="text-ellipsis px-4 py-2 w-full bg-white hover:bg-white-hover rounded-lg"
+          className={settingsControlClass.long}
           type="text"
           placeholder="..."
           value={azureTTSEndpoint}
@@ -60,7 +61,7 @@ export const AzureTTSSettings = ({
               openaiTTSVoice: e.target.value as OpenAITTSVoice,
             })
           }
-          className="px-4 py-2 bg-white hover:bg-white-hover rounded-lg"
+          className={settingsControlClass.compact}
         >
           <option value="alloy">alloy</option>
           <option value="echo">echo</option>

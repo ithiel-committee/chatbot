@@ -65,7 +65,7 @@ function createTask(
   return {
     sessionId,
     audioBuffer: new ArrayBuffer(8),
-    talk: { style: 'talk', speakerX: 0, speakerY: 0, message: 'test' },
+    talk: { emotion: 'neutral' as const, message: 'test' },
     isNeedDecode: false,
     ...overrides,
   }
@@ -80,6 +80,7 @@ function createDeferred<T>() {
 }
 
 const mockModelSpeak = jest.fn().mockResolvedValue(undefined)
+const mockModelSpeakPcm16Stream = jest.fn().mockResolvedValue(undefined)
 const mockModelStopSpeaking = jest.fn()
 const mockModelPlayEmotion = jest.fn().mockResolvedValue(undefined)
 
@@ -91,6 +92,7 @@ function setupMocks(modelType = 'vrm') {
     viewer: {
       model: {
         speak: mockModelSpeak,
+        speakPcm16Stream: mockModelSpeakPcm16Stream,
         stopSpeaking: mockModelStopSpeaking,
         playEmotion: mockModelPlayEmotion,
       },
@@ -141,13 +143,104 @@ describe('SpeakQueue', () => {
       queue.checkSessionId('session1')
 
       const task = createTask('session1')
+      mockModelSpeak.mockImplementationOnce(
+        async (_buffer, _talk, _isNeedDecode, observer) => {
+          observer?.onPlaybackStart?.()
+        }
+      )
       await queue.addTask(task)
 
       expect(mockModelSpeak).toHaveBeenCalledWith(
         task.audioBuffer,
         task.talk,
-        task.isNeedDecode
+        task.isNeedDecode,
+        { onPlaybackStart: expect.any(Function) }
       )
+      expect(mockHomeSetState).toHaveBeenCalledWith({
+        activeSpeech: expect.objectContaining({ text: 'test' }),
+      })
+    })
+
+    it('should expose display text while speaking synthesized text', async () => {
+      const queue = SpeakQueue.getInstance()
+      queue.checkSessionId('session1')
+      const task = {
+        ...createTask('session1'),
+        displayText: 'Bunkerkidsを紹介します。',
+        talk: {
+          emotion: 'neutral' as const,
+          message: 'バンカーキッズを紹介します。',
+        },
+      }
+      mockModelSpeak.mockImplementationOnce(
+        async (_buffer, _talk, _isNeedDecode, observer) => {
+          observer?.onPlaybackStart?.()
+        }
+      )
+
+      await queue.addTask(task)
+
+      expect(mockModelSpeak).toHaveBeenCalledWith(
+        task.audioBuffer,
+        task.talk,
+        task.isNeedDecode,
+        { onPlaybackStart: expect.any(Function) }
+      )
+      expect(mockHomeSetState).toHaveBeenCalledWith({
+        activeSpeech: expect.objectContaining({
+          text: 'Bunkerkidsを紹介します。',
+        }),
+      })
+    })
+
+    it('should process a PCM16 stream via the VRM model', async () => {
+      const queue = SpeakQueue.getInstance()
+      queue.checkSessionId('session1')
+      const stream = new ReadableStream<Uint8Array>()
+      const onPlaybackStart = jest.fn()
+      mockModelSpeakPcm16Stream.mockImplementationOnce(
+        async (_stream, _talk, _sampleRate, observer) => {
+          observer?.onPlaybackStart?.()
+        }
+      )
+
+      await queue.addTask({
+        sessionId: 'session1',
+        kind: 'pcm16-stream',
+        audioStream: stream,
+        sampleRate: 16000,
+        talk: { emotion: 'neutral', message: 'test' },
+        onPlaybackStart,
+      })
+
+      expect(mockModelSpeakPcm16Stream).toHaveBeenCalledWith(
+        stream,
+        expect.objectContaining({ message: 'test' }),
+        16000,
+        { onPlaybackStart: expect.any(Function) }
+      )
+      expect(onPlaybackStart).toHaveBeenCalledTimes(1)
+    })
+
+    it('should cancel a PCM16 stream and complete when the renderer is unsupported', async () => {
+      setupMocks('live2d')
+      const cancel = jest.fn()
+      const stream = new ReadableStream<Uint8Array>({ cancel })
+      const onComplete = jest.fn()
+      const queue = SpeakQueue.getInstance()
+      queue.checkSessionId('session1')
+
+      await queue.addTask({
+        sessionId: 'session1',
+        kind: 'pcm16-stream',
+        audioStream: stream,
+        sampleRate: 16000,
+        talk: { emotion: 'neutral', message: 'test' },
+        onComplete,
+      })
+
+      expect(cancel).toHaveBeenCalledTimes(1)
+      expect(onComplete).toHaveBeenCalledTimes(1)
     })
 
     it('should process via Live2DHandler when modelType is live2d', async () => {
@@ -161,7 +254,8 @@ describe('SpeakQueue', () => {
       expect(mockLive2DSpeak).toHaveBeenCalledWith(
         task.audioBuffer,
         task.talk,
-        task.isNeedDecode
+        task.isNeedDecode,
+        { onPlaybackStart: expect.any(Function) }
       )
     })
 
@@ -176,7 +270,8 @@ describe('SpeakQueue', () => {
       expect(mockPNGTuberSpeak).toHaveBeenCalledWith(
         task.audioBuffer,
         task.talk,
-        task.isNeedDecode
+        task.isNeedDecode,
+        { onPlaybackStart: expect.any(Function) }
       )
     })
 
@@ -209,7 +304,10 @@ describe('SpeakQueue', () => {
 
     it('should set isSpeaking to false', () => {
       SpeakQueue.stopAll()
-      expect(mockHomeSetState).toHaveBeenCalledWith({ isSpeaking: false })
+      expect(mockHomeSetState).toHaveBeenCalledWith({
+        isSpeaking: false,
+        activeSpeech: null,
+      })
     })
 
     it('should call stopSpeaking on VRM model', () => {
@@ -263,6 +361,25 @@ describe('SpeakQueue', () => {
       ).toEqual([])
       expect(mockModelStopSpeaking).not.toHaveBeenCalled()
     })
+
+    it('should cancel queued PCM16 streams', async () => {
+      const cancel = jest.fn()
+      const queue = SpeakQueue.getInstance()
+      ;(queue as unknown as { queue: unknown[] }).queue = [
+        {
+          sessionId: 'session1',
+          kind: 'pcm16-stream',
+          audioStream: new ReadableStream<Uint8Array>({ cancel }),
+          sampleRate: 16000,
+          talk: { emotion: 'neutral', message: 'test' },
+        },
+      ]
+
+      SpeakQueue.stopQueue()
+      await Promise.resolve()
+
+      expect(cancel).toHaveBeenCalledWith('speech task discarded')
+    })
   })
 
   describe('stopSession', () => {
@@ -275,7 +392,10 @@ describe('SpeakQueue', () => {
 
       expect(SpeakQueue.currentStopToken).toBe(initialToken + 1)
       expect(mockModelStopSpeaking).toHaveBeenCalled()
-      expect(mockHomeSetState).toHaveBeenCalledWith({ isSpeaking: false })
+      expect(mockHomeSetState).toHaveBeenCalledWith({
+        isSpeaking: false,
+        activeSpeech: null,
+      })
       expect(queue.isStopped()).toBe(true)
     })
 
@@ -362,6 +482,33 @@ describe('SpeakQueue', () => {
 
       speakDeferred.resolve()
       await firstTaskPromise
+    })
+
+    it('should cancel queued PCM16 streams discarded by session change', async () => {
+      const cancel = jest.fn()
+      let notifyComplete!: () => void
+      const completed = new Promise<void>((resolve) => {
+        notifyComplete = resolve
+      })
+      const onComplete = jest.fn(notifyComplete)
+      const queue = SpeakQueue.getInstance()
+      queue.checkSessionId('session1')
+      ;(queue as unknown as { queue: unknown[] }).queue = [
+        {
+          sessionId: 'session1',
+          kind: 'pcm16-stream',
+          audioStream: new ReadableStream<Uint8Array>({ cancel }),
+          sampleRate: 16000,
+          talk: { emotion: 'neutral', message: 'test' },
+          onComplete,
+        },
+      ]
+
+      queue.checkSessionId('session2')
+      await completed
+
+      expect(cancel).toHaveBeenCalledWith('speech task discarded')
+      expect(onComplete).toHaveBeenCalledTimes(1)
     })
 
     it('should reset stopped state when stopped', async () => {

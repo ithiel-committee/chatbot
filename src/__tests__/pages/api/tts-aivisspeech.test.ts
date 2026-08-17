@@ -217,6 +217,70 @@ describe('/api/tts-aivisspeech', () => {
     expect(mockAxiosPost).not.toHaveBeenCalled()
   })
 
+  it.each([
+    ['private', 'http://192.168.1.20:10101'],
+    ['remote', 'https://aivis.example.com'],
+  ])(
+    'should reject a %s AivisSpeech URL even for a same-machine request by default',
+    async (_kind, serverUrl) => {
+      process.env.AIVIS_SPEECH_SERVER_URL = serverUrl
+      delete process.env.AITUBERKIT_SERVER_SECRET_ACCESS_MODE
+
+      const req = createMockReq({
+        body: {
+          text: 'test',
+          speaker: 1,
+          speed: 1,
+          pitch: 0,
+          intonationScale: 1,
+        },
+        headers: { host: 'localhost:3000' },
+        socket: { remoteAddress: '127.0.0.1' } as NextApiRequest['socket'],
+      })
+      const res = createMockRes()
+
+      await handler(req, res)
+
+      expect(res._status).toBe(403)
+      expect(res._json).toEqual(
+        expect.objectContaining({
+          errorCode: 'ServerSecretAccessDenied',
+          feature: 'tts-aivisspeech',
+        })
+      )
+      expect(mockAxiosPost).not.toHaveBeenCalled()
+    }
+  )
+
+  it('should allow the default loopback AivisSpeech URL from the same machine', async () => {
+    process.env.AIVIS_SPEECH_SERVER_URL = 'http://localhost:10101'
+    delete process.env.AITUBERKIT_SERVER_SECRET_ACCESS_MODE
+    mockAxiosPost
+      .mockResolvedValueOnce({ data: {} })
+      .mockResolvedValueOnce({ data: new ArrayBuffer(0) })
+
+    const req = createMockReq({
+      body: {
+        text: 'test',
+        speaker: 1,
+        speed: 1,
+        pitch: 0,
+        intonationScale: 1,
+      },
+      headers: { host: 'localhost:3000' },
+      socket: { remoteAddress: '127.0.0.1' } as NextApiRequest['socket'],
+    })
+    const res = createMockRes()
+
+    await handler(req, res)
+
+    expect(res._status).toBe(200)
+    expect(mockAxiosPost).toHaveBeenCalledTimes(2)
+    expect(mockAxiosPost.mock.calls[0][0]).toContain(
+      'http://localhost:10101/audio_query'
+    )
+  })
+
   it('should guard explicitly provided localhost AivisSpeech URL by default', async () => {
     delete process.env.AITUBERKIT_SERVER_SECRET_ACCESS_MODE
 

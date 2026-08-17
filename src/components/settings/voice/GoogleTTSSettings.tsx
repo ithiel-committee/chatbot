@@ -2,6 +2,7 @@ import { useTranslation } from 'react-i18next'
 
 import settingsStore from '@/features/stores/settings'
 import { Link } from '../../link'
+import { settingsControlClass } from '@/components/settings/formStyles'
 
 interface GoogleTTSSettingsProps {
   googleTtsType: string
@@ -34,7 +35,7 @@ export const GoogleTTSSettings = ({
       <div className="mt-4 font-bold">{t('LanguageChoice')}</div>
       <div className="mt-2">
         <input
-          className="text-ellipsis px-4 py-2 w-full bg-white hover:bg-white-hover rounded-lg"
+          className={settingsControlClass.medium}
           type="text"
           placeholder="..."
           value={googleTtsType}

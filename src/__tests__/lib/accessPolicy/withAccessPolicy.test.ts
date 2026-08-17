@@ -473,6 +473,57 @@ describe('withAccessPolicy: server-secret（dynamic）', () => {
     expect(res._status).toBe(200)
   })
 
+  it('動的URLは同一マシンのループバック接続だけ既定モードで許可する', async () => {
+    const wrapped = withAccessPolicy(policy(), async (_req, res, gate) => {
+      if (
+        !gate.guardServerSecret(true, {
+          allowLocalLoopbackUrl: new URL('http://127.0.0.1:11434'),
+        })
+      ) {
+        return
+      }
+      res.status(200).json({ ok: true })
+    })
+    const res = createMockRes()
+
+    await wrapped(
+      createMockReq({
+        headers: { host: 'localhost:3000' },
+        socket: { remoteAddress: '127.0.0.1' } as never,
+      }),
+      res
+    )
+
+    expect(res._status).toBe(200)
+  })
+
+  it('動的ループバックURLでもリモート要求は既定モードで拒否する', async () => {
+    const wrapped = withAccessPolicy(policy(), async (_req, res, gate) => {
+      if (
+        !gate.guardServerSecret(true, {
+          allowLocalLoopbackUrl: new URL('http://127.0.0.1:11434'),
+        })
+      ) {
+        return
+      }
+      res.status(200).json({ ok: true })
+    })
+    const res = createMockRes()
+
+    await wrapped(
+      createMockReq({
+        headers: { host: 'aituberkit.example.com' },
+        socket: { remoteAddress: '198.51.100.20' } as never,
+      }),
+      res
+    )
+
+    expect(res._status).toBe(403)
+    expect(res._json).toEqual(
+      expect.objectContaining({ errorCode: 'ServerSecretAccessDenied' })
+    )
+  })
+
   it('dynamic以外のルートで guardServerSecret を呼ぶとthrow', async () => {
     const wrapped = withAccessPolicy(
       basePolicy({ secret: { kind: 'none' } }),

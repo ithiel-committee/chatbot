@@ -220,7 +220,8 @@ export class PNGTuberEngine implements IPNGTuberEngine {
   async playAudioFromBuffer(
     audioData: ArrayBuffer,
     isNeedDecode: boolean,
-    onFinish?: () => void
+    onFinish?: () => void,
+    onStart?: () => void
   ): Promise<void> {
     await this.initAudioContext()
 
@@ -246,7 +247,7 @@ export class PNGTuberEngine implements IPNGTuberEngine {
       decodedAudio.getChannelData(0).set(floatData)
     }
 
-    await this.playAudioWithLipSync(decodedAudio, onFinish)
+    await this.playAudioWithLipSync(decodedAudio, onFinish, onStart)
   }
 
   /**
@@ -254,7 +255,8 @@ export class PNGTuberEngine implements IPNGTuberEngine {
    */
   async playAudioWithLipSync(
     audioBuffer: AudioBuffer,
-    onFinish?: () => void
+    onFinish?: () => void,
+    onStart?: () => void
   ): Promise<void> {
     await this.initAudioContext()
 
@@ -309,6 +311,7 @@ export class PNGTuberEngine implements IPNGTuberEngine {
 
     // 再生開始
     this.currentSource.start()
+    onStart?.()
     logger.log(
       '[PNGTuber] Audio started, context state:',
       this.audioContext.state

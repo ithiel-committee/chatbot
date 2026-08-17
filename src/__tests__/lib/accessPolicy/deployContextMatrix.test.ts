@@ -21,7 +21,7 @@ async function invoke(
   policyPath: KnownApiPath,
   reqOverrides: Partial<NextApiRequest> = {}
 ) {
-  const handler = jest.fn(async (_req, res) => {
+  const handler = jest.fn(async (_req, res, _gate) => {
     res.status(200).json({ ok: true })
   })
   const wrapped = withAccessPolicy(routePolicies[policyPath], handler)
@@ -77,8 +77,22 @@ describe('プロファイル: self-host（既定 = serverSecretMode: disabled, F
     expect(handler).not.toHaveBeenCalled()
   })
 
-  it('ローカル既定URLのVOICEVOXは拒否される（プロキシ悪用防止）', async () => {
-    const { res } = await invoke('/api/tts-voicevox', { body: {} })
+  it('ローカルアプリからのVOICEVOX既定URLは通過する', async () => {
+    const { handler } = await invoke('/api/tts-voicevox', {
+      body: {},
+      headers: { host: 'localhost:3000' },
+    })
+    expect(handler).toHaveBeenCalled()
+  })
+
+  it('リモートからのVOICEVOX既定URLは拒否される（プロキシ悪用防止）', async () => {
+    const { res } = await invoke('/api/tts-voicevox', {
+      body: {},
+      headers: { host: 'aituberkit.example.com' },
+      socket: {
+        remoteAddress: '198.51.100.20',
+      } as NextApiRequest['socket'],
+    })
     expect(res._status).toBe(403)
   })
 
@@ -109,6 +123,20 @@ describe('プロファイル: self-host（サーバーキー利用 = unprotected
   it('ローカル既定URLのVOICEVOXが通過する', async () => {
     const { handler } = await invoke('/api/tts-voicevox', { body: {} })
     expect(handler).toHaveBeenCalled()
+  })
+
+  it('ローカル既定URLのAivisSpeechが通過する', async () => {
+    const { handler } = await invoke('/api/tts-aivisspeech', { body: {} })
+    expect(handler).toHaveBeenCalled()
+    expect(handler).toHaveBeenCalledWith(
+      expect.anything(),
+      expect.anything(),
+      expect.objectContaining({
+        serverUrl: expect.objectContaining({
+          raw: 'http://localhost:10101',
+        }),
+      })
+    )
   })
 
   it('常時ガードのtts-googleが通過する', async () => {

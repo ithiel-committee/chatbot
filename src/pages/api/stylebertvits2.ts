@@ -97,7 +97,11 @@ async function handler(
     return res.status(400).json({ error: 'Server URL is not allowed' })
   }
 
-  if (!gate.guardServerSecret(usesServerSecret || isProtectedServerResource)) {
+  if (
+    !gate.guardServerSecret(usesServerSecret || isProtectedServerResource, {
+      allowLocalLoopbackUrl: parsedUrl,
+    })
+  ) {
     return
   }
 

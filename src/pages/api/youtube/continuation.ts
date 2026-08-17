@@ -11,6 +11,7 @@ import { RequestContext } from '@mastra/core/request-context'
 import { withAccessPolicy } from '@/lib/accessPolicy/withAccessPolicy'
 import type { PolicyGate } from '@/lib/accessPolicy/withAccessPolicy'
 import { routePolicies } from '@/lib/accessPolicy/routePolicies'
+import { guardLocalLlmUrl } from '@/lib/accessPolicy/guardLocalLlmUrl'
 
 async function handler(
   req: NextApiRequest,
@@ -64,14 +65,15 @@ async function handler(
   }
 
   // ローカルLLMのURL検証
-  if (
-    isVercelLocalAIService(aiService) &&
-    aiService !== 'custom-api' &&
-    !localLlmUrl
-  ) {
-    return res
-      .status(400)
-      .json({ error: 'Empty Local LLM URL', errorCode: 'EmptyLocalLLMURL' })
+  if (isVercelLocalAIService(aiService) && aiService !== 'custom-api') {
+    if (!localLlmUrl) {
+      return res
+        .status(400)
+        .json({ error: 'Empty Local LLM URL', errorCode: 'EmptyLocalLLMURL' })
+    }
+    if (!guardLocalLlmUrl(res, gate, localLlmUrl)) {
+      return
+    }
   }
 
   // Azureのエンドポイントとデプロイメント名の処理

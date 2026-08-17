@@ -1,11 +1,16 @@
 import { useTranslation } from 'react-i18next'
 import settingsStore from '@/features/stores/settings'
-import { TextButton } from '../textButton'
+import { settingsControlClass } from '@/components/settings/formStyles'
 import { ToggleSwitch } from '../toggleSwitch'
 import Image from 'next/image'
 import { WhisperTranscriptionModel } from '@/features/constants/settings'
 import { Link } from '../link'
 import { getOpenAIWhisperModels } from '@/features/constants/aiModels'
+import { KeyboardShortcutInput } from '@/components/settings/KeyboardShortcutInput'
+import {
+  DEFAULT_SETTINGS_TOGGLE_SHORTCUT,
+  DEFAULT_VOICE_INPUT_SHORTCUT,
+} from '@/utils/keyboardShortcut'
 
 const SpeechInput = () => {
   const noSpeechTimeout = settingsStore((s) => s.noSpeechTimeout)
@@ -21,6 +26,11 @@ const SpeechInput = () => {
   const initialSpeechTimeout = settingsStore((s) => s.initialSpeechTimeout)
   const realtimeAPIMode = settingsStore((s) => s.realtimeAPIMode)
   const audioMode = settingsStore((s) => s.audioMode)
+  const voiceInputShortcut =
+    settingsStore((s) => s.voiceInputShortcut) || DEFAULT_VOICE_INPUT_SHORTCUT
+  const settingsToggleShortcut =
+    settingsStore((s) => s.settingsToggleShortcut) ||
+    DEFAULT_SETTINGS_TOGGLE_SHORTCUT
 
   const { t } = useTranslation()
 
@@ -30,7 +40,10 @@ const SpeechInput = () => {
       label: m,
     }))
 
-  // realtimeAPIモードかaudioモードがオンの場合はボタンを無効化
+  // realtimeAPIモードかaudioモードがオンの場合は音声認識方式を固定
+  const isLiveTranscriptionMode = speechRecognitionMode === 'live-transcription'
+  const supportsSpeechTimeouts =
+    speechRecognitionMode === 'browser' || isLiveTranscriptionMode
   const isSpeechModeSwitchDisabled = realtimeAPIMode || audioMode
 
   return (
@@ -57,23 +70,51 @@ const SpeechInput = () => {
             {t('SpeechRecognitionModeDisabledInfo')}
           </div>
         )}
-        <div className="mt-2">
-          <TextButton
-            onClick={() =>
+        <div className="mt-4">
+          <select
+            id="speech-recognition-mode-select"
+            className={settingsControlClass.medium}
+            value={speechRecognitionMode}
+            onChange={(e) =>
               settingsStore.setState({
-                speechRecognitionMode:
-                  speechRecognitionMode === 'browser' ? 'whisper' : 'browser',
+                speechRecognitionMode: e.target.value as
+                  | 'browser'
+                  | 'whisper'
+                  | 'live-transcription',
               })
             }
             disabled={isSpeechModeSwitchDisabled}
+            data-testid="speech-recognition-mode-select"
           >
-            {speechRecognitionMode === 'browser'
-              ? t('BrowserSpeechRecognition')
-              : t('WhisperSpeechRecognition')}
-          </TextButton>
+            <option value="browser">{t('BrowserSpeechRecognition')}</option>
+            <option value="whisper">{t('WhisperSpeechRecognition')}</option>
+            <option value="live-transcription">
+              {t('LiveTranscriptionSpeechRecognition')}
+            </option>
+          </select>
         </div>
+        {isLiveTranscriptionMode && (
+          <div className="my-4 text-sm whitespace-pre-wrap">
+            {t('LiveTranscriptionInfo')}
+          </div>
+        )}
       </div>
-      {speechRecognitionMode === 'whisper' && (
+      <div className="border-t border-gray-300 pt-6 my-6">
+        <div className="my-4 text-xl font-bold">{t('VoiceInputShortcut')}</div>
+        <div className="my-2 text-sm whitespace-pre-wrap">
+          {t('VoiceInputShortcutInfo')}
+        </div>
+        <KeyboardShortcutInput
+          value={voiceInputShortcut}
+          defaultValue={DEFAULT_VOICE_INPUT_SHORTCUT}
+          onChange={(shortcut) =>
+            settingsStore.setState({ voiceInputShortcut: shortcut })
+          }
+          conflictsWith={[settingsToggleShortcut]}
+          testId="voice-input-shortcut-input"
+        />
+      </div>
+      {(speechRecognitionMode === 'whisper' || isLiveTranscriptionMode) && (
         <>
           <div className="my-6">
             <div className="my-4 text-xl font-bold">
@@ -88,7 +129,7 @@ const SpeechInput = () => {
               />
             </div>
             <input
-              className="text-ellipsis px-4 py-2 w-full md:w-1/2 bg-white hover:bg-white-hover rounded-lg"
+              className={settingsControlClass.long}
               type="text"
               placeholder="sk-..."
               value={openaiKey}
@@ -97,34 +138,36 @@ const SpeechInput = () => {
               }
             />
           </div>
-          <div className="mt-6">
-            <div className="mb-4 text-xl font-bold">
-              {t('WhisperTranscriptionModel')}
+          {speechRecognitionMode === 'whisper' && (
+            <div className="mt-6">
+              <div className="mb-4 text-xl font-bold">
+                {t('WhisperTranscriptionModel')}
+              </div>
+              <div className="my-2 text-sm whitespace-pre-wrap">
+                {t('WhisperTranscriptionModelInfo')}
+              </div>
+              <select
+                id="whisper-model-select"
+                className={settingsControlClass.medium}
+                value={whisperTranscriptionModel}
+                onChange={(e) =>
+                  settingsStore.setState({
+                    whisperTranscriptionModel: e.target
+                      .value as WhisperTranscriptionModel,
+                  })
+                }
+              >
+                {whisperModels.map((model) => (
+                  <option key={model.value} value={model.value}>
+                    {model.label}
+                  </option>
+                ))}
+              </select>
             </div>
-            <div className="my-2 text-sm whitespace-pre-wrap">
-              {t('WhisperTranscriptionModelInfo')}
-            </div>
-            <select
-              id="whisper-model-select"
-              className="px-4 py-2 bg-white hover:bg-white-hover rounded-lg w-full md:w-1/2"
-              value={whisperTranscriptionModel}
-              onChange={(e) =>
-                settingsStore.setState({
-                  whisperTranscriptionModel: e.target
-                    .value as WhisperTranscriptionModel,
-                })
-              }
-            >
-              {whisperModels.map((model) => (
-                <option key={model.value} value={model.value}>
-                  {model.label}
-                </option>
-              ))}
-            </select>
-          </div>
+          )}
         </>
       )}
-      {speechRecognitionMode === 'browser' && !realtimeAPIMode && (
+      {supportsSpeechTimeouts && !realtimeAPIMode && (
         <>
           <div className="my-6">
             <div className="my-4 text-xl font-bold">
@@ -190,19 +233,21 @@ const SpeechInput = () => {
               />
             </div>
           </div>
-          <div className="my-6">
-            <div className="my-4 text-xl font-bold">{t('ContinuousMic')}</div>
-            <div className="my-2 text-sm whitespace-pre-wrap">
-              {t('ContinuousMicInfo')}
+          {speechRecognitionMode === 'browser' && (
+            <div className="my-6">
+              <div className="my-4 text-xl font-bold">{t('ContinuousMic')}</div>
+              <div className="my-2 text-sm whitespace-pre-wrap">
+                {t('ContinuousMicInfo')}
+              </div>
+              <ToggleSwitch
+                enabled={continuousMicListeningMode}
+                onChange={(v) =>
+                  settingsStore.setState({ continuousMicListeningMode: v })
+                }
+                testId="continuous-mic-listening-toggle"
+              />
             </div>
-            <ToggleSwitch
-              enabled={continuousMicListeningMode}
-              onChange={(v) =>
-                settingsStore.setState({ continuousMicListeningMode: v })
-              }
-              testId="continuous-mic-listening-toggle"
-            />
-          </div>
+          )}
         </>
       )}
     </div>

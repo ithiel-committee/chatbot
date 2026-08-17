@@ -62,6 +62,25 @@ export type DifyService = 'dify'
 
 export type AIService = VercelAIService | DifyService
 
+export const AI_SERVICES = [
+  'openai',
+  'anthropic',
+  'google',
+  'azure',
+  'xai',
+  'groq',
+  'cohere',
+  'mistralai',
+  'perplexity',
+  'fireworks',
+  'deepseek',
+  'openrouter',
+  'lmstudio',
+  'ollama',
+  'custom-api',
+  'dify',
+] as const satisfies readonly AIService[]
+
 export interface AIServiceConfig {
   openai: { key: string; model: string }
   anthropic: { key: string; model: string }
@@ -179,7 +198,7 @@ export type RealtimeAPIModeAzureVoice =
 export type AudioModeModel = string
 export type AudioModeInputType = 'input_text' | 'input_audio'
 
-export type SpeechRecognitionMode = 'browser' | 'whisper'
+export type SpeechRecognitionMode = 'browser' | 'whisper' | 'live-transcription'
 
 export type WhisperTranscriptionModel = (typeof openAIWhisperModels)[number]
 
@@ -190,3 +209,4 @@ export type ReasoningEffort =
   | 'medium'
   | 'high'
   | 'xhigh'
+  | 'max'

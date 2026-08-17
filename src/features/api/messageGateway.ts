@@ -1,10 +1,33 @@
+import { randomUUID } from 'crypto'
 import { logger } from '@/lib/logger'
+import type {
+  PresentationActualState,
+  PresentationControlAction,
+  PresentationControlTarget,
+} from '@/features/presentation/presentationTypes'
+import type {
+  ReceiverCapability,
+  ReceiverKind,
+} from '@/features/api/receiverRegistry'
 
 export type MessageType = 'direct_send' | 'ai_generate' | 'user_input'
 
-export type ApiCommandType = 'stop'
+export type ApiCommandType =
+  | 'stop'
+  | 'presentation.load'
+  | 'presentation.control'
 
 export type ApiStopMode = 'speech' | 'queue' | 'all'
+
+export interface ResponseCallback {
+  url: string
+  interactionId: string
+  token: string
+}
+
+export interface QueuedResponseCallback {
+  handle: string
+}
 
 export interface QueuedMessage {
   id: string
@@ -15,30 +38,72 @@ export interface QueuedMessage {
   useCurrentSystemPrompt?: boolean
   image?: string
   emotion?: string
+  /** 分割された同一回答を同じSpeakQueueセッションへ積むためのID。 */
+  speechSessionId?: string
   priority?: 'normal' | 'high'
   interrupt?: boolean
   source?: 'legacy' | 'v1'
+  responseCallback?: QueuedResponseCallback
 }
 
-export interface QueuedCommand {
+export interface QueuedStopCommand {
   id: string
   timestamp: number
-  command: ApiCommandType
+  command: 'stop'
   mode: ApiStopMode
   reason?: string
 }
 
+export interface QueuedPresentationLoadCommand {
+  id: string
+  timestamp: number
+  command: 'presentation.load'
+  presentationId: string
+  revision: number
+}
+
+export interface QueuedPresentationControlCommand {
+  id: string
+  timestamp: number
+  command: 'presentation.control'
+  action: PresentationControlAction
+  target?: PresentationControlTarget
+  speak?: boolean
+}
+
+export type QueuedCommand =
+  | QueuedStopCommand
+  | QueuedPresentationLoadCommand
+  | QueuedPresentationControlCommand
+
 export interface ClientStatus {
   clientId: string
+  configuredClientId?: string
+  receiverDisplayName?: string
+  receiverKind?: ReceiverKind
+  receiverCapabilities?: ReceiverCapability[]
   connected: boolean
   isSpeaking: boolean
+  activeSpeech?: { id: string; text: string } | null
   chatProcessing: boolean
   messageReceiverEnabled?: boolean
   modelType?: string
   aiService?: string
   voiceEngine?: string
   externalLinkageMode?: boolean
+  presentation?: PresentationActualState
   lastSeenAt: number
+}
+
+export interface ActiveReceiver {
+  receiverId: string
+  configuredClientId: string
+  displayName: string
+  kind: ReceiverKind
+  capabilities: ReceiverCapability[]
+  connected: true
+  isSpeaking: boolean
+  lastSeenAt: string
 }
 
 export interface ApiEvent {
@@ -47,10 +112,25 @@ export interface ApiEvent {
   clientId: string
   type:
     | 'message_queued'
+    | 'command_queued'
     | 'messages_fetched'
     | 'stop_requested'
     | 'commands_fetched'
     | 'status_updated'
+    | 'speech_started'
+    | 'speech_ended'
+    | 'speech_chunk_started'
+    | 'speech_chunk_ended'
+    | 'presentation_registered'
+    | 'presentation_assigned'
+    | 'presentation_loaded'
+    | 'presentation_started'
+    | 'slide_changed'
+    | 'section_paused'
+    | 'presentation_paused'
+    | 'presentation_completed'
+    | 'presentation_unloaded'
+    | 'presentation_error'
   payload?: Record<string, unknown>
 }
 
@@ -63,6 +143,11 @@ interface ClientQueue {
 interface MessageGatewayState {
   queuesPerClient: Record<string, ClientQueue>
   statusesPerClient: Record<string, ClientStatus>
+  activeSpeechVersionsPerClient: Record<string, number>
+  responseCallbacks: Record<
+    string,
+    ResponseCallback & { expiresAt: number; claimed: boolean }
+  >
   recentEvents: ApiEvent[]
   eventListeners: Array<(event: ApiEvent) => void>
 }
@@ -75,12 +160,16 @@ export interface EnqueueMessagesParams {
   useCurrentSystemPrompt?: boolean
   image?: string
   emotion?: string
+  speechSessionId?: string
   priority?: 'normal' | 'high'
   interrupt?: boolean
   source?: 'legacy' | 'v1'
+  responseCallback?: ResponseCallback
 }
 
 const CLIENT_TIMEOUT = 1000 * 60 * 5
+const ACTIVE_RECEIVER_WINDOW = 1000 * 10
+const RESPONSE_CALLBACK_TIMEOUT = 1000 * 60 * 30
 const RECENT_EVENT_LIMIT = 100
 
 const getGatewayState = (): MessageGatewayState => {
@@ -92,10 +181,14 @@ const getGatewayState = (): MessageGatewayState => {
     globalState.__aituberKitMessageGateway = {
       queuesPerClient: {},
       statusesPerClient: {},
+      activeSpeechVersionsPerClient: {},
+      responseCallbacks: {},
       recentEvents: [],
       eventListeners: [],
     }
   }
+
+  globalState.__aituberKitMessageGateway.responseCallbacks ??= {}
 
   return globalState.__aituberKitMessageGateway
 }
@@ -176,8 +269,41 @@ export const cleanupClientQueues = () => {
   for (const clientId of Object.keys(state.statusesPerClient)) {
     if (now - state.statusesPerClient[clientId].lastSeenAt > CLIENT_TIMEOUT) {
       delete state.statusesPerClient[clientId]
+      delete state.activeSpeechVersionsPerClient[clientId]
     }
   }
+  for (const handle of Object.keys(state.responseCallbacks)) {
+    if (state.responseCallbacks[handle].expiresAt <= now) {
+      delete state.responseCallbacks[handle]
+    }
+  }
+}
+
+const queueResponseCallback = (callback: ResponseCallback) => {
+  const handle = `callback_${randomUUID().replaceAll('-', '')}`
+  getGatewayState().responseCallbacks[handle] = {
+    ...callback,
+    expiresAt: Date.now() + RESPONSE_CALLBACK_TIMEOUT,
+    claimed: false,
+  }
+  return { handle }
+}
+
+export const claimResponseCallback = (handle: string) => {
+  cleanupClientQueues()
+  const callback = getGatewayState().responseCallbacks[handle]
+  if (!callback || callback.claimed) return null
+  callback.claimed = true
+  return callback
+}
+
+export const releaseResponseCallback = (handle: string) => {
+  const callback = getGatewayState().responseCallbacks[handle]
+  if (callback) callback.claimed = false
+}
+
+export const completeResponseCallback = (handle: string) => {
+  delete getGatewayState().responseCallbacks[handle]
 }
 
 export const enqueueMessages = ({
@@ -188,30 +314,48 @@ export const enqueueMessages = ({
   useCurrentSystemPrompt,
   image,
   emotion,
+  speechSessionId,
   priority = 'normal',
   interrupt = false,
   source = 'v1',
+  responseCallback,
 }: EnqueueMessagesParams): QueuedMessage[] => {
   cleanupClientQueues()
 
   const queue = getOrCreateQueue(clientId)
   const timestamp = Date.now()
-  const queuedMessages = messages.map((message) => ({
-    id: createId('msg'),
-    timestamp,
-    message,
-    type,
-    systemPrompt,
-    useCurrentSystemPrompt,
-    image,
-    emotion,
-    priority,
-    interrupt,
-    source,
-  }))
+  const queuedMessages = messages.map((message) => {
+    const queuedResponseCallback = responseCallback
+      ? queueResponseCallback(responseCallback)
+      : undefined
+    return {
+      id: createId('msg'),
+      timestamp,
+      message,
+      type,
+      systemPrompt,
+      useCurrentSystemPrompt,
+      image,
+      emotion,
+      speechSessionId,
+      priority,
+      interrupt,
+      source,
+      responseCallback: queuedResponseCallback,
+    }
+  })
 
   if (priority === 'high') {
-    queue.messages.unshift(...queuedMessages)
+    const lastSessionMessageIndex = speechSessionId
+      ? queue.messages.findLastIndex(
+          (message) => message.speechSessionId === speechSessionId
+        )
+      : -1
+    if (lastSessionMessageIndex >= 0) {
+      queue.messages.splice(lastSessionMessageIndex + 1, 0, ...queuedMessages)
+    } else {
+      queue.messages.unshift(...queuedMessages)
+    }
   } else {
     queue.messages.push(...queuedMessages)
   }
@@ -247,11 +391,11 @@ export const enqueueStopCommand = (
   clientId: string,
   mode: ApiStopMode = 'all',
   reason?: string
-): QueuedCommand => {
+): QueuedStopCommand => {
   cleanupClientQueues()
 
   const queue = getOrCreateQueue(clientId)
-  const command: QueuedCommand = {
+  const command: QueuedStopCommand = {
     id: createId('cmd'),
     timestamp: Date.now(),
     command: 'stop',
@@ -263,6 +407,54 @@ export const enqueueStopCommand = (
   queue.lastAccessed = command.timestamp
   emitApiEvent(clientId, 'stop_requested', { commandId: command.id, mode })
 
+  return command
+}
+
+export const enqueuePresentationLoadCommand = (
+  clientId: string,
+  presentationId: string,
+  revision: number
+): QueuedPresentationLoadCommand => {
+  cleanupClientQueues()
+  const queue = getOrCreateQueue(clientId)
+  const command: QueuedPresentationLoadCommand = {
+    id: createId('cmd'),
+    timestamp: Date.now(),
+    command: 'presentation.load',
+    presentationId,
+    revision,
+  }
+  queue.commands.push(command)
+  queue.lastAccessed = command.timestamp
+  emitApiEvent(clientId, 'command_queued', {
+    commandId: command.id,
+    commandType: command.command,
+  })
+  return command
+}
+
+export const enqueuePresentationControlCommand = (
+  clientId: string,
+  action: PresentationControlAction,
+  target?: PresentationControlTarget,
+  speak?: boolean
+): QueuedPresentationControlCommand => {
+  cleanupClientQueues()
+  const queue = getOrCreateQueue(clientId)
+  const command: QueuedPresentationControlCommand = {
+    id: createId('cmd'),
+    timestamp: Date.now(),
+    command: 'presentation.control',
+    action,
+    target,
+    speak,
+  }
+  queue.commands.push(command)
+  queue.lastAccessed = command.timestamp
+  emitApiEvent(clientId, 'command_queued', {
+    commandId: command.id,
+    commandType: command.command,
+  })
   return command
 }
 
@@ -282,12 +474,37 @@ export const dequeueCommands = (clientId: string): QueuedCommand[] => {
   return commands
 }
 
+const emitSpeechChunkTransition = (
+  clientId: string,
+  previousSpeech: ClientStatus['activeSpeech'],
+  nextSpeech: ClientStatus['activeSpeech']
+) => {
+  if (previousSpeech?.id === nextSpeech?.id) return
+  if (previousSpeech) {
+    emitApiEvent(clientId, 'speech_chunk_ended', {
+      speechChunkId: previousSpeech.id,
+    })
+  }
+  if (nextSpeech) {
+    emitApiEvent(clientId, 'speech_chunk_started', {
+      speechChunkId: nextSpeech.id,
+      text: nextSpeech.text,
+    })
+  }
+}
+
 export const updateClientStatus = (
   clientId: string,
   status: Omit<ClientStatus, 'clientId' | 'lastSeenAt'>
 ): ClientStatus => {
+  const previousStatus = getGatewayState().statusesPerClient[clientId]
+  const activeSpeech =
+    status.activeSpeech === undefined
+      ? (previousStatus?.activeSpeech ?? null)
+      : status.activeSpeech
   const nextStatus: ClientStatus = {
     ...status,
+    activeSpeech,
     clientId,
     lastSeenAt: Date.now(),
   }
@@ -299,11 +516,150 @@ export const updateClientStatus = (
     chatProcessing: nextStatus.chatProcessing,
   })
 
+  if (
+    previousStatus
+      ? previousStatus.isSpeaking !== nextStatus.isSpeaking
+      : nextStatus.isSpeaking
+  ) {
+    emitApiEvent(
+      clientId,
+      nextStatus.isSpeaking ? 'speech_started' : 'speech_ended',
+      {
+        isSpeaking: nextStatus.isSpeaking,
+        chatProcessing: nextStatus.chatProcessing,
+      }
+    )
+  }
+
+  emitSpeechChunkTransition(
+    clientId,
+    previousStatus?.activeSpeech ?? null,
+    nextStatus.activeSpeech ?? null
+  )
+
+  const previousPresentation = previousStatus?.presentation
+  const presentation = nextStatus.presentation
+  if (
+    previousPresentation?.presentationId &&
+    (!presentation?.presentationId || presentation.state === 'unassigned')
+  ) {
+    emitApiEvent(clientId, 'presentation_unloaded', {
+      presentationId: previousPresentation.presentationId,
+      revision: previousPresentation.revision,
+    })
+  } else if (presentation?.presentationId) {
+    const payload = {
+      presentationId: presentation.presentationId,
+      revision: presentation.revision,
+      sectionId: presentation.sectionId,
+      slideId: presentation.slideId,
+      state: presentation.state,
+    }
+    if (
+      presentation.state !== 'loading' &&
+      presentation.state !== 'error' &&
+      (previousPresentation?.presentationId !== presentation.presentationId ||
+        previousPresentation?.revision !== presentation.revision ||
+        previousPresentation?.state === 'loading' ||
+        previousPresentation?.state === 'error')
+    ) {
+      emitApiEvent(clientId, 'presentation_loaded', payload)
+    }
+    if (
+      presentation.state !== 'loading' &&
+      previousPresentation?.slideId !== presentation.slideId
+    ) {
+      emitApiEvent(clientId, 'slide_changed', payload)
+    }
+    if (previousPresentation?.state !== presentation.state) {
+      const eventByState: Partial<
+        Record<PresentationActualState['state'], ApiEvent['type']>
+      > = {
+        playing: 'presentation_started',
+        paused: 'presentation_paused',
+        section_paused: 'section_paused',
+        completed: 'presentation_completed',
+        error: 'presentation_error',
+      }
+      const eventType = eventByState[presentation.state]
+      if (eventType) emitApiEvent(clientId, eventType, payload)
+    }
+  }
+
+  return nextStatus
+}
+
+export const updateClientActiveSpeech = (
+  clientId: string,
+  activeSpeech: ClientStatus['activeSpeech'],
+  version?: number
+): ClientStatus | null => {
+  const state = getGatewayState()
+  const previousStatus = state.statusesPerClient[clientId]
+  if (!previousStatus) return null
+  if (
+    version !== undefined &&
+    version <= (state.activeSpeechVersionsPerClient[clientId] ?? -1)
+  ) {
+    return previousStatus
+  }
+  if (version !== undefined) {
+    state.activeSpeechVersionsPerClient[clientId] = version
+  }
+
+  const previousSpeech = previousStatus.activeSpeech ?? null
+  const nextSpeech = activeSpeech ?? null
+  const nextStatus: ClientStatus = {
+    ...previousStatus,
+    activeSpeech: nextSpeech,
+    lastSeenAt: Date.now(),
+  }
+  state.statusesPerClient[clientId] = nextStatus
+  emitSpeechChunkTransition(clientId, previousSpeech, nextSpeech)
   return nextStatus
 }
 
 export const getClientStatus = (clientId: string): ClientStatus | null =>
   getGatewayState().statusesPerClient[clientId] ?? null
+
+const defaultReceiverCapabilities = (
+  status: ClientStatus
+): ReceiverCapability[] => [
+  'presentation',
+  ...(status.messageReceiverEnabled ? (['chat', 'speech'] as const) : []),
+]
+
+const toActiveReceiver = (status: ClientStatus): ActiveReceiver => ({
+  receiverId: status.clientId,
+  configuredClientId: status.configuredClientId ?? status.clientId,
+  displayName:
+    status.receiverDisplayName ??
+    `AITuberKit ${status.clientId.slice(-8) || status.clientId}`,
+  kind: status.receiverKind ?? 'legacy',
+  capabilities:
+    status.receiverCapabilities ?? defaultReceiverCapabilities(status),
+  connected: true,
+  isSpeaking: status.isSpeaking,
+  lastSeenAt: new Date(status.lastSeenAt).toISOString(),
+})
+
+export const listActiveReceivers = (now = Date.now()): ActiveReceiver[] => {
+  cleanupClientQueues()
+  const activeStatuses = Object.values(getGatewayState().statusesPerClient)
+    .filter(
+      (status) =>
+        status.connected && now - status.lastSeenAt <= ACTIVE_RECEIVER_WINDOW
+    )
+    .sort((left, right) => right.lastSeenAt - left.lastSeenAt)
+  const registeredReceivers = activeStatuses.filter(
+    (status) => status.receiverKind && status.receiverKind !== 'legacy'
+  )
+  return (
+    registeredReceivers.length > 0
+      ? registeredReceivers
+      : activeStatuses.filter((status) => status.receiverKind !== 'legacy')
+  ).map(toActiveReceiver)
+}
 
 export const getClientQueueSummary = (clientId: string) => {
   const queue = getQueueIfExists(clientId)
@@ -320,6 +676,8 @@ export const __resetMessageGatewayForTests = () => {
 
   state.queuesPerClient = {}
   state.statusesPerClient = {}
+  state.activeSpeechVersionsPerClient = {}
+  state.responseCallbacks = {}
   state.recentEvents = []
   state.eventListeners = []
 }

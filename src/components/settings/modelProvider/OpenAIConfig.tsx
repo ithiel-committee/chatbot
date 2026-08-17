@@ -9,6 +9,7 @@ import { ApiKeyInput } from './ApiKeyInput'
 import { ModelSelector } from './ModelSelector'
 import { MultiModalToggle } from './MultiModalToggle'
 import { ModelCapabilityLegend } from '@/components/settings/modelProvider/ModelCapabilityLegend'
+import { settingsControlClass } from '@/components/settings/formStyles'
 import {
   getModels,
   getOpenAIRealtimeModels,
@@ -127,7 +128,7 @@ export const OpenAIConfig = ({
             {t('RealtimeAPIModeContentType')}
           </div>
           <select
-            className="px-4 py-2 w-full sm:w-col-span-2 bg-white hover:bg-white-hover rounded-lg"
+            className={settingsControlClass.compact}
             value={realtimeAPIModeContentType}
             onChange={(e) => {
               settingsStore.setState({
@@ -142,7 +143,7 @@ export const OpenAIConfig = ({
 
           <div className="my-4 font-bold">{t('RealtimeAPIModeVoice')}</div>
           <select
-            className="px-4 py-2 w-full sm:w-col-span-2 bg-white hover:bg-white-hover rounded-lg"
+            className={settingsControlClass.compact}
             value={realtimeAPIModeVoice}
             onChange={(e) => {
               settingsStore.setState({
@@ -163,7 +164,7 @@ export const OpenAIConfig = ({
           <div className="my-6">
             <div className="my-4 font-bold">{t('SelectModel')}</div>
             <select
-              className="px-4 py-2 w-full sm:w-col-span-2 bg-white hover:bg-white-hover rounded-lg"
+              className={settingsControlClass.medium}
               value={selectAIModel}
               onChange={(e) => handleModelChange(e.target.value)}
             >
@@ -193,7 +194,7 @@ export const OpenAIConfig = ({
             {t('RealtimeAPIModeContentType')}
           </div>
           <select
-            className="px-4 py-2 w-full sm:w-col-span-2 bg-white hover:bg-white-hover rounded-lg"
+            className={settingsControlClass.compact}
             value={audioModeInputType}
             onChange={(e) => {
               settingsStore.setState({
@@ -207,7 +208,7 @@ export const OpenAIConfig = ({
 
           <div className="my-4 font-bold">{t('RealtimeAPIModeVoice')}</div>
           <select
-            className="px-4 py-2 w-full sm:w-col-span-2 bg-white hover:bg-white-hover rounded-lg"
+            className={settingsControlClass.compact}
             value={audioModeVoice}
             onChange={(e) => {
               settingsStore.setState({
@@ -226,7 +227,7 @@ export const OpenAIConfig = ({
           <div className="my-6">
             <div className="my-4 font-bold">{t('SelectModel')}</div>
             <select
-              className="px-4 py-2 w-full sm:w-col-span-2 bg-white hover:bg-white-hover rounded-lg"
+              className={settingsControlClass.medium}
               value={selectAIModel}
               onChange={(e) => handleModelChange(e.target.value)}
             >

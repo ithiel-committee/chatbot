@@ -74,6 +74,25 @@ describe('vercelAIChat', () => {
     { role: 'user', content: 'こんにちは', timestamp: '2023-01-01T00:00:01Z' },
   ]
 
+  const mockCustomOpenAISettings = () => {
+    const mockedGetState = settingsStore.getState as jest.Mock
+    mockedGetState.mockReturnValue({
+      selectAIService: 'openai',
+      openaiKey: 'test-openai-key',
+      selectAIModel: 'gpt-5-pro',
+      localLlmUrl: '',
+      azureEndpoint: '',
+      useSearchGrounding: false,
+      temperature: 0.7,
+      maxTokens: 1000,
+      reasoningMode: true,
+      reasoningEffort: 'low',
+      reasoningTokenBudget: 8192,
+      customModel: true,
+      selectLanguage: 'ja',
+    })
+  }
+
   describe('getVercelAIChatResponse', () => {
     it('正常なレスポンスを処理する', async () => {
       mockFetch.mockResolvedValueOnce({
@@ -123,6 +142,19 @@ describe('vercelAIChat', () => {
       expect(result.text).toBe('Errors.InvalidAPIKey')
     })
 
+    it('customModel設定をVercel APIへ渡す', async () => {
+      mockCustomOpenAISettings()
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        json: jest.fn().mockResolvedValue({ text: 'response' }),
+      })
+
+      await getVercelAIChatResponse(testMessages)
+
+      const requestBody = JSON.parse(mockFetch.mock.calls[0][1].body)
+      expect(requestBody.customModel).toBe(true)
+    })
+
     it('カスタムAPIモードでシステムメッセージをフィルタリングする', async () => {
       ;(settingsStore.getState as jest.Mock).mockReturnValue({
         selectAIService: 'custom-api',
@@ -152,6 +184,28 @@ describe('vercelAIChat', () => {
   })
 
   describe('getVercelAIChatResponseStream', () => {
+    it('customModel設定をストリーミングAPIへ渡す', async () => {
+      mockCustomOpenAISettings()
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        headers: {
+          get: () => 'text/plain; charset=utf-8',
+        },
+        body: {
+          getReader: () => ({
+            read: jest.fn().mockResolvedValue({ done: true }),
+            releaseLock: jest.fn(),
+          }),
+        },
+      })
+
+      await getVercelAIChatResponseStream(testMessages)
+
+      const requestBody = JSON.parse(mockFetch.mock.calls[0][1].body)
+      expect(requestBody.customModel).toBe(true)
+    })
+
     it('ストリーミングレスポンスを正しく処理する', async () => {
       const mockReader = {
         read: jest.fn(),

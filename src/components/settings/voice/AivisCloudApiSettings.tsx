@@ -2,6 +2,7 @@ import { useTranslation } from 'react-i18next'
 
 import settingsStore from '@/features/stores/settings'
 import { Link } from '../../link'
+import { settingsControlClass } from '@/components/settings/formStyles'
 
 interface AivisCloudApiSettingsProps {
   aivisCloudApiKey: string
@@ -45,7 +46,7 @@ export const AivisCloudApiSettings = ({
       <div className="mt-4 font-bold">{t('APIKey')}</div>
       <div className="mt-2">
         <input
-          className="text-ellipsis px-4 py-2 w-full bg-white hover:bg-white-hover rounded-lg"
+          className={settingsControlClass.long}
           type="password"
           placeholder="Aivis Cloud API Key"
           value={aivisCloudApiKey}
@@ -59,7 +60,7 @@ export const AivisCloudApiSettings = ({
       <div className="mt-4 font-bold">{t('ModelUUID')}</div>
       <div className="mt-2">
         <input
-          className="text-ellipsis px-4 py-2 w-full bg-white hover:bg-white-hover rounded-lg"
+          className={settingsControlClass.medium}
           type="text"
           placeholder="a59cb814-..."
           value={aivisCloudModelUuid}
@@ -93,7 +94,7 @@ export const AivisCloudApiSettings = ({
             <div className="font-bold">{t('StyleName')}</div>
             <div className="mt-2">
               <input
-                className="text-ellipsis px-4 py-2 w-full bg-white hover:bg-white-hover rounded-lg"
+                className={settingsControlClass.compact}
                 type="text"
                 maxLength={20}
                 placeholder={t('StyleNamePlaceholder')}
@@ -111,7 +112,7 @@ export const AivisCloudApiSettings = ({
             <div className="font-bold">{t('StyleID')}</div>
             <div className="mt-2">
               <input
-                className="text-ellipsis px-4 py-2 w-full bg-white hover:bg-white-hover rounded-lg"
+                className={settingsControlClass.numeric}
                 type="number"
                 min="0"
                 max="31"

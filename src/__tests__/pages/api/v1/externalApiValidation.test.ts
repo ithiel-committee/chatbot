@@ -177,6 +177,52 @@ describe('/api/v1 validation and mode branches', () => {
       expect(res._status).toBe(400)
       expect(res._json).toEqual({ error: 'System prompt is not a string' })
     })
+
+    it.each([123, '', 'x'.repeat(201)])(
+      'rejects invalid speechSessionId on v1/speak: %p',
+      (speechSessionId) => {
+        const handler = require('@/pages/api/v1/speak').default
+        const res = createMockRes()
+
+        handler(
+          createMockReq({
+            method: 'POST',
+            headers: AUTH_HEADERS,
+            query: { clientId: 'client1' },
+            body: { text: 'hello', speechSessionId },
+          }),
+          res
+        )
+
+        expect(res._status).toBe(400)
+        expect(res._json).toEqual({ error: 'Invalid speech session ID' })
+      }
+    )
+
+    it('rejects a non-loopback response callback on v1/chat with 400', () => {
+      const handler = require('@/pages/api/v1/chat').default
+      const res = createMockRes()
+
+      handler(
+        createMockReq({
+          method: 'POST',
+          headers: AUTH_HEADERS,
+          query: { clientId: 'client1' },
+          body: {
+            text: 'hello',
+            responseCallback: {
+              url: 'https://example.com/callback',
+              interactionId: 'qa-question-1',
+              token: 'callback-token',
+            },
+          },
+        }),
+        res
+      )
+
+      expect(res._status).toBe(400)
+      expect(res._json).toEqual({ error: 'Invalid response callback' })
+    })
   })
 
   describe('authentication alternatives', () => {
@@ -237,7 +283,11 @@ describe('/api/v1 validation and mode branches', () => {
   describe('events SSE stream', () => {
     it('streams recent events with SSE headers when snapshot is not requested', () => {
       const speak = require('@/pages/api/v1/speak').default
+      const stop = require('@/pages/api/v1/stop').default
       const events = require('@/pages/api/v1/events').default
+      const {
+        enqueuePresentationControlCommand,
+      } = require('@/features/api/messageGateway')
 
       speak(
         createMockReq({
@@ -248,6 +298,16 @@ describe('/api/v1 validation and mode branches', () => {
         }),
         createMockRes()
       )
+      stop(
+        createMockReq({
+          method: 'POST',
+          headers: AUTH_HEADERS,
+          query: { clientId: 'client1' },
+          body: { mode: 'queue' },
+        }),
+        createMockRes()
+      )
+      enqueuePresentationControlCommand('client1', 'next_slide')
 
       const res = createMockRes()
       events(
@@ -263,6 +323,9 @@ describe('/api/v1 validation and mode branches', () => {
       expect(res._headers['Content-Type']).toBe('text/event-stream')
       expect(res._writes[0]).toBe(': connected\n\n')
       expect(res._writes.join('')).toContain('event: message_queued')
+      expect(res._writes.join('')).toContain('event: stop_requested')
+      expect(res._writes.join('')).toContain('event: command_queued')
+      res._emit('close')
     })
   })
 })
