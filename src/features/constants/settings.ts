@@ -118,24 +118,7 @@ export type AIVoice =
 
 export type Language = (typeof LANGUAGES)[number]
 
-export const LANGUAGES = [
-  'en',
-  'ja',
-  'ko',
-  'zh-CN',
-  'zh-TW',
-  'vi',
-  'fr',
-  'es',
-  'pt',
-  'de',
-  'ru',
-  'it',
-  'ar',
-  'hi',
-  'pl',
-  'th',
-] as const
+export const LANGUAGES = ['ja', 'en'] as const
 
 export const isLanguageSupported = (language: string): language is Language =>
   LANGUAGES.includes(language as Language)
