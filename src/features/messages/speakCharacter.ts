@@ -126,7 +126,6 @@ async function synthesizeVoice(
 ): Promise<ArrayBuffer | null> {
   const ss = settingsStore.getState()
 
-
   try {
     switch (voiceType) {
       case 'koeiromap':
