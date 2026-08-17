@@ -1,6 +1,7 @@
 {
   "name": "aituber-kit",
   "version": "0.1.0",
+  "packageManager": "pnpm@10.20.0",
   "private": true,
   
   "scripts": {
