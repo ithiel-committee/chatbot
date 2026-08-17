@@ -1,14 +1,14 @@
 import Head from 'next/head'
 import { isOfficialSite } from '@/utils/officialSite'
 
-export const SITE_NAME = 'AITuberKit'
+export const SITE_NAME = 'iThieL Chatbot'
 export const SITE_URL =
   process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, '') ||
   'https://aituberkit.com'
 export const SITE_TITLE =
-  'AITuberKit｜AIキャラクターとの会話・AITuber配信をブラウザで体験'
+  'iThieL Chatbot｜中央大学国際情報学部(iTL) AIキャラクター対話システム'
 export const SITE_DESCRIPTION =
-  'AITuberKitは、AIキャラクターとの会話やAITuber配信をブラウザで体験・構築できるオープンソースのツールキットです。VRM・Live2D・PNGTuber、各種LLM・音声合成、YouTubeコメント連携に対応しています。'
+  'iThieL Chatbotは、中央大学国際情報学部(iTL)のAIキャラクター「イティエル」とリアルタイムに対話・相談ができるWebアプリケーションです。'
 
 const serializeStructuredData = (value: unknown) =>
   JSON.stringify(value).replace(/</g, '\\u003c')
