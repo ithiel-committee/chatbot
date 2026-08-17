@@ -201,10 +201,14 @@ export async function dropImageOnChatInput(
 }
 
 export async function readHomeChatLog(page: Page) {
-  return page.evaluate((homeStorageKey) => {
-    const raw = localStorage.getItem(homeStorageKey)
-    return raw ? JSON.parse(raw).state.chatLog : []
-  }, storageKeys.home)
+  try {
+    return await page.evaluate((homeStorageKey) => {
+      const raw = localStorage.getItem(homeStorageKey)
+      return raw ? JSON.parse(raw).state.chatLog : []
+    }, storageKeys.home)
+  } catch {
+    return []
+  }
 }
 
 export function getMultimodalTextPart(
