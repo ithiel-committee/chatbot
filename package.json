@@ -2,7 +2,7 @@
   "name": "aituber-kit",
   "version": "0.1.0",
   "private": true,
-  "packageManager": "npm@11.12.1",
+  
   "scripts": {
     "dev": "node scripts/print-startup-logo.js && next dev",
     "dev-https": "node scripts/print-startup-logo.js && next dev --experimental-https",
