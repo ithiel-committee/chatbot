@@ -7,35 +7,6 @@ export const getVoiceLanguageCode = (selectLanguage: string): VoiceLanguage => {
       return 'ja-JP'
     case 'en':
       return 'en-US'
-    case 'ko':
-      return 'ko-KR'
-    case 'zh':
-    case 'zh-TW':
-      return 'zh-TW'
-    case 'zh-CN':
-      return 'zh-CN'
-    case 'vi':
-      return 'vi-VN'
-    case 'fr':
-      return 'fr-FR'
-    case 'es':
-      return 'es-ES'
-    case 'pt':
-      return 'pt-PT'
-    case 'de':
-      return 'de-DE'
-    case 'ru':
-      return 'ru-RU'
-    case 'it':
-      return 'it-IT'
-    case 'ar':
-      return 'ar-SA'
-    case 'hi':
-      return 'hi-IN'
-    case 'pl':
-      return 'pl-PL'
-    case 'th':
-      return 'th-TH'
     default:
       return 'ja-JP'
   }

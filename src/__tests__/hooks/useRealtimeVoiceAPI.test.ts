@@ -116,16 +116,13 @@ describe('useRealtimeVoiceAPI - 言語設定の動的反映', () => {
       expect(getVoiceLanguageCode('en')).toBe('en-US')
     })
 
-    it('koを渡すとko-KRを返す', () => {
-      expect(getVoiceLanguageCode('ko')).toBe('ko-KR')
-    })
-
-    it('zhを渡すとzh-TWを返す', () => {
-      expect(getVoiceLanguageCode('zh')).toBe('zh-TW')
-    })
-
     it('不明な言語はja-JPにフォールバックする', () => {
       expect(getVoiceLanguageCode('unknown')).toBe('ja-JP')
+    })
+
+    it('未対応言語（ko, zh等）はja-JPにフォールバックする', () => {
+      expect(getVoiceLanguageCode('ko')).toBe('ja-JP')
+      expect(getVoiceLanguageCode('zh')).toBe('ja-JP')
     })
   })
 
