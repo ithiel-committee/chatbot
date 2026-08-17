@@ -4,7 +4,10 @@ import { getDifyChatResponseStream } from './difyChat'
 import { getVercelAIChatResponseStream } from './vercelAIChat'
 import settingsStore from '@/features/stores/settings'
 import { getOpenAIAudioChatResponseStream } from '@/features/chat/openAIAudioChat'
-import { getCannedResponse, createCannedResponseStream } from './cannedResponses'
+import {
+  getCannedResponse,
+  createCannedResponseStream,
+} from './cannedResponses'
 
 export interface AIChatResponseStreamOptions {
   signal?: AbortSignal

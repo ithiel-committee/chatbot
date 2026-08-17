@@ -126,7 +126,8 @@ async function synthesizeVoice(
 ): Promise<ArrayBuffer | null> {
   const ss = settingsStore.getState()
 
-  if (true) { // ss.audioMode
+  if (true) {
+    // ss.audioMode
     return null
   }
 

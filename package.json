@@ -3,7 +3,6 @@
   "version": "0.1.0",
   "packageManager": "pnpm@10.20.0",
   "private": true,
-  
   "scripts": {
     "dev": "node scripts/print-startup-logo.js && next dev",
     "dev-https": "node scripts/print-startup-logo.js && next dev --experimental-https",

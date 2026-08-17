@@ -30,20 +30,24 @@
 ## クイックスタート
 
 ### 動作環境
+
 - **Node.js**: 24.x
 - **パッケージマネージャー**: `pnpm` (推奨) または `npm`
 
 ### セットアップ＆起動手順
 
 1. **依存パッケージのインストール**
+
    ```bash
    pnpm install
    ```
 
 2. **環境変数の設定**
+
    ```bash
    cp .env.example .env.local
    ```
+
    `.env.local` を編集し、利用する AI サービス等の API キー（`OPENAI_API_KEY` や `GEMINI_API_KEY` 等）を設定します。
 
 3. **開発サーバーの起動**
@@ -72,8 +76,10 @@ pnpm format        # Prettierフォーマット適用
 ## クレジット・ライセンス
 
 ### 謝辞
+
 本アプリケーションは、[tegnike/aituber-kit](https://github.com/tegnike/aituber-kit)（作者: tegnike 氏）をベースにして構築されています。素晴らしいオープンソースソフトウェアを提供してくださっている作者様および貢献者の皆様に深く感謝いたします。
 
 ### ライセンス
+
 - ベースコード（AITuberKit）のライセンス規定に基づき、`LICENSE` ファイル（AITuberKit Custom License）をそのまま保持しています。
 - 本リポジトリは部活動・学内プロジェクト等の**非営利目的**で運用・改変されています。

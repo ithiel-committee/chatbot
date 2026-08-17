@@ -27,7 +27,11 @@ describe('aiChatFactory', () => {
   })
 
   const testMessages: Message[] = [
-    { role: 'user', content: 'テストメッセージ', timestamp: '2023-01-01T00:00:00Z' },
+    {
+      role: 'user',
+      content: 'テストメッセージ',
+      timestamp: '2023-01-01T00:00:00Z',
+    },
   ]
 
   const createMockStream = () => {
@@ -184,7 +188,11 @@ describe('aiChatFactory', () => {
 
   it('定型文のキーワードに一致する場合、定型文ストリームを返す', async () => {
     const cannedMessages: Message[] = [
-      { role: 'user', content: 'こんにちは', timestamp: '2023-01-01T00:00:00Z' },
+      {
+        role: 'user',
+        content: 'こんにちは',
+        timestamp: '2023-01-01T00:00:00Z',
+      },
     ]
     const result = await getAIChatResponseStream(cannedMessages)
     expect(result).not.toBeNull()
