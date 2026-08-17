@@ -507,8 +507,8 @@ const getInitialValuesFromEnv = (): SettingsState => ({
     parseInt(process.env.NEXT_PUBLIC_YOUTUBE_COMMENT_INTERVAL || '10') || 10,
 
   // Character
-  characterName: process.env.NEXT_PUBLIC_CHARACTER_NAME || 'CHARACTER',
-  userDisplayName: process.env.NEXT_PUBLIC_USER_DISPLAY_NAME || 'YOU',
+  characterName: process.env.NEXT_PUBLIC_CHARACTER_NAME || 'イティエル',
+  userDisplayName: process.env.NEXT_PUBLIC_USER_DISPLAY_NAME || 'あなた',
   characterPreset1: process.env.NEXT_PUBLIC_CHARACTER_PRESET1 || '',
   characterPreset2: process.env.NEXT_PUBLIC_CHARACTER_PRESET2 || '',
   characterPreset3: process.env.NEXT_PUBLIC_CHARACTER_PRESET3 || '',
@@ -682,7 +682,7 @@ const getInitialValuesFromEnv = (): SettingsState => ({
       | 'mono'
       | 'ocean'
       | 'forest'
-      | 'sunset') || 'default',
+      | 'sunset') || 'mono',
 
   // Custom model toggle
   customModel: process.env.NEXT_PUBLIC_CUSTOM_MODEL === 'true',
@@ -1093,6 +1093,22 @@ const mergePersistedSettings = (
     !mergedState.selectedVrmPath
   ) {
     mergedState.selectedVrmPath = currentState.selectedVrmPath
+  }
+
+  if (
+    mergedState.characterName === 'CHARACTER' ||
+    mergedState.characterName === 'ニケちゃん' ||
+    !mergedState.characterName
+  ) {
+    mergedState.characterName = currentState.characterName
+  }
+
+  if (mergedState.userDisplayName === 'YOU' || !mergedState.userDisplayName) {
+    mergedState.userDisplayName = currentState.userDisplayName
+  }
+
+  if (mergedState.colorTheme === 'default' || !mergedState.colorTheme) {
+    mergedState.colorTheme = currentState.colorTheme
   }
 
   if (process.env.NEXT_PUBLIC_ALWAYS_OVERRIDE_WITH_ENV_VARIABLES === 'true') {
