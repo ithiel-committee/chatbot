@@ -80,22 +80,22 @@ jobs:
         run: pnpm run test:e2e
 
       - name: Upload Playwright HTML report
-        if: always()
+        if: failure()
         uses: actions/upload-artifact@v4
         with:
           name: playwright-report-e2e
           path: playwright-report/
           if-no-files-found: ignore
-          retention-days: 14
+          retention-days: 3
 
       - name: Upload Playwright traces and screenshots
-        if: always()
+        if: failure()
         uses: actions/upload-artifact@v4
         with:
           name: playwright-test-results-e2e
           path: test-results/
           if-no-files-found: ignore
-          retention-days: 14
+          retention-days: 3
 
   e2e-production:
     runs-on: ubuntu-latest
@@ -131,19 +131,19 @@ jobs:
         run: pnpm run test:e2e:production
 
       - name: Upload production Playwright HTML report
-        if: always()
+        if: failure()
         uses: actions/upload-artifact@v4
         with:
           name: playwright-report-e2e-production
           path: playwright-report/
           if-no-files-found: ignore
-          retention-days: 14
+          retention-days: 3
 
       - name: Upload production Playwright traces and screenshots
-        if: always()
+        if: failure()
         uses: actions/upload-artifact@v4
         with:
           name: playwright-test-results-e2e-production
           path: test-results/
           if-no-files-found: ignore
-          retention-days: 14
+          retention-days: 3
