@@ -5,7 +5,7 @@ module.exports = {
   theme: {
     extend: {
       colors: {
-        // デフォルトテーマ
+        // default
         primary: 'var(--color-primary)',
         'primary-hover': 'var(--color-primary-hover)',
         'primary-press': 'var(--color-primary-press)',
@@ -18,19 +18,14 @@ module.exports = {
         'base-light': 'var(--color-base-light)',
         'base-dark': 'var(--color-base-dark)',
 
-        // トースト用のより鮮明な色定義
+        // color definition for toast notification
         'toast-info': '#007BFF',
         'toast-info-hover': '#0056B3',
         'toast-error': '#DC3545',
         'toast-error-hover': '#BD2130',
         'toast-success': '#28A745',
-        'toast-success-hover': '#218838',
         'toast-tool': '#9C27B0',
         'toast-tool-hover': '#7B1FA2',
-      },
-      fontFamily: {
-        M_PLUS_2: ['Montserrat', 'M_PLUS_2', 'sans-serif'],
-        Montserrat: ['Montserrat', 'sans-serif'],
       },
       zIndex: {
         5: '5',

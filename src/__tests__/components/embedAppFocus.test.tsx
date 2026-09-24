@@ -72,7 +72,6 @@ jest.mock('@/features/stores/settings', () => ({
         showCharacterName: true,
         showPresetQuestions: false,
         presetQuestions: [],
-        colorTheme: 'default',
         backgroundImageUrl: 'green',
       })),
       setState: jest.fn(),

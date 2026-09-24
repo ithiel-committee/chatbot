@@ -235,13 +235,13 @@ const GlassChatLog = () => {
   } = useChatLogResize(isRightAligned, chatLogRef)
 
   const defaultOffsetClasses = isRightAligned
-    ? 'right-2 sm:right-4 md:right-9 lg:right-14'
-    : 'left-2 sm:left-4 md:left-14 lg:left-24'
+    ? 'right-3 sm:right-6'
+    : 'left-3 sm:left-6'
 
   return (
     <div
       ref={chatLogRef}
-      className={`aurora-glass-panel absolute bottom-[128px] top-[94px] z-10 flex max-w-[calc(100vw-40px)] flex-col overflow-hidden rounded-[22px] ${chatLogEdgeOffset == null ? defaultOffsetClasses : ''}`}
+      className={`aurora-glass-panel absolute bottom-[94px] top-[94px] z-10 flex max-w-[calc(100vw-40px)] flex-col overflow-hidden rounded-[22px] ${chatLogEdgeOffset == null ? defaultOffsetClasses : ''}`}
       style={{
         width: `${chatLogWidth}px`,
         ...(chatLogEdgeOffset != null
@@ -294,7 +294,7 @@ const GlassChatLog = () => {
           )
         })}
         {chatProcessing && (
-          <div className="flex gap-1 self-start rounded-[16px_16px_16px_4px] bg-white/80 px-[15px] py-[11px]">
+          <div className="flex gap-1 self-start rounded-[16px_16px_16px_4px] bg-zinc-700/80 px-[15px] py-[11px]">
             <span className="block h-1.5 w-1.5 animate-[aurora-dot-blink_1.2s_infinite] rounded-full bg-[var(--aurora-text-muted)]"></span>
             <span className="block h-1.5 w-1.5 animate-[aurora-dot-blink_1.2s_0.2s_infinite] rounded-full bg-[var(--aurora-text-muted)]"></span>
             <span className="block h-1.5 w-1.5 animate-[aurora-dot-blink_1.2s_0.4s_infinite] rounded-full bg-[var(--aurora-text-muted)]"></span>
@@ -371,7 +371,7 @@ const GlassChat = ({
         className={`w-fit max-w-full px-3.5 py-[9px] text-[13px] leading-[1.6] ${
           isUser
             ? 'rounded-[16px_16px_4px_16px] bg-primary text-white'
-            : 'rounded-[16px_16px_16px_4px] bg-white/80 text-[var(--aurora-text-medium)]'
+            : 'rounded-[16px_16px_16px_4px] bg-zinc-700/80 text-[var(--aurora-text-medium)]'
         }`}
       >
         {thinking && !isUser && (
@@ -388,7 +388,7 @@ const GlassChat = ({
               <span>{t('ThinkingProcess')}</span>
             </button>
             {isThinkingExpanded && (
-              <div className="mt-2 whitespace-pre-wrap rounded border-l-2 border-l-primary bg-white/60 px-3 py-2 text-xs italic text-[var(--aurora-text-subtle)]">
+              <div className="mt-2 whitespace-pre-wrap rounded border-l-2 border-l-primary bg-black/25 px-3 py-2 text-xs italic text-[var(--aurora-text-subtle)]">
                 {thinking}
               </div>
             )}
@@ -451,8 +451,8 @@ const ClassicChatLog = () => {
   } = useChatLogResize(isRightAligned, chatLogRef)
 
   const defaultOffsetClasses = isRightAligned
-    ? 'right-2 sm:right-4 md:right-9 lg:right-14'
-    : 'left-2 sm:left-4 md:left-14 lg:left-24'
+    ? 'right-3 sm:right-6'
+    : 'left-3 sm:left-6'
 
   return (
     <div

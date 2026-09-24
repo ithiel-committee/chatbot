@@ -9,22 +9,30 @@ body {
   background-repeat: no-repeat;
 }
 
-/* Aurora ガラスUI上のテキスト/コントロール色トークン */
-:root {
-  --aurora-text-strong: #26262e;
-  --aurora-text-medium: #2a2a34;
-  --aurora-text-soft: #3a3a46;
-  --aurora-text-subtle: #55555f;
-  --aurora-text-muted: #8a8a96;
-  --aurora-icon: #41414f;
-  --aurora-control-bg: rgba(120, 120, 140, 0.16);
-  --aurora-control-bg-hover: rgba(120, 120, 140, 0.28);
-  --aurora-control-bg-disabled: rgba(120, 120, 140, 0.08);
-  --settings-backdrop-bg: rgba(255, 255, 255, 0.52);
+@layer base {
+  *,
+  ::before,
+  ::after {
+    --tw-ring-color: transparent;
+  }
+
+  button:focus,
+  button:focus-visible,
+  input:focus,
+  input:focus-visible,
+  select:focus,
+  select:focus-visible,
+  textarea:focus,
+  textarea:focus-visible,
+  [tabindex]:focus,
+  [tabindex]:focus-visible {
+    outline: none !important;
+    outline-color: transparent !important;
+  }
 }
 
-/* darkMode: class 用の上書き（ダークガラス面に合わせたライトテキスト） */
-.dark {
+/* Aurora ガラスUI上のテキスト/コントロール色トークン */
+:root {
   --aurora-text-strong: #f2f2f6;
   --aurora-text-medium: #e9eaf1;
   --aurora-text-soft: #d5d6e0;
@@ -40,43 +48,43 @@ body {
 @layer components {
   /* Aurora ガラスUIトークン（テーマ非依存のすりガラス演出） */
   .aurora-glass-bubble {
-    background: rgba(255, 255, 255, 0.58);
+    background: rgba(17, 19, 28, 0.58);
     backdrop-filter: blur(20px) saturate(1.5);
     -webkit-backdrop-filter: blur(20px) saturate(1.5);
-    border: 1px solid rgba(255, 255, 255, 0.72);
+    border: 1px solid rgba(255, 255, 255, 0.18);
     box-shadow: 0 8px 28px rgba(31, 38, 60, 0.14);
   }
 
   .aurora-glass-panel {
-    background: rgba(255, 255, 255, 0.5);
+    background: rgba(17, 19, 28, 0.5);
     backdrop-filter: blur(22px) saturate(1.5);
     -webkit-backdrop-filter: blur(22px) saturate(1.5);
-    border: 1px solid rgba(255, 255, 255, 0.7);
+    border: 1px solid rgba(255, 255, 255, 0.14);
     box-shadow: 0 12px 40px rgba(31, 38, 60, 0.16);
   }
 
   .aurora-glass-capsule {
-    background: rgba(255, 255, 255, 0.58);
+    background: rgba(17, 19, 28, 0.58);
     backdrop-filter: blur(24px) saturate(1.7);
     -webkit-backdrop-filter: blur(24px) saturate(1.7);
-    border: 1px solid rgba(255, 255, 255, 0.75);
+    border: 1px solid rgba(255, 255, 255, 0.18);
     box-shadow: 0 12px 40px rgba(31, 38, 60, 0.2);
   }
 
   .aurora-glass-dock {
-    background: rgba(255, 255, 255, 0.5);
+    background: rgba(17, 19, 28, 0.5);
     backdrop-filter: blur(20px) saturate(1.6);
     -webkit-backdrop-filter: blur(20px) saturate(1.6);
-    border: 1px solid rgba(255, 255, 255, 0.7);
+    border: 1px solid rgba(255, 255, 255, 0.14);
     box-shadow: 0 8px 32px rgba(31, 38, 60, 0.16);
   }
 
   .aurora-glass-popover {
-    background: rgba(255, 255, 255, 0.62);
-    backdrop-filter: blur(24px) saturate(1.6);
-    -webkit-backdrop-filter: blur(24px) saturate(1.6);
-    border: 1px solid rgba(255, 255, 255, 0.75);
-    box-shadow: 0 16px 48px rgba(31, 38, 60, 0.22);
+    background: rgba(17, 19, 28, 0.5);
+    backdrop-filter: blur(20px) saturate(1.6);
+    -webkit-backdrop-filter: blur(20px) saturate(1.6);
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    box-shadow: 0 8px 32px rgba(31, 38, 60, 0.16);
   }
 
   .aurora-scrim {
@@ -95,14 +103,10 @@ body {
   }
 
   .dark .aurora-glass-panel,
-  .dark .aurora-glass-dock {
+  .dark .aurora-glass-dock,
+  .dark .aurora-glass-popover {
     background: rgba(17, 19, 28, 0.5);
     border-color: rgba(255, 255, 255, 0.14);
-  }
-
-  .dark .aurora-glass-popover {
-    background: rgba(17, 19, 28, 0.62);
-    border-color: rgba(255, 255, 255, 0.16);
   }
 
   .theme-surface-popover {
@@ -209,7 +213,7 @@ body {
       var(--color-base-dark) 86%,
       var(--color-primary)
     );
-    color: var(--color-text-base);
+    color: var(--color-text-primary);
   }
 
   .theme-surface-contrast:hover {
@@ -430,10 +434,12 @@ body {
     width: 100%;
     border-radius: 4px;
   }
+
   .input-range:focus,
   .input-range:active {
     outline: none;
   }
+
   .input-range::-webkit-slider-thumb {
     -webkit-appearance: none;
     appearance: none;
@@ -455,6 +461,7 @@ body {
     opacity: 0;
     transform: translateY(8px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -467,6 +474,7 @@ body {
   100% {
     opacity: 0.25;
   }
+
   40% {
     opacity: 1;
   }
@@ -476,9 +484,11 @@ body {
   0% {
     box-shadow: 0 0 0 0 rgba(255, 90, 120, 0.45);
   }
+
   70% {
     box-shadow: 0 0 0 16px rgba(255, 90, 120, 0);
   }
+
   100% {
     box-shadow: 0 0 0 0 rgba(255, 90, 120, 0);
   }
@@ -518,5 +528,149 @@ body {
 
   .preset-questions-scroll::-webkit-scrollbar-thumb:hover {
     background: theme('colors.secondary-hover');
+  }
+}
+
+@layer components {
+  /* メインパネルやドックの立体感（上部の白いハイライトと深い影） */
+  .dark .theme-surface-elevated,
+  .dark .theme-settings-shell,
+  .dark .theme-surface-dock {
+    border-color: rgba(255, 255, 255, 0.12) !important;
+    box-shadow:
+      0 12px 32px rgba(0, 0, 0, 0.4),
+      inset 0 1px 1px rgba(255, 255, 255, 0.15) !important;
+  }
+
+  /* 設定パネル内の各セクション（少し浮き出たガラスカード） */
+  .dark [data-testid='settings-panel'] section {
+    background: linear-gradient(
+      160deg,
+      rgba(30, 41, 59, 0.6),
+      rgba(15, 23, 42, 0.6)
+    ) !important;
+
+    border: 1px solid color-mix(in srgb, var(--color-primary) 30%, transparent) !important;
+
+    box-shadow:
+      0 4px 12px rgba(0, 0, 0, 0.3),
+      inset 0 1px 1px rgba(255, 255, 255, 0.05) !important;
+  }
+
+  /* ダークガラス化されたボタン（GitHubボタンなど） */
+  .dark [data-testid='settings-panel'] button[class*='bg-white'],
+  .dark [data-testid='settings-panel'] a[class*='bg-white'] {
+    background-color: rgba(30, 41, 59, 0.7) !important;
+    border: 1px solid rgba(255, 255, 255, 0.15) !important;
+    box-shadow:
+      0 2px 4px rgba(0, 0, 0, 0.2),
+      inset 0 1px 1px rgba(255, 255, 255, 0.15) !important;
+    color: var(--color-text-primary) !important;
+  }
+
+  .dark [data-testid='settings-panel'] button[class*='bg-white']:hover,
+  .dark [data-testid='settings-panel'] a[class*='bg-white']:hover {
+    background-color: rgba(51, 65, 85, 0.9) !important;
+  }
+
+  /* 入力フォーム（内側に落ちる影でくぼみを表現） */
+  .dark [data-testid='settings-panel'] input,
+  .dark [data-testid='settings-panel'] textarea,
+  .dark [data-testid='settings-panel'] select {
+    background-color: rgba(15, 23, 42, 0.6) !important;
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.3) !important;
+    color: var(--color-text-primary) !important;
+  }
+
+  /* 入力フォームのフォーカス時 */
+  .dark [data-testid='settings-panel'] input:focus,
+  .dark [data-testid='settings-panel'] textarea:focus,
+  .dark [data-testid='settings-panel'] select:focus {
+    border-color: var(--color-primary) !important;
+    box-shadow:
+      0 0 0 1px var(--color-primary),
+      inset 0 2px 4px rgba(0, 0, 0, 0.3) !important;
+  }
+
+  .dark .bg-white {
+    background-color: var(--color-text-base) !important;
+    border-color: color-mix(
+      in srgb,
+      var(--color-primary) 30%,
+      transparent
+    ) !important;
+    color: var(--color-text-primary) !important;
+  }
+
+  .dark .hover\:bg-gray-100:hover,
+  .dark .hover\:bg-gray-50:hover {
+    background-color: color-mix(
+      in srgb,
+      var(--color-text-base) 80%,
+      var(--color-primary)
+    ) !important;
+  }
+
+  /* Tailwindの透明度修飾子(/20など)のパース失敗による描写問題の修正 */
+  .border-primary\/10 {
+    border-color: color-mix(
+      in srgb,
+      var(--color-primary) 10%,
+      transparent
+    ) !important;
+  }
+
+  .border-primary\/15 {
+    border-color: color-mix(
+      in srgb,
+      var(--color-primary) 15%,
+      transparent
+    ) !important;
+  }
+
+  .border-primary\/20 {
+    border-color: color-mix(
+      in srgb,
+      var(--color-primary) 20%,
+      transparent
+    ) !important;
+  }
+
+  .border-primary\/30 {
+    border-color: color-mix(
+      in srgb,
+      var(--color-primary) 30%,
+      transparent
+    ) !important;
+  }
+
+  .border-primary\/40 {
+    border-color: color-mix(
+      in srgb,
+      var(--color-primary) 40%,
+      transparent
+    ) !important;
+  }
+
+  .border-primary\/50 {
+    border-color: color-mix(
+      in srgb,
+      var(--color-primary) 50%,
+      transparent
+    ) !important;
+  }
+
+  .border-primary\/60 {
+    border-color: color-mix(
+      in srgb,
+      var(--color-primary) 60%,
+      transparent
+    ) !important;
+  }
+
+  .hide-mouse-cursor,
+  .hide-mouse-cursor * {
+    cursor: none !important;
   }
 }

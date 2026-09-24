@@ -82,7 +82,7 @@ export default function AITuberPage() {
         description="AITuber（AI VTuber）の仕組みと作り方を解説。AITuberKitなら、VRM・Live2D・PNGTuber、LLM、音声合成、YouTubeコメント連携を組み合わせ、AIキャラクターとの会話や配信をブラウザで体験・構築できます。"
         structuredData={faqStructuredData}
       />
-      <main className="min-h-screen bg-slate-950 px-5 py-12 font-M_PLUS_2 text-slate-100 sm:px-8">
+      <main className="min-h-screen bg-slate-950 px-5 py-12 font-sans text-slate-100 sm:px-8">
         <article className="mx-auto max-w-5xl">
           <header className="rounded-3xl border border-cyan-400/20 bg-gradient-to-br from-cyan-400/10 via-slate-900 to-fuchsia-400/10 p-7 shadow-2xl shadow-cyan-950/30 sm:p-12">
             <p className="mb-3 text-sm font-bold tracking-[0.2em] text-cyan-300">

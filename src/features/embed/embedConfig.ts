@@ -16,7 +16,6 @@ export type EmbedConfig = {
   showCharacterName?: boolean
   showPresetQuestions?: boolean
   presetQuestions?: string[]
-  colorTheme?: SettingsState['colorTheme']
   backgroundImageUrl?: string
   allowedOrigins?: string[]
 }
@@ -24,14 +23,6 @@ export type EmbedConfig = {
 type EmbedConfigMap = Record<string, EmbedConfig>
 
 const MODEL_TYPES: EmbedModelType[] = ['vrm', 'live2d', 'pngtuber']
-const COLOR_THEMES: SettingsState['colorTheme'][] = [
-  'default',
-  'cool',
-  'mono',
-  'ocean',
-  'forest',
-  'sunset',
-]
 
 const parseBoolean = (value: string | null): boolean | undefined => {
   if (value === null) return undefined
@@ -81,7 +72,6 @@ export const getEmbedOverridesFromSearchParams = (
   params: URLSearchParams
 ): EmbedConfig => {
   const modelType = params.get('modelType')
-  const colorTheme = params.get('colorTheme')
 
   return {
     characterName: params.get('characterName') || undefined,
@@ -97,9 +87,6 @@ export const getEmbedOverridesFromSearchParams = (
     showCharacterName: parseBoolean(params.get('showCharacterName')),
     showPresetQuestions: parseBoolean(params.get('showPresetQuestions')),
     presetQuestions: parseList(params.get('presetQuestions')),
-    colorTheme: COLOR_THEMES.includes(colorTheme as SettingsState['colorTheme'])
-      ? (colorTheme as SettingsState['colorTheme'])
-      : undefined,
     backgroundImageUrl: params.get('backgroundImageUrl') || undefined,
   }
 }

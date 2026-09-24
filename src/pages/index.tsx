@@ -11,7 +11,6 @@ import Live2DViewer from '@/components/live2DViewer'
 import PNGTuberViewer from '@/components/pngTuberViewer'
 import { Toasts } from '@/components/toasts'
 import { WebSocketManager } from '@/components/websocketManager'
-import CharacterPresetMenu from '@/components/characterPresetMenu'
 import ImageOverlay from '@/components/ImageOverlay'
 import PresenceManager from '@/components/presenceManager'
 import IdleManager from '@/components/idleManager'
@@ -27,6 +26,7 @@ import toastStore from '@/features/stores/toast'
 import { usePresetLoader } from '@/features/presets/usePresetLoader'
 import { useLive2DEnabled } from '@/hooks/useLive2DEnabled'
 import { SeoSummary } from '@/components/seoSummary'
+import { ChatResetModal } from '@/components/chatResetModal'
 
 const Home = () => {
   const webcamStatus = homeStore((s) => s.webcamStatus)
@@ -105,12 +105,29 @@ const Home = () => {
     }
   }, [characterPresets, t])
 
-  const backgroundStyle =
-    (webcamStatus || captureStatus) && useVideoAsBackground
+  const screenOrientation = settingsStore((s) => s.screenOrientation)
+
+  const orientationStyle = useMemo(() => {
+    switch (screenOrientation) {
+      case 'flip-h':
+        return { transform: 'scaleX(-1)' }
+      case 'flip-v':
+        return { transform: 'scaleY(-1)' }
+      case 'flip-hv':
+        return { transform: 'scale(-1, -1)' }
+      default:
+        return {}
+    }
+  }, [screenOrientation])
+
+  const backgroundStyle = {
+    ...((webcamStatus || captureStatus) && useVideoAsBackground
       ? {}
       : backgroundImageUrl === 'green'
         ? { backgroundColor: '#00FF00' }
-        : { backgroundImage: bgUrl }
+        : { backgroundImage: bgUrl }),
+    ...orientationStyle,
+  }
 
   return (
     <div className="h-[100svh] bg-cover" style={backgroundStyle}>
@@ -134,7 +151,6 @@ const Home = () => {
       <WebSocketManager />
       <YoutubeManager />
       <MemoryServiceInitializer />
-      <CharacterPresetMenu />
       <ImageOverlay />
       <PresenceManager />
       <div className="absolute top-4 left-4 z-30">
@@ -142,6 +158,7 @@ const Home = () => {
         <GameCommentaryManager />
       </div>
       <KioskOverlay />
+      <ChatResetModal />
     </div>
   )
 }

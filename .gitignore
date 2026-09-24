@@ -105,3 +105,5 @@ promo-video/*
 
 # External presentation persistent storage
 /.aituber-kit/
+
+repomix.config.json

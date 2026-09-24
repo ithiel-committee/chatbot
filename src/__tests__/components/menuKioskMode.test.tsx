@@ -12,7 +12,7 @@ import menuStore from '@/features/stores/menu'
 import homeStore from '@/features/stores/home'
 import { getLatestAssistantMessage } from '@/utils/assistantMessageUtils'
 
-// Mock useKioskMode
+// mock useKioskMode
 const mockUseKioskMode = jest.fn(() => ({
   isKioskMode: false,
   isTemporaryUnlocked: false,
@@ -75,17 +75,21 @@ jest.mock('@/features/stores/presentation', () => ({
   default: jest.fn(),
 }))
 
-// Mock i18n
+// mock i18n
 jest.mock('react-i18next', () => ({
   useTranslation: () => ({
     t: (key: string) => key,
   }),
 }))
 
-// Mock sub-components
+// mock sub-components
 jest.mock('@/components/settings', () => ({
   __esModule: true,
   default: () => <div data-testid="settings" />,
+}))
+
+jest.mock('@/components/DpadSettingsMenu', () => ({
+  DpadSettingsMenu: () => <div data-testid="dpad-settings" />,
 }))
 
 jest.mock('@/components/assistantText', () => ({
@@ -97,9 +101,19 @@ jest.mock('@/components/chatLog', () => ({
 }))
 
 jest.mock('@/components/iconButton', () => ({
-  IconButton: ({ onClick, iconName }: any) => (
-    <button data-testid={`icon-${iconName}`} onClick={onClick}>
-      {iconName}
+  IconButton: ({
+    onClick,
+    iconName,
+    label,
+    'data-testid': testId,
+    ...props
+  }: any) => (
+    <button
+      data-testid={testId || `icon-${iconName}`}
+      onClick={onClick}
+      {...props}
+    >
+      {label || iconName}
     </button>
   ),
 }))
@@ -153,7 +167,7 @@ describe('Menu - Kiosk Mode', () => {
     jest.clearAllMocks()
     mockGetLatestAssistantMessage.mockReturnValue('')
 
-    // Default settings store mock
+    // default settings store mock
     mockSettingsStore.mockImplementation((selector) => {
       const state = {
         selectAIService: 'openai',
@@ -170,7 +184,7 @@ describe('Menu - Kiosk Mode', () => {
       return selector(state as any)
     })
 
-    // Default menu store mock
+    // default menu store mock
     mockMenuStore.mockImplementation((selector) => {
       const state = {
         slideVisible: false,
@@ -180,13 +194,13 @@ describe('Menu - Kiosk Mode', () => {
       return selector(state as any)
     })
 
-    // Default home store mock
+    // default home store mock
     ;(homeStore as any).mockImplementation((selector: any) => {
       const state = { chatLog: [] }
       return selector(state as any)
     })
 
-    // Default slide store mock
+    // default slide store mock
     mockSlideStore.mockImplementation((selector) => {
       const state = {
         isPlaying: false,
@@ -198,23 +212,26 @@ describe('Menu - Kiosk Mode', () => {
     mockPresentationStore.mockImplementation((selector) =>
       selector({ document: null } as any)
     )
+
+    mockUseKioskMode.mockReturnValue({
+      isKioskMode: false,
+      isTemporaryUnlocked: false,
+      canAccessSettings: true,
+      maxInputLength: 200,
+      validateInput: jest.fn(() => ({ valid: true })),
+      temporaryUnlock: jest.fn(),
+      lockAgain: jest.fn(),
+    })
   })
 
-  describe('control panel visibility', () => {
-    it('persists the next chat log mode through the settings store', () => {
+  describe('control panel and tools menu visibility', () => {
+    it('should show tools toggle button when control panel is visible', () => {
       const { container } = render(<Menu />)
-      const chatLogButton = container.querySelector(
-        '[data-testid="icon-24/CommentFill"]'
-      )
-
-      expect(chatLogButton).not.toBeNull()
-      fireEvent.click(chatLogButton as Element)
-      expect(settingsStore.setState).toHaveBeenCalledWith({
-        chatLogMode: 'chat-log',
-      })
+      const toolsButton = screen.getByTestId('main-tools-toggle-button')
+      expect(toolsButton).toBeInTheDocument()
     })
 
-    it('should show settings button when kiosk mode is off and control panel is visible', () => {
+    it('should show settings button inside tools menu when kiosk mode is off', () => {
       mockUseKioskMode.mockReturnValue({
         isKioskMode: false,
         isTemporaryUnlocked: false,
@@ -225,16 +242,15 @@ describe('Menu - Kiosk Mode', () => {
         lockAgain: jest.fn(),
       })
 
-      const { container } = render(<Menu />)
-      const settingsButton = container.querySelector(
-        '[data-testid="icon-24/Settings"]'
-      )
-      expect(settingsButton).not.toBeNull()
+      render(<Menu />)
+      fireEvent.click(screen.getByTestId('main-tools-toggle-button'))
+      const settingsButton = screen.getByTestId('open-settings-button')
+      expect(settingsButton).toBeInTheDocument()
     })
 
-    it('should hide settings button when kiosk mode is on and not temporarily unlocked', () => {
+    it('should hide settings button inside tools menu when settings access is disabled', () => {
       mockUseKioskMode.mockReturnValue({
-        isKioskMode: true,
+        isKioskMode: false,
         isTemporaryUnlocked: false,
         canAccessSettings: false,
         maxInputLength: 200,
@@ -243,14 +259,12 @@ describe('Menu - Kiosk Mode', () => {
         lockAgain: jest.fn(),
       })
 
-      const { container } = render(<Menu />)
-      const settingsButton = container.querySelector(
-        '[data-testid="icon-24/Settings"]'
-      )
-      expect(settingsButton).toBeNull()
+      render(<Menu />)
+      fireEvent.click(screen.getByTestId('main-tools-toggle-button'))
+      expect(screen.queryByTestId('open-settings-button')).toBeNull()
     })
 
-    it('should show settings button when kiosk mode is on but temporarily unlocked', () => {
+    it('should show settings button inside tools menu when kiosk mode is on but temporarily unlocked', () => {
       mockUseKioskMode.mockReturnValue({
         isKioskMode: true,
         isTemporaryUnlocked: true,
@@ -261,11 +275,9 @@ describe('Menu - Kiosk Mode', () => {
         lockAgain: jest.fn(),
       })
 
-      const { container } = render(<Menu />)
-      const settingsButton = container.querySelector(
-        '[data-testid="icon-24/Settings"]'
-      )
-      expect(settingsButton).not.toBeNull()
+      render(<Menu />)
+      fireEvent.click(screen.getByTestId('main-tools-toggle-button'))
+      expect(screen.getByTestId('open-settings-button')).toBeInTheDocument()
     })
   })
 
@@ -297,13 +309,58 @@ describe('Menu - Kiosk Mode', () => {
         return selector(state as any)
       })
 
-      const { container } = render(<Menu />)
-      // effectiveShowControlPanel should be false (showControlPanel && (!isKioskMode || isTemporaryUnlocked))
-      // showControlPanel=true, isKioskMode=true, isTemporaryUnlocked=false => false
-      const settingsButton = container.querySelector(
-        '[data-testid="icon-24/Settings"]'
-      )
-      expect(settingsButton).toBeNull()
+      render(<Menu />)
+      expect(screen.queryByTestId('main-tools-toggle-button')).toBeNull()
+    })
+  })
+
+  describe('keyboard navigation in tools menu', () => {
+    it('toggles tools menu with Shift+Cmd+K (or Shift+Ctrl+K)', () => {
+      render(<Menu />)
+
+      // open with shortcut
+      fireEvent.keyDown(window, {
+        key: 'K',
+        code: 'KeyK',
+        metaKey: true,
+        shiftKey: true,
+      })
+      expect(screen.getByTestId('main-tools-menu')).toBeInTheDocument()
+
+      // close with shortcut
+      fireEvent.keyDown(window, {
+        key: 'K',
+        code: 'KeyK',
+        metaKey: true,
+        shiftKey: true,
+      })
+      expect(screen.queryByTestId('main-tools-menu')).toBeNull()
+    })
+
+    it('navigates items with ArrowDown / ArrowUp, executes with Enter, and closes with Backspace', () => {
+      render(<Menu />)
+
+      // open menu
+      fireEvent.click(screen.getByTestId('main-tools-toggle-button'))
+      expect(screen.getByTestId('main-tools-menu')).toBeInTheDocument()
+
+      // navigate down and up
+      fireEvent.keyDown(window, { key: 'ArrowDown' })
+      fireEvent.keyDown(window, { key: 'ArrowUp' })
+
+      // press Enter on settings (first item) -> opens settings menu
+      fireEvent.keyDown(window, { key: 'Enter' })
+      expect(screen.getByTestId('dpad-settings')).toBeInTheDocument()
+    })
+
+    it('closes tools menu with Backspace', () => {
+      render(<Menu />)
+
+      fireEvent.click(screen.getByTestId('main-tools-toggle-button'))
+      expect(screen.getByTestId('main-tools-menu')).toBeInTheDocument()
+
+      fireEvent.keyDown(window, { key: 'Backspace' })
+      expect(screen.queryByTestId('main-tools-menu')).toBeNull()
     })
   })
 
@@ -338,10 +395,10 @@ describe('Menu - Kiosk Mode', () => {
       render(<Menu />)
 
       fireEvent.keyDown(window, { key: '.', code: 'Period', ctrlKey: true })
-      expect(screen.queryByTestId('settings')).toBeNull()
+      expect(screen.queryByTestId('dpad-settings')).toBeNull()
 
       fireEvent.keyDown(window, { key: 'k', code: 'KeyK', ctrlKey: true })
-      expect(screen.getByTestId('settings')).toBeTruthy()
+      expect(screen.getByTestId('dpad-settings')).toBeTruthy()
     })
   })
 

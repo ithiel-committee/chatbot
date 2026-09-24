@@ -9,7 +9,7 @@ import { isMultiModalAvailable } from '@/features/constants/aiModels'
 import { IconButton } from './iconButton'
 import { useKioskMode } from '@/hooks/useKioskMode'
 
-// ファイルバリデーションの設定
+// file validation settings
 const FILE_VALIDATION = {
   maxSizeBytes: 10 * 1024 * 1024, // 10MB
   allowedTypes: [
@@ -66,12 +66,22 @@ export const MessageInput = ({
   const [inputValidationError, setInputValidationError] = useState<string>('')
   const [isSmallScreen, setIsSmallScreen] = useState(false)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
-  // Mount focus is an initialization contract; later prop changes must not
+  // mount focus is an initialization contract; later prop changes must not
   // retrigger the chat-processing effect or clear an in-progress draft.
   const focusOnMountRef = useRef(focusOnMount)
   const previousChatProcessingRef = useRef<boolean | null>(null)
   const realtimeAPIMode = settingsStore((s) => s.realtimeAPIMode)
   const showSilenceProgressBar = settingsStore((s) => s.showSilenceProgressBar)
+  const chatLogWidth = settingsStore((s) => s.chatLogWidth)
+  const chatLogPosition = settingsStore((s) => s.chatLogPosition)
+  const chatLogEdgeOffset = settingsStore((s) => s.chatLogEdgeOffset)
+
+  const isRightAligned = chatLogPosition === 'right'
+  const isInputRightAligned = !isRightAligned
+
+  const defaultOffsetClasses = isInputRightAligned
+    ? 'right-3 sm:right-6'
+    : 'left-3 sm:left-6'
 
   const { t } = useTranslation()
 
@@ -83,10 +93,10 @@ export const MessageInput = ({
     return () => mql.removeEventListener('change', handler)
   }, [])
 
-  // Kiosk mode input validation
+  // kiosk mode input validation
   const { isKioskMode, validateInput, maxInputLength } = useKioskMode()
 
-  // マルチモーダル対応かどうかを判定
+  // multimodal correspondence check
   const isMultiModalSupported = isMultiModalAvailable(
     selectAIService,
     selectAIModel,
@@ -94,7 +104,7 @@ export const MessageInput = ({
     customModel
   )
 
-  // アイコン表示の条件
+  // icon display condition
   const showIconDisplay = modalImage && imageDisplayPosition === 'icon'
 
   useEffect(() => {
@@ -134,18 +144,18 @@ export const MessageInput = ({
     }
   }, [chatProcessing])
 
-  // テキスト内容に基づいて適切な行数を計算
+  // calculate the appropriate number of rows based on the text content
   const calculateRows = useCallback((text: string): number => {
     const MIN_ROWS = 1
-    const MAX_ROWS = 5 // 最大行数を制限（UIの見栄えを考慮して調整）
-    const CHARS_PER_LINE = 50 // 平均的な1行の文字数（概算）
+    const MAX_ROWS = 5
+    const CHARS_PER_LINE = 50
     const lines = text.split('\n')
 
-    // 各行の幅を考慮してテキストの折り返しを計算
-    // 簡単な実装では改行文字の数 + 1を使用
+    // calculate the appropriate number of rows based on the text content
+    // simple implementation uses the number of newline characters + 1
     const baseRows = Math.max(MIN_ROWS, lines.length)
 
-    // 長い行がある場合、追加の行を考慮（おおよその計算）
+    // if there are long lines, consider additional lines (rough calculation)
     const extraRows = lines.reduce((acc, line) => {
       const lineRows = Math.ceil(line.length / CHARS_PER_LINE)
       return acc + Math.max(0, lineRows - 1)
@@ -154,13 +164,13 @@ export const MessageInput = ({
     return Math.min(MAX_ROWS, baseRows + extraRows)
   }, [])
 
-  // userMessageの変更に応じて行数を調整
+  // adjust line count in response to userMessage changes
   useEffect(() => {
     const newRows = calculateRows(userMessage)
     setRows(newRows)
   }, [userMessage, calculateRows])
 
-  // 共通の遅延行数更新処理
+  // common delayed line count update process
   const updateRowsWithDelay = useCallback(
     (target: HTMLTextAreaElement) => {
       setTimeout(() => {
@@ -171,7 +181,7 @@ export const MessageInput = ({
     [calculateRows]
   )
 
-  // テキストエリアの内容変更時の処理
+  // text area contetns change process
   const handleTextChange = (event: React.ChangeEvent<HTMLTextAreaElement>) => {
     const newText = event.target.value
     const newRows = calculateRows(newText)
@@ -179,10 +189,10 @@ export const MessageInput = ({
     onChangeUserMessage(event)
   }
 
-  // ファイルバリデーション関数
+  // file validation function
   const validateFile = useCallback(
     (file: File): { isValid: boolean; error?: string } => {
-      // ファイルサイズチェック
+      // file size check
       if (file.size > FILE_VALIDATION.maxSizeBytes) {
         return {
           isValid: false,
@@ -192,7 +202,7 @@ export const MessageInput = ({
         }
       }
 
-      // ファイルタイプチェック
+      // file type check
       if (!FILE_VALIDATION.allowedTypes.includes(file.type as any)) {
         return {
           isValid: false,
@@ -205,7 +215,7 @@ export const MessageInput = ({
     [t]
   )
 
-  // 画像の寸法をチェックする関数
+  // check image dimensions function
   const validateImageDimensions = useCallback(
     (imageElement: HTMLImageElement): boolean => {
       return (
@@ -216,7 +226,7 @@ export const MessageInput = ({
     []
   )
 
-  // 画像を処理する関数
+  // image processing function
   const processImageFile = useCallback(
     async (file: File): Promise<void> => {
       setFileError('')
@@ -232,7 +242,7 @@ export const MessageInput = ({
         reader.onload = (e) => {
           const base64Image = e.target?.result as string
 
-          // 画像の寸法チェック（オプション）
+          // image dimension check (optional)
           const img = document.createElement('img')
           img.onload = () => {
             if (!validateImageDimensions(img)) {
@@ -262,13 +272,13 @@ export const MessageInput = ({
     [validateFile, validateImageDimensions, t]
   )
 
-  // 画像を削除する関数
+  // image deletion function
   const handleRemoveImage = useCallback(() => {
     homeStore.setState({ modalImage: '' })
     setFileError('')
   }, [])
 
-  // クリップボードからの画像ペースト処理
+  // clipboard image pasting process
   const handlePaste = useCallback(
     async (event: React.ClipboardEvent<HTMLTextAreaElement>) => {
       if (!isMultiModalSupported) {
@@ -297,7 +307,7 @@ export const MessageInput = ({
         }
       }
 
-      // 画像がない場合のみ通常のペースト処理を実行
+      // execute normal paste processing only when there is no image
       if (!hasImage) {
         updateRowsWithDelay(event.target as HTMLTextAreaElement)
       }
@@ -305,7 +315,7 @@ export const MessageInput = ({
     [isMultiModalSupported, processImageFile, updateRowsWithDelay]
   )
 
-  // ドラッグ＆ドロップ処理
+  // drag & drop
   const handleDragOver = useCallback(
     (event: React.DragEvent) => {
       if (!isMultiModalSupported) {
@@ -338,12 +348,12 @@ export const MessageInput = ({
     [isMultiModalSupported, processImageFile, t]
   )
 
-  // Validate input and handle send with kiosk mode restrictions
+  // validate input and handle send with kiosk mode restrictions
   const handleValidatedSend = useCallback(
     (event: React.MouseEvent<HTMLButtonElement> | React.KeyboardEvent) => {
       if (userMessage.trim() === '') return false
 
-      // Validate input in kiosk mode
+      // validate input in kiosk mode
       if (isKioskMode) {
         const validation = validateInput(userMessage)
         if (!validation.valid) {
@@ -352,7 +362,7 @@ export const MessageInput = ({
         }
       }
 
-      // Clear any previous validation errors
+      // clear any previous validation errors
       setInputValidationError('')
       return true
     },
@@ -361,15 +371,15 @@ export const MessageInput = ({
 
   const handleKeyPress = (event: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (
-      // IME 文字変換中を除外しつつ、半角/全角キー（Backquote）による IME トグルは無視
+      // exclude IME converting character, ignore IME toggle by backquote key
       !event.nativeEvent.isComposing &&
       event.code !== 'Backquote' &&
       event.key === 'Enter' &&
       !event.shiftKey
     ) {
-      event.preventDefault() // デフォルトの挙動を防止
+      event.preventDefault()
       if (userMessage.trim() !== '') {
-        // Validate before sending
+        // validate before sending
         if (
           handleValidatedSend(
             event as unknown as React.MouseEvent<HTMLButtonElement>
@@ -382,19 +392,19 @@ export const MessageInput = ({
         }
       }
     } else if (event.key === 'Enter' && event.shiftKey) {
-      // Shift+Enterの場合、calculateRowsで自動計算されるため、手動で行数を増やす必要なし
+      // in case of Shift + Enter, rows automatically calculates by calculateRows, so no need to increase rows manually
       updateRowsWithDelay(event.target as HTMLTextAreaElement)
     } else if (
       event.key === 'Backspace' &&
       rows > 1 &&
       userMessage.slice(-1) === '\n'
     ) {
-      // Backspaceの場合も、calculateRowsで自動計算されるため、手動で行数を減らす必要なし
+      // in case of Backspace, rows automatically calculates by calculateRows, so no need to decrease rows manually
       updateRowsWithDelay(event.target as HTMLTextAreaElement)
     }
   }
 
-  // Handle send button click with validation
+  // handle send button click with validation
   const handleSendClick = useCallback(
     (event: React.MouseEvent<HTMLButtonElement>) => {
       if (handleValidatedSend(event)) {
@@ -408,7 +418,7 @@ export const MessageInput = ({
     onClickMicButton(event)
   }
 
-  // 画像添付ボタン
+  // image paste button
   const attachInputRef = useRef<HTMLInputElement>(null)
 
   const handleAttachClick = useCallback(() => {
@@ -427,7 +437,7 @@ export const MessageInput = ({
   )
 
   return (
-    <div className="absolute bottom-0 z-20 w-screen">
+    <>
       {showPermissionModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="theme-surface-elevated max-w-[calc(100vw-2rem)] rounded-xl border p-4 text-theme-default shadow-xl sm:max-w-md sm:p-6">
@@ -444,15 +454,29 @@ export const MessageInput = ({
           </div>
         </div>
       )}
-      <div className="text-theme-default">
-        <div className="mx-auto w-full max-w-[680px] px-3 pb-2 pt-2 sm:pb-6">
-          {/* プログレスバー - 設定に基づいて表示/非表示 */}
+      <div
+        className={`aurora-glass-capsule absolute bottom-[94px] top-[94px] z-20 flex max-w-[calc(100vw-40px)] flex-col justify-between overflow-hidden rounded-[22px] p-3 text-theme-default sm:p-4 ${
+          chatLogEdgeOffset == null ? defaultOffsetClasses : ''
+        }`}
+        style={{
+          width: `${chatLogWidth}px`,
+          ...(chatLogEdgeOffset != null
+            ? isInputRightAligned
+              ? { right: `${chatLogEdgeOffset}px` }
+              : { left: `${chatLogEdgeOffset}px` }
+            : {}),
+        }}
+        onDragOver={handleDragOver}
+        onDrop={handleDrop}
+      >
+        <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
+          {/* progress bar - show/hide based on settings */}
           {isMicRecording && showSilenceProgressBar && (
-            <div className="aurora-glass-bubble mb-2 h-2 w-full overflow-hidden rounded-full">
+            <div className="aurora-glass-bubble mb-2 h-2 w-full shrink-0 overflow-hidden rounded-full">
               <div
                 className="h-full rounded-full bg-secondary transition-all duration-200 ease-linear"
                 style={{
-                  // プログレスバーの幅計算 - 最初と最後の0.3秒は表示しない
+                  // progress bar width calculation - first and last 0.3 sec is not displayed
                   width:
                     silenceTimeoutRemaining !== null
                       ? `${Math.min(
@@ -472,22 +496,22 @@ export const MessageInput = ({
               ></div>
             </div>
           )}
-          {/* エラーメッセージ表示 */}
+          {/* showing error message */}
           {fileError && (
-            <div className="mb-2 rounded-2xl border border-red-200 bg-red-50/90 p-2 text-sm font-medium text-red-700 shadow-sm">
+            <div className="mb-2 shrink-0 rounded-2xl border border-red-200 bg-red-50/90 p-2 text-sm font-medium text-red-700 shadow-sm">
               {fileError}
             </div>
           )}
-          {/* 入力バリデーションエラー表示 (Kiosk mode) */}
+          {/* input validation error (Kiosk mode) */}
           {inputValidationError && (
-            <div className="mb-2 rounded-2xl border border-red-200 bg-red-50/90 p-2 text-sm font-medium text-red-700 shadow-sm">
+            <div className="mb-2 shrink-0 rounded-2xl border border-red-200 bg-red-50/90 p-2 text-sm font-medium text-red-700 shadow-sm">
               {inputValidationError}
             </div>
           )}
-          {/* 画像プレビュー - 入力欄表示設定の場合のみ */}
+          {/* image preview - only when image display setting is input */}
           {modalImage && imageDisplayPosition === 'input' && (
             <div
-              className="aurora-glass-bubble relative mb-2 rounded-[20px] p-2"
+              className="aurora-glass-bubble relative mb-2 shrink-0 rounded-[20px] p-2"
               onDragOver={handleDragOver}
               onDrop={handleDrop}
             >
@@ -509,13 +533,90 @@ export const MessageInput = ({
             </div>
           )}
 
-          <div
-            className="aurora-glass-capsule flex items-end gap-1.5 rounded-[31px] p-2 pl-2.5 sm:gap-2"
-            onDragOver={handleDragOver}
-            onDrop={handleDrop}
-          >
+          <div className="relative min-h-0 flex-1">
+            {/* image attachment indicator - only when icon display setting is enabled */}
+            {showIconDisplay && (
+              <div className="absolute left-1 top-[15px] z-10 flex h-4 w-4 items-center justify-center">
+                <div
+                  className="relative flex h-4 w-4 cursor-pointer items-center justify-center"
+                  onMouseEnter={() => setShowImageActions(true)}
+                  onMouseLeave={() => setShowImageActions(false)}
+                  onFocus={() => setShowImageActions(true)}
+                  onBlur={() => setShowImageActions(false)}
+                  onKeyDown={(event) => {
+                    if (event.key === 'Enter' || event.key === ' ') {
+                      event.preventDefault()
+                      setShowImageActions(true)
+                    }
+                  }}
+                  tabIndex={0}
+                  role="button"
+                  aria-label={t('RemoveImage')}
+                >
+                  <svg
+                    className="block h-4 w-4 text-text-primary"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"
+                    />
+                  </svg>
+                  {showImageActions && (
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        handleRemoveImage()
+                        setShowImageActions(false)
+                      }}
+                      className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-xs text-theme transition-colors hover:bg-red-600"
+                      title={t('RemoveImage')}
+                    >
+                      ×
+                    </button>
+                  )}
+                </div>
+              </div>
+            )}
+            <textarea
+              ref={textareaRef}
+              data-testid="chat-message-input"
+              placeholder={
+                chatProcessing
+                  ? `${t('AnswerGenerating')}${loadingDots}`
+                  : continuousMicListeningMode && isMicRecording
+                    ? t('ListeningContinuously')
+                    : isMultiModalSupported && !isSmallScreen
+                      ? `${t('EnterYourQuestion')} (${t('PasteImageSupported') || 'Paste image supported'})`
+                      : t('EnterYourQuestion')
+              }
+              onChange={handleTextChange}
+              onPaste={handlePaste}
+              onKeyDown={handleKeyPress}
+              onDragOver={handleDragOver}
+              onDrop={handleDrop}
+              disabled={chatProcessing || slidePlaying || realtimeAPIMode}
+              className="scroll-hidden block h-full w-full resize-none bg-transparent text-[15px] font-bold text-[var(--aurora-text-strong)] outline-none transition-all duration-200 placeholder:text-[var(--aurora-text-muted)] disabled:opacity-60 overflow-y-auto"
+              value={userMessage}
+              rows={rows}
+              maxLength={maxInputLength}
+              style={{
+                lineHeight: '1.5',
+                padding: showIconDisplay ? '12px 8px 12px 28px' : '12px 8px',
+                whiteSpace: 'pre-wrap',
+              }}
+            ></textarea>
+          </div>
+        </div>
+
+        <div className="mt-2 flex shrink-0 items-center justify-between gap-1.5 pt-2 sm:gap-2">
+          <div>
             {isMultiModalSupported && (
-              <div className="hidden flex-shrink-0 sm:mb-[3px] sm:block">
+              <div className="flex-shrink-0">
                 <input
                   ref={attachInputRef}
                   type="file"
@@ -546,140 +647,61 @@ export const MessageInput = ({
                 </button>
               </div>
             )}
-            <div className="flex-1 relative">
-              {/* 画像添付インジケーター - アイコンのみ表示設定の場合 */}
-              {showIconDisplay && (
-                <div className="absolute left-3 top-[15px] z-10 flex h-4 w-4 items-center justify-center">
-                  <div
-                    className="relative flex h-4 w-4 cursor-pointer items-center justify-center"
-                    onMouseEnter={() => setShowImageActions(true)}
-                    onMouseLeave={() => setShowImageActions(false)}
-                    onFocus={() => setShowImageActions(true)}
-                    onBlur={() => setShowImageActions(false)}
-                    onKeyDown={(event) => {
-                      if (event.key === 'Enter' || event.key === ' ') {
-                        event.preventDefault()
-                        setShowImageActions(true)
-                      }
-                    }}
-                    tabIndex={0}
-                    role="button"
-                    aria-label={t('RemoveImage')}
-                  >
-                    <svg
-                      className="block h-4 w-4 text-text-primary"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"
-                      />
-                    </svg>
-                    {showImageActions && (
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation()
-                          handleRemoveImage()
-                          setShowImageActions(false)
-                        }}
-                        className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-xs text-theme transition-colors hover:bg-red-600"
-                        title={t('RemoveImage')}
-                      >
-                        ×
-                      </button>
-                    )}
-                  </div>
-                </div>
-              )}
-              <textarea
-                ref={textareaRef}
-                data-testid="chat-message-input"
-                placeholder={
-                  chatProcessing
-                    ? `${t('AnswerGenerating')}${loadingDots}`
-                    : continuousMicListeningMode && isMicRecording
-                      ? t('ListeningContinuously')
-                      : isMultiModalSupported && !isSmallScreen
-                        ? `${t('EnterYourQuestion')} (${t('PasteImageSupported') || 'Paste image supported'})`
-                        : t('EnterYourQuestion')
-                }
-                onChange={handleTextChange}
-                onPaste={handlePaste}
-                onKeyDown={handleKeyPress}
-                onDragOver={handleDragOver}
-                onDrop={handleDrop}
-                disabled={chatProcessing || slidePlaying || realtimeAPIMode}
-                className="block w-full bg-transparent text-[15px] font-bold text-[var(--aurora-text-strong)] outline-none transition-all duration-200 placeholder:text-[var(--aurora-text-muted)] disabled:opacity-60"
-                value={userMessage}
-                rows={rows}
-                maxLength={maxInputLength}
-                style={{
-                  lineHeight: '1.5',
-                  padding: showIconDisplay ? '12px 8px 12px 32px' : '12px 8px',
-                  resize: 'none',
-                  whiteSpace: 'pre-wrap',
-                }}
-              ></textarea>
-            </div>
-            <div className="flex flex-shrink-0 gap-1.5 sm:gap-2">
-              <IconButton
-                iconName={
-                  continuousMicListeningMode ? '24/Close' : '24/Microphone'
-                }
-                backgroundColor={
-                  continuousMicListeningMode
-                    ? isMicRecording
-                      ? 'bg-green-500 text-theme'
-                      : 'bg-green-600 text-theme'
-                    : isMicRecording
-                      ? 'bg-secondary text-theme'
-                      : 'bg-[var(--aurora-control-bg)] hover:bg-[var(--aurora-control-bg-hover)] disabled:bg-[var(--aurora-control-bg-disabled)]'
-                }
-                iconColor={
-                  continuousMicListeningMode || isMicRecording
-                    ? 'text-theme'
-                    : 'text-[var(--aurora-icon)]'
-                }
-                isProcessing={isMicRecording}
-                isProcessingIcon={
-                  continuousMicListeningMode ? '24/Microphone' : '24/PauseAlt'
-                }
-                disabled={
-                  continuousMicListeningMode || chatProcessing || isSpeaking
-                }
-                onClick={handleMicClick}
-                className={`!h-10 !min-h-10 !w-10 !min-w-10 !rounded-full !p-2 sm:!h-[46px] sm:!min-h-[46px] sm:!w-[46px] sm:!min-w-[46px] ring-0 transition-colors duration-200 focus:outline-none focus-visible:outline-none focus-visible:ring-0 ${
-                  isMicRecording && !continuousMicListeningMode
-                    ? 'animate-[aurora-mic-pulse_1.5s_ease-out_infinite]'
-                    : ''
-                }`}
-              />
+          </div>
+          <div className="flex flex-shrink-0 gap-1.5 sm:gap-2">
+            <IconButton
+              iconName={
+                continuousMicListeningMode ? '24/Close' : '24/Microphone'
+              }
+              backgroundColor={
+                continuousMicListeningMode
+                  ? isMicRecording
+                    ? 'bg-green-500 text-theme'
+                    : 'bg-green-600 text-theme'
+                  : isMicRecording
+                    ? 'bg-secondary text-theme'
+                    : 'bg-[var(--aurora-control-bg)] hover:bg-[var(--aurora-control-bg-hover)] disabled:bg-[var(--aurora-control-bg-disabled)]'
+              }
+              iconColor={
+                continuousMicListeningMode || isMicRecording
+                  ? 'text-theme'
+                  : 'text-[var(--aurora-icon)]'
+              }
+              isProcessing={isMicRecording}
+              isProcessingIcon={
+                continuousMicListeningMode ? '24/Microphone' : '24/PauseAlt'
+              }
+              disabled={
+                continuousMicListeningMode || chatProcessing || isSpeaking
+              }
+              onClick={handleMicClick}
+              className={`!h-10 !min-h-10 !w-10 !min-w-10 !rounded-full !p-2 sm:!h-[46px] sm:!min-h-[46px] sm:!w-[46px] sm:!min-w-[46px] ring-0 transition-colors duration-200 focus:outline-none focus-visible:outline-none focus-visible:ring-0 ${
+                isMicRecording && !continuousMicListeningMode
+                  ? 'animate-[aurora-mic-pulse_1.5s_ease-out_infinite]'
+                  : ''
+              }`}
+            />
 
-              <IconButton
-                iconName="24/Send"
-                className="!h-10 !min-h-10 !w-10 !min-w-10 !rounded-full !p-2 sm:!h-[46px] sm:!min-h-[46px] sm:!w-[46px] sm:!min-w-[46px] shadow-[0_4px_14px_rgba(0,0,0,0.18)] ring-0 transition duration-200 hover:brightness-110 focus:outline-none focus-visible:outline-none focus-visible:ring-0 disabled:shadow-none"
-                isProcessing={chatProcessing}
-                disabled={chatProcessing || !userMessage || realtimeAPIMode}
-                onClick={handleSendClick}
-                data-testid="chat-send-button"
-              />
+            <IconButton
+              iconName="24/Send"
+              className="!h-10 !min-h-10 !w-10 !min-w-10 !rounded-full !p-2 sm:!h-[46px] sm:!min-h-[46px] sm:!w-[46px] sm:!min-w-[46px] shadow-[0_4px_14px_rgba(0,0,0,0.18)] ring-0 transition duration-200 hover:brightness-110 focus:outline-none focus-visible:outline-none focus-visible:ring-0 disabled:shadow-none"
+              isProcessing={chatProcessing}
+              disabled={chatProcessing || !userMessage || realtimeAPIMode}
+              onClick={handleSendClick}
+              data-testid="chat-send-button"
+            />
 
-              <IconButton
-                iconName="stop"
-                backgroundColor="bg-[var(--aurora-control-bg)] hover:bg-[var(--aurora-control-bg-hover)]"
-                className="!h-10 !min-h-10 !w-10 !min-w-10 !rounded-full !p-2 sm:!h-[46px] sm:!min-h-[46px] sm:!w-[46px] sm:!min-w-[46px] ring-0 transition-colors duration-200 focus:outline-none focus-visible:outline-none focus-visible:ring-0"
-                onClick={onClickStopButton}
-                isProcessing={false}
-                data-testid="chat-stop-button"
-              />
-            </div>
+            <IconButton
+              iconName="stop"
+              backgroundColor="bg-[var(--aurora-control-bg)] hover:bg-[var(--aurora-control-bg-hover)]"
+              className="!h-10 !min-h-10 !w-10 !min-w-10 !rounded-full !p-2 sm:!h-[46px] sm:!min-h-[46px] sm:!w-[46px] sm:!min-w-[46px] ring-0 transition-colors duration-200 focus:outline-none focus-visible:outline-none focus-visible:ring-0"
+              onClick={onClickStopButton}
+              isProcessing={false}
+              data-testid="chat-stop-button"
+            />
           </div>
         </div>
       </div>
-    </div>
+    </>
   )
 }

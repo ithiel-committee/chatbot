@@ -9,7 +9,6 @@ const AdvancedSettings = () => {
     (s) => s.includeTimestampInUserMessage
   )
   const useVideoAsBackground = settingsStore((s) => s.useVideoAsBackground)
-  const showQuickMenu = settingsStore((s) => s.showQuickMenu)
 
   const { t } = useTranslation()
 
@@ -40,15 +39,6 @@ const AdvancedSettings = () => {
             onChange={(v) =>
               settingsStore.setState({ useVideoAsBackground: v })
             }
-          />
-        </div>
-      </div>
-      <div className="border-t border-gray-300 pt-6 my-6">
-        <div className="my-4 text-xl font-bold">{t('ShowQuickMenu')}</div>
-        <div className="my-2">
-          <ToggleSwitch
-            enabled={showQuickMenu}
-            onChange={(v) => settingsStore.setState({ showQuickMenu: v })}
           />
         </div>
       </div>

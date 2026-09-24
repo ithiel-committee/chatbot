@@ -8,13 +8,20 @@ import i18n from '@/lib/i18n'
 import migrateStore from '@/utils/migrateStore'
 
 export default function AppInitializer() {
+  const showMouseCursor = settingsStore((s) => s.showMouseCursor)
+
+  useEffect(() => {
+    if (typeof document !== 'undefined') {
+      document.body.classList.toggle('hide-mouse-cursor', !showMouseCursor)
+    }
+  }, [showMouseCursor])
+
   useEffect(() => {
     const hs = homeStore.getState()
     const ss = settingsStore.getState()
 
     if (hs.userOnboarded) {
       i18n.changeLanguage(ss.selectLanguage)
-      document.documentElement.setAttribute('data-theme', ss.colorTheme)
       return
     }
 
@@ -35,7 +42,6 @@ export default function AppInitializer() {
     i18n.changeLanguage(language)
     settingsStore.setState({ selectLanguage: language })
 
-    document.documentElement.setAttribute('data-theme', ss.colorTheme)
     homeStore.setState({ userOnboarded: true })
   }, [])
 

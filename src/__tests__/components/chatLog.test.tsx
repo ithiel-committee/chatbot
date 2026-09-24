@@ -152,7 +152,7 @@ describe('ChatLog', () => {
 
     const { container } = render(<ChatLog />)
     const panel = container.firstChild as HTMLElement
-    expect(panel.className).toContain('right-2')
+    expect(panel.className).toContain('right-3')
 
     const resizeHandle = container.querySelector(
       '.cursor-ew-resize'
@@ -202,7 +202,7 @@ describe('ChatLog', () => {
     const panel = container.firstChild as HTMLElement
 
     expect(panel.className).not.toContain('aurora-glass-panel')
-    expect(panel.className).toContain('left-2')
+    expect(panel.className).toContain('left-3')
     const classicCard = container.querySelector('.classic-chat-card')
     expect(classicCard).not.toBeNull()
     expect(classicCard?.className).toContain('bg-white/75')

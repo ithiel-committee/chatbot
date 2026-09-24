@@ -88,12 +88,12 @@ describe('settingsStore persistence', () => {
     expect(settingsStore.getState().chatLogMode).toBe('hidden')
   })
 
-  it('falls back to the assistant view for an invalid chat log mode', () => {
+  it('falls back to the chat-log view for an invalid chat log mode', () => {
     process.env.NEXT_PUBLIC_CHAT_LOG_MODE = 'invalid'
 
     const settingsStore = loadStore()
 
-    expect(settingsStore.getState().chatLogMode).toBe('assistant')
+    expect(settingsStore.getState().chatLogMode).toBe('chat-log')
   })
 
   it('persists customized keyboard shortcuts', () => {

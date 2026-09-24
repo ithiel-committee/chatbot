@@ -55,22 +55,22 @@ export default defineConfig({
   },
   projects: isProductionMode
     ? [
-        {
-          name: 'production-chromium',
-          testMatch: productionSpecs,
-          use: { ...devices['Desktop Chrome'] },
-        },
-      ]
+      {
+        name: 'production-chromium',
+        testMatch: productionSpecs,
+        use: { ...devices['Desktop Chrome'] },
+      },
+    ]
     : [
-        {
-          name: 'chromium',
-          testMatch: desktopSpecs,
-          use: { ...devices['Desktop Chrome'] },
-        },
-        {
-          name: 'mobile-chromium',
-          testMatch: mobileSpecs,
-          use: { ...devices['Pixel 5'] },
-        },
-      ],
+      {
+        name: 'chromium',
+        testMatch: desktopSpecs,
+        use: { ...devices['Desktop Chrome'] },
+      },
+      {
+        name: 'mobile-chromium',
+        testMatch: mobileSpecs,
+        use: { ...devices['Pixel 5'] },
+      },
+    ],
 })

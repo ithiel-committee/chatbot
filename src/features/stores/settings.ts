@@ -243,7 +243,7 @@ interface General {
   showInputForm: boolean
   settingsToggleShortcut: string
   voiceInputShortcut: string
-  showQuickMenu: boolean
+  showMouseCursor: boolean
   externalLinkageMode: boolean
   externalLinkageUrl: string
   realtimeAPIMode: boolean
@@ -283,15 +283,15 @@ interface General {
   imageDisplayPosition: 'input' | 'side' | 'icon'
   multiModalAiDecisionPrompt: string
   enableMultiModal: boolean
-  colorTheme: 'default' | 'cool' | 'mono' | 'ocean' | 'forest' | 'sunset'
   customModel: boolean
+  screenOrientation: 'normal' | 'flip-h' | 'flip-v' | 'flip-hv'
 }
 
 interface ModelType {
   modelType: 'vrm' | 'live2d' | 'pngtuber'
 }
 
-// Presence detection sensitivity type
+// presence detection sensitivity type
 export type PresenceDetectionSensitivity = 'low' | 'medium' | 'high'
 
 interface PresenceDetectionSettings {
@@ -325,7 +325,7 @@ const parseEnvInt = (value: string | undefined, fallback: number): number => {
   return Number.isNaN(parsed) ? fallback : parsed
 }
 
-// Function to get initial values from environment variables
+// function to get initial values from environment variables
 const getInitialWhisperTranscriptionModel = (): WhisperTranscriptionModel => {
   const configuredModel = migrateOpenAITranscriptionModel(
     process.env.NEXT_PUBLIC_WHISPER_TRANSCRIPTION_MODEL ||
@@ -365,7 +365,7 @@ const getInitialValuesFromEnv = (): SettingsState => ({
   cartesiaApiKey: '',
   azureEndpoint: process.env.NEXT_PUBLIC_AZURE_ENDPOINT || '',
 
-  // Model Provider
+  // model provider
   selectAIService:
     (process.env.NEXT_PUBLIC_SELECT_AI_SERVICE as AIService) || 'openai',
   selectAIModel: migrateOpenAIModelName(
@@ -468,7 +468,7 @@ const getInitialValuesFromEnv = (): SettingsState => ({
   customApiIncludeMimeType:
     process.env.NEXT_PUBLIC_CUSTOM_API_INCLUDE_MIME_TYPE !== 'false',
 
-  // Integrations
+  // integrations
   difyUrl: '',
   difyConversationId: '',
   youtubeMode: process.env.NEXT_PUBLIC_YOUTUBE_MODE === 'true' ? true : false,
@@ -506,8 +506,8 @@ const getInitialValuesFromEnv = (): SettingsState => ({
   youtubeCommentInterval:
     parseInt(process.env.NEXT_PUBLIC_YOUTUBE_COMMENT_INTERVAL || '10') || 10,
 
-  // Character
-  characterName: process.env.NEXT_PUBLIC_CHARACTER_NAME || 'イティエル',
+  // character
+  characterName: process.env.NEXT_PUBLIC_CHARACTER_NAME || 'キャラクター',
   userDisplayName: process.env.NEXT_PUBLIC_USER_DISPLAY_NAME || 'あなた',
   characterPreset1: process.env.NEXT_PUBLIC_CHARACTER_PRESET1 || '',
   characterPreset2: process.env.NEXT_PUBLIC_CHARACTER_PRESET2 || '',
@@ -568,7 +568,7 @@ const getInitialValuesFromEnv = (): SettingsState => ({
     parseFloat(process.env.NEXT_PUBLIC_LIGHTING_INTENSITY || '1.0') || 1.0,
   poseAdjustMode: false,
 
-  // General
+  // general
   selectLanguage: (process.env.NEXT_PUBLIC_SELECT_LANGUAGE as Language) || 'ja',
   changeEnglishToJapanese:
     process.env.NEXT_PUBLIC_CHANGE_ENGLISH_TO_JAPANESE === 'true',
@@ -584,7 +584,7 @@ const getInitialValuesFromEnv = (): SettingsState => ({
     process.env.NEXT_PUBLIC_VOICE_INPUT_SHORTCUT,
     DEFAULT_VOICE_INPUT_SHORTCUT
   ),
-  showQuickMenu: process.env.NEXT_PUBLIC_SHOW_QUICK_MENU === 'true',
+  showMouseCursor: process.env.NEXT_PUBLIC_SHOW_MOUSE_CURSOR !== 'false',
   externalLinkageMode: process.env.NEXT_PUBLIC_EXTERNAL_LINKAGE_MODE === 'true',
   externalLinkageUrl:
     process.env.NEXT_PUBLIC_EXTERNAL_LINKAGE_URL || 'ws://localhost:8000/ws',
@@ -655,7 +655,7 @@ const getInitialValuesFromEnv = (): SettingsState => ({
     parseFloat(process.env.NEXT_PUBLIC_CHAT_LOG_WIDTH || '400') || 400,
   chatLogMode: (() => {
     const mode = process.env.NEXT_PUBLIC_CHAT_LOG_MODE
-    return mode === 'hidden' || mode === 'chat-log' ? mode : 'assistant'
+    return mode === 'hidden' || mode === 'assistant' ? mode : 'chat-log'
   })(),
   chatLogPosition:
     process.env.NEXT_PUBLIC_CHAT_LOG_POSITION === 'left' ? 'left' : 'right',
@@ -675,19 +675,19 @@ const getInitialValuesFromEnv = (): SettingsState => ({
   multiModalAiDecisionPrompt:
     process.env.NEXT_PUBLIC_MULTIMODAL_AI_DECISION_PROMPT || '',
   enableMultiModal: process.env.NEXT_PUBLIC_ENABLE_MULTIMODAL !== 'false',
-  colorTheme:
-    (process.env.NEXT_PUBLIC_COLOR_THEME as
-      | 'default'
-      | 'cool'
-      | 'mono'
-      | 'ocean'
-      | 'forest'
-      | 'sunset') || 'mono',
 
-  // Custom model toggle
+  // custom model toggle
   customModel: process.env.NEXT_PUBLIC_CUSTOM_MODEL === 'true',
 
-  // Settings
+  // screen orientation
+  screenOrientation:
+    (process.env.NEXT_PUBLIC_SCREEN_ORIENTATION as
+      | 'normal'
+      | 'flip-h'
+      | 'flip-v'
+      | 'flip-hv') || 'normal',
+
+  // settings
   modelType:
     (process.env.NEXT_PUBLIC_MODEL_TYPE as
       | 'vrm'
@@ -737,7 +737,7 @@ const getInitialValuesFromEnv = (): SettingsState => ({
     process.env.NEXT_PUBLIC_THINKING_POSE_ENABLED === 'true' || false,
   thinkingPoseId: process.env.NEXT_PUBLIC_THINKING_POSE_ID || 'think',
 
-  // Memory settings
+  // memory settings
   memoryEnabled:
     process.env.NEXT_PUBLIC_MEMORY_ENABLED === 'true' ||
     DEFAULT_MEMORY_CONFIG.memoryEnabled,
@@ -751,7 +751,7 @@ const getInitialValuesFromEnv = (): SettingsState => ({
     parseInt(process.env.NEXT_PUBLIC_MEMORY_MAX_CONTEXT_TOKENS || '') ||
     DEFAULT_MEMORY_CONFIG.memoryMaxContextTokens,
 
-  // Presence detection settings
+  // presence detection settings
   presenceDetectionEnabled:
     process.env.NEXT_PUBLIC_PRESENCE_DETECTION_ENABLED === 'true',
   presenceGreetingPhrases: (() => {
@@ -780,7 +780,7 @@ const getInitialValuesFromEnv = (): SettingsState => ({
   presenceSelectedCameraId:
     process.env.NEXT_PUBLIC_PRESENCE_SELECTED_CAMERA_ID || '',
 
-  // Idle mode settings
+  // idle mode settings
   idleModeEnabled:
     process.env.NEXT_PUBLIC_IDLE_MODE_ENABLED === 'true' ||
     DEFAULT_IDLE_CONFIG.idleModeEnabled,
@@ -822,7 +822,7 @@ const getInitialValuesFromEnv = (): SettingsState => ({
     DEFAULT_IDLE_CONFIG.idleAiGenerationEnabled,
   idleAiPromptTemplate: process.env.NEXT_PUBLIC_IDLE_AI_PROMPT_TEMPLATE || '',
 
-  // Kiosk mode settings
+  // kiosk mode settings
   kioskModeEnabled:
     process.env.NEXT_PUBLIC_KIOSK_MODE_ENABLED === 'true' ||
     DEFAULT_KIOSK_CONFIG.kioskModeEnabled,
@@ -846,7 +846,7 @@ const getInitialValuesFromEnv = (): SettingsState => ({
     DEFAULT_KIOSK_CONFIG.kioskGuidanceTimeout,
   kioskTemporaryUnlock: DEFAULT_KIOSK_CONFIG.kioskTemporaryUnlock,
 
-  // Game commentary settings
+  // game commentary settings
   gameCommentaryEnabled:
     process.env.NEXT_PUBLIC_GAME_COMMENTARY_ENABLED === 'true' ||
     DEFAULT_GAME_COMMENTARY_CONFIG.gameCommentaryEnabled,
@@ -891,7 +891,7 @@ const getInitialValuesFromEnv = (): SettingsState => ({
     )
   ),
 
-  // Live2D settings
+  // live2D settings
   neutralEmotions: process.env.NEXT_PUBLIC_NEUTRAL_EMOTIONS?.split(',') || [],
   happyEmotions: process.env.NEXT_PUBLIC_HAPPY_EMOTIONS?.split(',') || [],
   sadEmotions: process.env.NEXT_PUBLIC_SAD_EMOTIONS?.split(',') || [],
@@ -1280,7 +1280,7 @@ export const selectPersistedSettings = (state: SettingsState) => ({
   hideVideoDisplay: state.hideVideoDisplay,
   showControlPanel: state.showControlPanel,
   showInputForm: state.showInputForm,
-  showQuickMenu: state.showQuickMenu,
+  showMouseCursor: state.showMouseCursor,
   temperature: state.temperature,
   maxTokens: state.maxTokens,
   reasoningMode: state.reasoningMode,
@@ -1309,7 +1309,6 @@ export const selectPersistedSettings = (state: SettingsState) => ({
   imageDisplayPosition: state.imageDisplayPosition,
   multiModalAiDecisionPrompt: state.multiModalAiDecisionPrompt,
   enableMultiModal: state.enableMultiModal,
-  colorTheme: state.colorTheme,
   customModel: state.customModel,
   memoryEnabled: state.memoryEnabled,
   memorySimilarityThreshold: state.memorySimilarityThreshold,
@@ -1325,7 +1324,7 @@ export const selectPersistedSettings = (state: SettingsState) => ({
   presenceDeparturePhrases: state.presenceDeparturePhrases,
   presenceClearChatOnDeparture: state.presenceClearChatOnDeparture,
   presenceSelectedCameraId: state.presenceSelectedCameraId,
-  // Idle mode settings
+  // idle mode settings
   idleModeEnabled: state.idleModeEnabled,
   idlePhrases: state.idlePhrases,
   idlePlaybackMode: state.idlePlaybackMode,
@@ -1340,7 +1339,7 @@ export const selectPersistedSettings = (state: SettingsState) => ({
   idleTimePeriodEveningEmotion: state.idleTimePeriodEveningEmotion,
   idleAiGenerationEnabled: state.idleAiGenerationEnabled,
   idleAiPromptTemplate: state.idleAiPromptTemplate,
-  // Kiosk mode settings (kioskTemporaryUnlock is NOT persisted)
+  // kiosk mode settings (kioskTemporaryUnlock is NOT persisted)
   kioskModeEnabled: state.kioskModeEnabled,
   kioskPasscode: state.kioskPasscode,
   kioskGuidanceMessage: state.kioskGuidanceMessage,
@@ -1350,7 +1349,7 @@ export const selectPersistedSettings = (state: SettingsState) => ({
   kioskNgWordEnabled: state.kioskNgWordEnabled,
   thinkingPoseEnabled: state.thinkingPoseEnabled,
   thinkingPoseId: state.thinkingPoseId,
-  // Game commentary settings
+  // game commentary settings
   gameCommentaryEnabled: state.gameCommentaryEnabled,
   gameCommentaryCaptureInterval: state.gameCommentaryCaptureInterval,
   gameCommentaryContextCount: state.gameCommentaryContextCount,
