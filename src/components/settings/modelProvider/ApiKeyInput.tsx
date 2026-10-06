@@ -16,12 +16,13 @@ export const ApiKeyInput = ({
   label,
   value,
   onChange,
-  placeholder = '...',
+  placeholder,
   linkUrl,
   linkLabel,
   description,
 }: ApiKeyInputProps) => {
   const { t } = useTranslation()
+  const effectivePlaceholder = placeholder || t('APIKeyPlaceholder')
 
   return (
     <div className="my-6">
@@ -38,7 +39,7 @@ export const ApiKeyInput = ({
       <input
         className={settingsControlClass.long}
         type="password"
-        placeholder={placeholder}
+        placeholder={effectivePlaceholder}
         value={value}
         onChange={(e) => onChange(e.target.value)}
       />
