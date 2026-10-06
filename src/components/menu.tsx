@@ -7,13 +7,17 @@ import menuStore from '@/features/stores/menu'
 import settingsStore, { type ChatLogMode } from '@/features/stores/settings'
 import slideStore from '@/features/stores/slide'
 import presentationStore from '@/features/stores/presentation'
+import dynamic from 'next/dynamic'
 import { AssistantText } from './assistantText'
 import { ChatLog } from './chatLog'
 import { IconButton } from './iconButton'
-import Settings from './settings'
-import { Webcam } from './webcam'
-import Slides from './slides'
-import Capture from './capture'
+
+const Settings = dynamic(() => import('./settings'), { ssr: false })
+const Webcam = dynamic(() => import('./webcam').then((mod) => mod.Webcam), {
+  ssr: false,
+})
+const Slides = dynamic(() => import('./slides'), { ssr: false })
+const Capture = dynamic(() => import('./capture'), { ssr: false })
 import { DpadSettingsMenu } from './DpadSettingsMenu'
 import { PresetSubmenu } from './dock/PresetSubmenu'
 import { LayerOrderSubmenu } from './dock/LayerOrderSubmenu'
