@@ -354,6 +354,11 @@ const modelDefinitions: Record<AIService, ModelInfo[]> = {
   ],
   google: [
     {
+      name: 'gemini-3.8-flash',
+      multiModal: true,
+      reasoningEfforts: ['minimal', 'low', 'medium', 'high'],
+    },
+    {
       name: 'gemini-3.7-flash',
       multiModal: true,
       reasoningEfforts: ['minimal', 'low', 'medium', 'high'],
@@ -740,6 +745,7 @@ export function isMultiModalAvailable(
 }
 
 export const googleSearchGroundingModels = [
+  'gemini-3.8-flash',
   'gemini-3.7-flash',
   'gemini-3.6-flash',
   'gemini-3.5-flash',
