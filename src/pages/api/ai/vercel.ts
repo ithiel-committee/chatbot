@@ -62,6 +62,13 @@ async function handler(
         process.env[`${servicePrefix}_KEY`] ||
         process.env[`${servicePrefix}_API_KEY`] ||
         ''
+      if (!aiApiKey && aiService === 'google') {
+        aiApiKey =
+          process.env.GEMINI_API_KEY ||
+          process.env.GEMINI_KEY ||
+          process.env.GOOGLE_GENERATIVE_AI_API_KEY ||
+          ''
+      }
       usesServerSecret = Boolean(aiApiKey)
     }
     if (!aiApiKey) {

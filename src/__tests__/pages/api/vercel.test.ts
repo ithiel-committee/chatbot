@@ -475,6 +475,38 @@ describe('/api/ai/vercel handler', () => {
     })
   })
 
+  it('falls back to GEMINI_API_KEY when GOOGLE_API_KEY is not defined', async () => {
+    delete process.env.GOOGLE_KEY
+    delete process.env.GOOGLE_API_KEY
+    process.env.GEMINI_API_KEY = 'env-gemini'
+    process.env.AITUBERKIT_SERVER_SECRET_ACCESS_MODE = 'unprotected'
+    mockModifyMessages.mockReturnValue([
+      { role: 'user', content: 'hello' },
+    ] as any)
+    mockGenerateAiText.mockResolvedValue(new Response('done', { status: 200 }))
+
+    const { req, res } = createMocks({
+      method: 'POST',
+      body: {
+        messages: [],
+        apiKey: '',
+        aiService: 'google',
+        model: 'gemini-2.5-flash',
+        stream: false,
+      },
+    })
+
+    await handler(req as any, res as any)
+
+    expect(res._getStatusCode()).toBe(200)
+    expect(mockCreateAIRegistry).toHaveBeenCalledWith(
+      'google',
+      expect.objectContaining({
+        apiKey: 'env-gemini',
+      })
+    )
+  })
+
   it('does not guard non-azure requests only because AZURE_ENDPOINT is configured', async () => {
     process.env.AZURE_ENDPOINT =
       'https://my-resource.openai.azure.com/openai/deployments/my-deploy/chat/completions?api-version=2024-05-01-preview'
