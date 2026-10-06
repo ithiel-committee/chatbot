@@ -38,9 +38,6 @@ export function buildReasoningProviderOptions(
     case 'azure':
       return { azure: { reasoningEffort } }
 
-    case 'xai':
-      return { xai: { reasoningEffort } }
-
     case 'groq':
       // GroqはcreateOpenAI互換のため、providerOptionsキーはopenai
       // qwen3系はeffort値として'default'を送信
@@ -59,24 +56,6 @@ export function buildReasoningProviderOptions(
       }
       return { anthropic: anthropicOptions }
     }
-
-    case 'cohere':
-      return {
-        cohere: {
-          thinking: { type: 'enabled', tokenBudget: reasoningTokenBudget },
-        },
-      }
-
-    case 'fireworks':
-      return {
-        fireworks: {
-          thinking: {
-            type: 'enabled',
-            budgetTokens: reasoningTokenBudget,
-          },
-          reasoningHistory: 'interleaved',
-        },
-      }
 
     case 'google': {
       const isGoogle3Series = model.startsWith('gemini-3')

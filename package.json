@@ -24,23 +24,14 @@
     "test:e2e:report": "playwright show-report",
     "test:e2e:install": "playwright install chromium",
     "test:e2e:install:with-deps": "playwright install --with-deps chromium",
-    "test:e2e:production": "E2E_MODE=production playwright test",
-    "build:cloudflare": "node scripts/build-cloudflare.js",
-    "preview:cloudflare": "node scripts/build-cloudflare.js --preview",
-    "deploy:cloudflare": "node scripts/build-cloudflare.js --deploy"
+    "test:e2e:production": "E2E_MODE=production playwright test"
   },
   "dependencies": {
     "@ai-sdk/anthropic": "^3.0.85",
     "@ai-sdk/azure": "^3.0.77",
-    "@ai-sdk/cohere": "^3.0.39",
-    "@ai-sdk/deepseek": "^2.0.39",
-    "@ai-sdk/fireworks": "^2.0.57",
     "@ai-sdk/google": "^3.0.83",
-    "@ai-sdk/mistral": "^3.0.40",
     "@ai-sdk/openai": "^3.0.74",
     "@ai-sdk/openai-compatible": "^2.0.51",
-    "@ai-sdk/perplexity": "^3.0.36",
-    "@ai-sdk/xai": "^3.0.96",
     "@anthropic-ai/sdk": "^0.20.8",
     "@azure/identity": "^4.13.0",
     "@charcoal-ui/icons": "^5.1.0",
@@ -52,7 +43,6 @@
     "@heroicons/react": "^2.1.5",
     "@marp-team/marpit": "^3.2.1",
     "@mastra/core": "^1.1.0",
-    "@opennextjs/cloudflare": "^1.16.4",
     "@openrouter/ai-sdk-provider": "^2.1.1",
     "@pixiv/three-vrm": "^3.4.4",
     "@supabase/supabase-js": "^2.89.0",
@@ -123,8 +113,7 @@
     "ts-jest": "^29.4.6",
     "typescript": "5.0.2",
     "wait-on": "^7.2.0",
-    "web-streams-polyfill": "^4.2.0",
-    "wrangler": "^4.64.0"
+    "web-streams-polyfill": "^4.2.0"
   },
   "engines": {
     "node": "24.x",

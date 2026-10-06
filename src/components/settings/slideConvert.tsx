@@ -69,13 +69,7 @@ const SlideConvert: React.FC<SlideConvertProps> = ({ onFolderUpdate }) => {
     else if (aiService === 'anthropic') apiKey = settings.anthropicKey
     else if (aiService === 'google') apiKey = settings.googleKey
     else if (aiService === 'azure') apiKey = settings.azureKey
-    else if (aiService === 'xai') apiKey = settings.xaiKey
     else if (aiService === 'groq') apiKey = settings.groqKey
-    else if (aiService === 'cohere') apiKey = settings.cohereKey
-    else if (aiService === 'mistralai') apiKey = settings.mistralaiKey
-    else if (aiService === 'perplexity') apiKey = settings.perplexityKey
-    else if (aiService === 'fireworks') apiKey = settings.fireworksKey
-    else if (aiService === 'deepseek') apiKey = settings.deepseekKey
     else if (aiService === 'openrouter') apiKey = settings.openrouterKey
     else if (aiService === 'dify') apiKey = settings.difyKey
 

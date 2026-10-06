@@ -152,13 +152,7 @@ export const getSettingCategories = (
               azure: st.azureKey,
               groq: st.groqKey,
               dify: st.difyKey,
-              cohere: st.cohereKey,
-              mistralai: st.mistralaiKey,
-              perplexity: st.perplexityKey,
-              fireworks: st.fireworksKey,
-              deepseek: st.deepseekKey,
               openrouter: st.openrouterKey,
-              xai: st.xaiKey,
             }
             return keyMap[srv] || ''
           },
@@ -171,13 +165,7 @@ export const getSettingCategories = (
               azure: 'azureKey',
               groq: 'groqKey',
               dify: 'difyKey',
-              cohere: 'cohereKey',
-              mistralai: 'mistralaiKey',
-              perplexity: 'perplexityKey',
-              fireworks: 'fireworksKey',
-              deepseek: 'deepseekKey',
               openrouter: 'openrouterKey',
-              xai: 'xaiKey',
             }
             const field = keyFieldMap[srv]
             if (field) {
@@ -250,9 +238,6 @@ export const getSettingCategories = (
             { label: 'Aivis Cloud API', value: 'aivis_cloud_api' },
             { label: 'Google TTS', value: 'google' },
             { label: 'OpenAI TTS', value: 'openai' },
-            { label: 'Azure OpenAI TTS', value: 'azure' },
-            { label: 'ElevenLabs', value: 'elevenlabs' },
-            { label: 'Cartesia', value: 'cartesia' },
             { label: 'Style-Bert-VITS2', value: 'stylebertvits2' },
             { label: 'Koeiromap', value: 'koeiromap' },
           ],
