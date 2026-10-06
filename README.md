@@ -112,15 +112,15 @@ cp .env.example .env.local
 
 `.env.local` をエディタで開き、利用する AI サービス等の API キーを設定します。
 
-| 設定項目 | 説明 | 既定値・設定例 |
-| -- | -- | -- |
-| `OPENAI_API_KEY` | OpenAI API キー | `sk-...` |
-| `GEMINI_API_KEY` | Google Gemini API キー | `AIza...` |
-| `ANTHROPIC_API_KEY` | Anthropic Claude API キー | `sk-ant-...` |
-| `NEXT_PUBLIC_SELECT_LANGUAGE` | 初期表示言語 (`ja` / `en`) | `ja` |
-| `NEXT_PUBLIC_SELECTED_VRM_PATH` | 初期表示のVRMモデルパス | `/vrm/ithiel.vrm` |
-| `NEXT_PUBLIC_BACKGROUND_IMAGE_PATH` | 初期表示の背景画像パス | `/backgrounds/bg.jpg` |
-| `NEXT_PUBLIC_VOICEVOX_SERVER_URL` | VOICEVOX サーバーのURL | `http://localhost:50021` |
+| 設定項目                            | 説明                       | 既定値・設定例           |
+| ----------------------------------- | -------------------------- | ------------------------ |
+| `OPENAI_API_KEY`                    | OpenAI API キー            | `sk-...`                 |
+| `GEMINI_API_KEY`                    | Google Gemini API キー     | `AIza...`                |
+| `ANTHROPIC_API_KEY`                 | Anthropic Claude API キー  | `sk-ant-...`             |
+| `NEXT_PUBLIC_SELECT_LANGUAGE`       | 初期表示言語 (`ja` / `en`) | `ja`                     |
+| `NEXT_PUBLIC_SELECTED_VRM_PATH`     | 初期表示のVRMモデルパス    | `/vrm/ithiel.vrm`        |
+| `NEXT_PUBLIC_BACKGROUND_IMAGE_PATH` | 初期表示の背景画像パス     | `/backgrounds/bg.jpg`    |
+| `NEXT_PUBLIC_VOICEVOX_SERVER_URL`   | VOICEVOX サーバーのURL     | `http://localhost:50021` |
 
 ※ ブラウザの設定画面から入力した API キーやモデル選択は、ブラウザのローカルストレージに優先保存されます。
 
@@ -151,18 +151,18 @@ pnpm dev
 
 ## コマンド一覧
 
-| コマンド | 実行内容 |
-| -- | -- |
-| `pnpm install` | 依存パッケージのインストール |
-| `pnpm dev` | 開発サーバーの起動 (http://localhost:3000) |
-| `pnpm build` | 本番用ビルドの生成 |
-| `pnpm start` | 本番サーバーの起動 |
-| `pnpm run lint` | ESLint による静的解析 |
-| `pnpm run lint:fix` | ESLint によるコード自動修正 |
-| `pnpm run format` | Prettier によるコード整形 |
-| `pnpm test` | Jest による単体テストの実行 |
-| `pnpm run test:coverage` | カバレッジ付き単体テストの実行 |
-| `pnpm run test:e2e` | Playwright による E2E テストの実行 |
+| コマンド                 | 実行内容                                   |
+| ------------------------ | ------------------------------------------ |
+| `pnpm install`           | 依存パッケージのインストール               |
+| `pnpm dev`               | 開発サーバーの起動 (http://localhost:3000) |
+| `pnpm build`             | 本番用ビルドの生成                         |
+| `pnpm start`             | 本番サーバーの起動                         |
+| `pnpm run lint`          | ESLint による静的解析                      |
+| `pnpm run lint:fix`      | ESLint によるコード自動修正                |
+| `pnpm run format`        | Prettier によるコード整形                  |
+| `pnpm test`              | Jest による単体テストの実行                |
+| `pnpm run test:coverage` | カバレッジ付き単体テストの実行             |
+| `pnpm run test:e2e`      | Playwright による E2E テストの実行         |
 
 ## かんたん起動・Docker実行
 
