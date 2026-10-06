@@ -106,18 +106,10 @@ const defaultVoiceState = {
   stylebertvits2Style: 'Neutral',
   stylebertvits2SdpRatio: 0.2,
   stylebertvits2Length: 1.0,
-  gsviTtsServerUrl: '',
-  gsviTtsModelId: '0',
-  gsviTtsBatchSize: 2,
-  gsviTtsSpeechRate: 1.0,
-  elevenlabsVoiceId: '',
-  cartesiaVoiceId: '',
   openaiKey: '',
   openaiTTSVoice: 'shimmer' as const,
   openaiTTSModel: 'tts-1' as const,
   openaiTTSSpeed: 1.0,
-  azureTTSKey: '',
-  azureTTSEndpoint: '',
 }
 
 describe('Voice Settings', () => {
@@ -146,7 +138,6 @@ describe('Voice Settings', () => {
       expect(screen.getByText('UsingGoogleTTS')).toBeTruthy()
       expect(screen.getByText('UsingStyleBertVITS2')).toBeTruthy()
       expect(screen.getByText('UsingAivisSpeech')).toBeTruthy()
-      expect(screen.getByText('UsingElevenLabs')).toBeTruthy()
       expect(screen.getByText('UsingOpenAITTS')).toBeTruthy()
     })
   })

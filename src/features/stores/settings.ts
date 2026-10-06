@@ -61,24 +61,14 @@ interface APIKeys {
   anthropicKey: string
   googleKey: string
   azureKey: string
-  xaiKey: string
   groqKey: string
   difyKey: string
-  cohereKey: string
-  mistralaiKey: string
-  perplexityKey: string
-  fireworksKey: string
-  deepseekKey: string
   openrouterKey: string
   lmstudioKey: string
   ollamaKey: string
   koeiromapKey: string
   youtubeApiKey: string
-  elevenlabsApiKey: string
-  cartesiaApiKey: string
   azureEndpoint: string
-  azureTTSKey: string
-  azureTTSEndpoint: string
   customApiUrl: string
   customApiHeaders: string
   customApiBody: string
@@ -140,12 +130,6 @@ interface ModelProvider extends Live2DSettings {
   stylebertvits2Style: string
   stylebertvits2SdpRatio: number
   stylebertvits2Length: number
-  gsviTtsServerUrl: string
-  gsviTtsModelId: string
-  gsviTtsBatchSize: number
-  gsviTtsSpeechRate: number
-  elevenlabsVoiceId: string
-  cartesiaVoiceId: string
   openaiTTSVoice: OpenAITTSVoice
   openaiTTSModel: OpenAITTSModel
   openaiTTSSpeed: number
@@ -348,21 +332,13 @@ const getInitialValuesFromEnv = (): SettingsState => ({
     process.env.NEXT_PUBLIC_AZURE_API_KEY ||
     process.env.NEXT_PUBLIC_AZURE_KEY ||
     '',
-  xaiKey: '',
   groqKey: '',
-  cohereKey: '',
-  mistralaiKey: '',
-  perplexityKey: '',
-  fireworksKey: '',
   difyKey: '',
-  deepseekKey: '',
   openrouterKey: '',
   lmstudioKey: '',
   ollamaKey: '',
   koeiromapKey: process.env.NEXT_PUBLIC_KOEIROMAP_KEY || '',
   youtubeApiKey: process.env.NEXT_PUBLIC_YOUTUBE_API_KEY || '',
-  elevenlabsApiKey: '',
-  cartesiaApiKey: '',
   azureEndpoint: process.env.NEXT_PUBLIC_AZURE_ENDPOINT || '',
 
   // model provider
@@ -443,22 +419,12 @@ const getInitialValuesFromEnv = (): SettingsState => ({
     0.2,
   stylebertvits2Length:
     parseFloat(process.env.NEXT_PUBLIC_STYLEBERTVITS2_LENGTH || '1.0') || 1.0,
-  gsviTtsServerUrl: process.env.NEXT_PUBLIC_GSVI_TTS_URL || '',
-  gsviTtsModelId: process.env.NEXT_PUBLIC_GSVI_TTS_MODEL_ID || '0',
-  gsviTtsBatchSize:
-    parseInt(process.env.NEXT_PUBLIC_GSVI_TTS_BATCH_SIZE || '2') || 2,
-  gsviTtsSpeechRate:
-    parseFloat(process.env.NEXT_PUBLIC_GSVI_TTS_SPEECH_RATE || '1.0') || 1.0,
-  elevenlabsVoiceId: process.env.NEXT_PUBLIC_ELEVENLABS_VOICE_ID || '',
-  cartesiaVoiceId: process.env.NEXT_PUBLIC_CARTESIA_VOICE_ID || '',
   openaiTTSVoice:
     (process.env.NEXT_PUBLIC_OPENAI_TTS_VOICE as OpenAITTSVoice) || 'shimmer',
   openaiTTSModel:
     (process.env.NEXT_PUBLIC_OPENAI_TTS_MODEL as OpenAITTSModel) || 'tts-1',
   openaiTTSSpeed:
     parseFloat(process.env.NEXT_PUBLIC_OPENAI_TTS_SPEED || '1.0') || 1.0,
-  azureTTSKey: '',
-  azureTTSEndpoint: '',
   customApiUrl: process.env.NEXT_PUBLIC_CUSTOM_API_URL || '',
   customApiHeaders: process.env.NEXT_PUBLIC_CUSTOM_API_HEADERS || '{}',
   customApiBody: process.env.NEXT_PUBLIC_CUSTOM_API_BODY || '{}',
@@ -1107,10 +1073,6 @@ const mergePersistedSettings = (
     mergedState.userDisplayName = currentState.userDisplayName
   }
 
-  if (mergedState.colorTheme === 'default' || !mergedState.colorTheme) {
-    mergedState.colorTheme = currentState.colorTheme
-  }
-
   if (process.env.NEXT_PUBLIC_ALWAYS_OVERRIDE_WITH_ENV_VARIABLES === 'true') {
     return {
       ...mergedState,
@@ -1126,21 +1088,13 @@ export const selectPersistedSettings = (state: SettingsState) => ({
   anthropicKey: state.anthropicKey,
   googleKey: state.googleKey,
   azureKey: state.azureKey,
-  xaiKey: state.xaiKey,
   groqKey: state.groqKey,
-  cohereKey: state.cohereKey,
-  mistralaiKey: state.mistralaiKey,
-  perplexityKey: state.perplexityKey,
-  fireworksKey: state.fireworksKey,
   difyKey: state.difyKey,
-  deepseekKey: state.deepseekKey,
   openrouterKey: state.openrouterKey,
   lmstudioKey: state.lmstudioKey,
   ollamaKey: state.ollamaKey,
   koeiromapKey: state.koeiromapKey,
   youtubeApiKey: state.youtubeApiKey,
-  elevenlabsApiKey: state.elevenlabsApiKey,
-  cartesiaApiKey: state.cartesiaApiKey,
   azureEndpoint: state.azureEndpoint,
   selectAIService: state.selectAIService,
   selectAIModel: state.selectAIModel,
@@ -1178,12 +1132,6 @@ export const selectPersistedSettings = (state: SettingsState) => ({
   stylebertvits2Style: state.stylebertvits2Style,
   stylebertvits2SdpRatio: state.stylebertvits2SdpRatio,
   stylebertvits2Length: state.stylebertvits2Length,
-  gsviTtsServerUrl: state.gsviTtsServerUrl,
-  gsviTtsModelId: state.gsviTtsModelId,
-  gsviTtsBatchSize: state.gsviTtsBatchSize,
-  gsviTtsSpeechRate: state.gsviTtsSpeechRate,
-  elevenlabsVoiceId: state.elevenlabsVoiceId,
-  cartesiaVoiceId: state.cartesiaVoiceId,
   difyUrl: state.difyUrl,
   difyConversationId: state.difyConversationId,
   youtubeMode: state.youtubeMode,
@@ -1243,8 +1191,6 @@ export const selectPersistedSettings = (state: SettingsState) => ({
   openaiTTSVoice: state.openaiTTSVoice,
   openaiTTSModel: state.openaiTTSModel,
   openaiTTSSpeed: state.openaiTTSSpeed,
-  azureTTSKey: state.azureTTSKey,
-  azureTTSEndpoint: state.azureTTSEndpoint,
   selectedVrmPath: state.selectedVrmPath,
   selectedLive2DPath: state.selectedLive2DPath,
   fixedCharacterPosition: state.fixedCharacterPosition,

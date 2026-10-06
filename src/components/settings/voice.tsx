@@ -10,18 +10,12 @@ import {
   StyleBertVITS2Settings,
   AivisSpeechSettings,
   AivisCloudApiSettings,
-  GsviTtsSettings,
-  ElevenLabsSettings,
-  CartesiaSettings,
   OpenAITTSSettings,
-  AzureTTSSettings,
   TestVoiceSection,
 } from './voice/index'
 
 const Voice = () => {
   const koeiromapKey = settingsStore((s) => s.koeiromapKey)
-  const elevenlabsApiKey = settingsStore((s) => s.elevenlabsApiKey)
-  const cartesiaApiKey = settingsStore((s) => s.cartesiaApiKey)
 
   const realtimeAPIMode = settingsStore((s) => s.realtimeAPIMode)
   const audioMode = settingsStore((s) => s.audioMode)
@@ -77,18 +71,10 @@ const Voice = () => {
   const stylebertvits2Style = settingsStore((s) => s.stylebertvits2Style)
   const stylebertvits2SdpRatio = settingsStore((s) => s.stylebertvits2SdpRatio)
   const stylebertvits2Length = settingsStore((s) => s.stylebertvits2Length)
-  const gsviTtsServerUrl = settingsStore((s) => s.gsviTtsServerUrl)
-  const gsviTtsModelId = settingsStore((s) => s.gsviTtsModelId)
-  const gsviTtsBatchSize = settingsStore((s) => s.gsviTtsBatchSize)
-  const gsviTtsSpeechRate = settingsStore((s) => s.gsviTtsSpeechRate)
-  const elevenlabsVoiceId = settingsStore((s) => s.elevenlabsVoiceId)
-  const cartesiaVoiceId = settingsStore((s) => s.cartesiaVoiceId)
   const openaiAPIKey = settingsStore((s) => s.openaiKey)
   const openaiTTSVoice = settingsStore((s) => s.openaiTTSVoice)
   const openaiTTSModel = settingsStore((s) => s.openaiTTSModel)
   const openaiTTSSpeed = settingsStore((s) => s.openaiTTSSpeed)
-  const azureTTSKey = settingsStore((s) => s.azureTTSKey)
-  const azureTTSEndpoint = settingsStore((s) => s.azureTTSEndpoint)
   const { t } = useTranslation()
 
   // 追加: realtimeAPIMode または audioMode が true の場合にメッセージを表示
@@ -178,44 +164,12 @@ const Voice = () => {
                 aivisCloudPostPhonemeLength={aivisCloudPostPhonemeLength}
               />
             )
-          } else if (selectVoice === 'gsvitts') {
-            return (
-              <GsviTtsSettings
-                gsviTtsServerUrl={gsviTtsServerUrl}
-                gsviTtsModelId={gsviTtsModelId}
-                gsviTtsBatchSize={gsviTtsBatchSize}
-                gsviTtsSpeechRate={gsviTtsSpeechRate}
-              />
-            )
-          } else if (selectVoice === 'elevenlabs') {
-            return (
-              <ElevenLabsSettings
-                elevenlabsApiKey={elevenlabsApiKey}
-                elevenlabsVoiceId={elevenlabsVoiceId}
-              />
-            )
-          } else if (selectVoice === 'cartesia') {
-            return (
-              <CartesiaSettings
-                cartesiaApiKey={cartesiaApiKey}
-                cartesiaVoiceId={cartesiaVoiceId}
-              />
-            )
           } else if (selectVoice === 'openai') {
             return (
               <OpenAITTSSettings
                 openaiAPIKey={openaiAPIKey}
                 openaiTTSVoice={openaiTTSVoice}
                 openaiTTSModel={openaiTTSModel}
-                openaiTTSSpeed={openaiTTSSpeed}
-              />
-            )
-          } else if (selectVoice === 'azure') {
-            return (
-              <AzureTTSSettings
-                azureTTSKey={azureTTSKey}
-                azureTTSEndpoint={azureTTSEndpoint}
-                openaiTTSVoice={openaiTTSVoice}
                 openaiTTSSpeed={openaiTTSSpeed}
               />
             )

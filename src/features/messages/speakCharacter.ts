@@ -5,21 +5,14 @@ import { wait } from '@/utils/wait'
 import { Talk } from './messages'
 import { synthesizeStyleBertVITS2Api } from './synthesizeStyleBertVITS2'
 import { synthesizeVoiceKoeiromapApi } from './synthesizeVoiceKoeiromap'
-import {
-  synthesizeVoiceElevenlabsApi,
-  synthesizeVoiceElevenlabsStreamApi,
-} from './synthesizeVoiceElevenlabs'
-import { synthesizeVoiceCartesiaApi } from './synthesizeVoiceCartesia'
 import { synthesizeVoiceGoogleApi } from './synthesizeVoiceGoogle'
 import { synthesizeVoiceVoicevoxApi } from './synthesizeVoiceVoicevox'
 import { synthesizeVoiceAivisSpeechApi } from './synthesizeVoiceAivisSpeech'
 import { synthesizeVoiceAivisCloudApi } from './synthesizeVoiceAivisCloudApi'
-import { synthesizeVoiceGSVIApi } from './synthesizeVoiceGSVI'
 import {
   synthesizeVoiceOpenAIApi,
   synthesizeVoiceOpenAIStreamApi,
 } from './synthesizeVoiceOpenAI'
-import { synthesizeVoiceAzureOpenAIApi } from './synthesizeVoiceAzureOpenAI'
 import toastStore from '@/features/stores/toast'
 import i18next from 'i18next'
 import { SpeakQueue } from './speakQueue'
@@ -187,42 +180,12 @@ async function synthesizeVoice(
           ss.aivisCloudPrePhonemeLength,
           ss.aivisCloudPostPhonemeLength
         )
-      case 'gsvitts':
-        return await synthesizeVoiceGSVIApi(
-          talk,
-          ss.gsviTtsServerUrl,
-          ss.gsviTtsModelId,
-          ss.gsviTtsBatchSize,
-          ss.gsviTtsSpeechRate
-        )
-      case 'elevenlabs':
-        return await synthesizeVoiceElevenlabsApi(
-          talk,
-          ss.elevenlabsApiKey,
-          ss.elevenlabsVoiceId,
-          ss.selectLanguage
-        )
-      case 'cartesia':
-        return await synthesizeVoiceCartesiaApi(
-          talk,
-          ss.cartesiaApiKey,
-          ss.cartesiaVoiceId,
-          ss.selectLanguage
-        )
       case 'openai':
         return await synthesizeVoiceOpenAIApi(
           talk,
           ss.openaiKey,
           ss.openaiTTSVoice,
           ss.openaiTTSModel,
-          ss.openaiTTSSpeed
-        )
-      case 'azure':
-        return await synthesizeVoiceAzureOpenAIApi(
-          talk,
-          ss.azureTTSKey || ss.azureKey,
-          ss.azureTTSEndpoint || ss.azureEndpoint,
-          ss.openaiTTSVoice,
           ss.openaiTTSSpeed
         )
       default:
@@ -405,22 +368,6 @@ const createSpeakCharacter = () => {
         } else if (talk.message !== '') {
           markConversationLatency(sessionId, 'tts_request_started')
           if (
-            ss.selectVoice === 'elevenlabs' &&
-            getCharacterRenderer()?.speakPcm16Stream
-          ) {
-            const streamed = await synthesizeVoiceElevenlabsStreamApi(
-              talk,
-              ss.elevenlabsApiKey,
-              ss.elevenlabsVoiceId,
-              ss.selectLanguage,
-              () => markConversationLatency(sessionId, 'first_audio_chunk')
-            )
-            audio = {
-              kind: 'pcm16-stream',
-              audioStream: streamed.stream,
-              sampleRate: streamed.sampleRate,
-            }
-          } else if (
             ss.selectVoice === 'openai' &&
             getCharacterRenderer()?.speakPcm16Stream
           ) {
@@ -545,11 +492,7 @@ export const testVoice = async (voiceType: AIVoice, customText?: string) => {
     koeiromap: 'コエイロマップを使用します',
     google: 'Google Text-to-Speechを使用します',
     stylebertvits2: 'StyleBertVITS2を使用します',
-    gsvitts: 'GSVI TTSを使用します',
-    elevenlabs: 'ElevenLabsを使用します',
-    cartesia: 'Cartesiaを使用します',
     openai: 'OpenAI TTSを使用します',
-    azure: 'Azure TTSを使用します',
   }
 
   const message = customText || defaultMessages[voiceType]

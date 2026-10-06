@@ -34,8 +34,7 @@ type MultimodalImagePart = {
   image: string
 }
 
-const ttsApiPattern =
-  /\/api\/(tts-|stylebertvits2|elevenLabs|cartesia|openAITTS|azureOpenAITTS)/
+const ttsApiPattern = /\/api\/(tts-|stylebertvits2|openAITTS)/
 const localHosts = new Set(['127.0.0.1', 'localhost', '::1'])
 
 export async function mockChatFlowApis(
