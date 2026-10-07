@@ -183,8 +183,10 @@ async function handler(
     )
 
     logger.log(
-      `[API /api/ai/vercel] 🤖 AI呼び出し開始 (${aiService}:${modifiedModel})...`
+      `[API /api/ai/vercel] 🤖 AI呼び出し開始 (${aiService}:${modifiedModel}) [reasoning: ${reasoningMode ? `${reasoningEffort || 'default'}` : 'off'}, search: ${Boolean(isUseSearchGrounding)}]...`
     )
+
+    const callStartTime = Date.now()
 
     // ストリーミングレスポンスまたは一括レスポンスの生成
     let response: Response
@@ -211,13 +213,19 @@ async function handler(
       })
     }
 
-    const elapsed = Date.now() - startTime
-    logger.log(`[API /api/ai/vercel] ⚡ AI応答開始 (所要時間: ${elapsed}ms)`)
+    const aiCallElapsed = Date.now() - callStartTime
+    const totalElapsed = Date.now() - startTime
+    logger.log(
+      `[API /api/ai/vercel] ⚡ AI応答ストリーム確立 (AI呼び出し所要: ${(aiCallElapsed / 1000).toFixed(2)}秒 / ${aiCallElapsed}ms, リクエスト総計: ${(totalElapsed / 1000).toFixed(2)}秒)`
+    )
 
     return pipeResponse(response, res)
   } catch (error) {
     const elapsed = Date.now() - startTime
-    logger.error(`[API /api/ai/vercel] ❌ エラー (${elapsed}ms):`, error)
+    logger.error(
+      `[API /api/ai/vercel] ❌ エラー (${(elapsed / 1000).toFixed(2)}秒 / ${elapsed}ms):`,
+      error
+    )
 
     return res.status(500).json({
       error: 'Unexpected Error',
