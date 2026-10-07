@@ -20,7 +20,8 @@ iThieL Chatbot は、中央大学国際情報学部(iTL)のAIキャラクター�
 
 ### 主な特徴
 
-- iTL特化の定型文自動応答: 挨拶、時間割、市ヶ谷田町キャンパス案内、講義・勉強に関する質問に対して、感情タグ(表情変化)と連動した高速な自動応答を提供
+- マルチプロジェクト共有運用: 環境変数の切り替えにより、「iThiel Committee」（イティエル）や「C3」（ホログラム対話）など、用途や展示形態に応じた設定へ即座に切り替え可能
+- 柔軟な定型文応答: 必要に応じて有効化可能な定型文自動応答（挨拶、キャンパス案内等に対する感情タグ付き即時応答）
 - マルチモデル対応: 3D(VRM)および 2D(Live2D / PNGTuber)モデルに対応し、感情・モーション制御とリップシンクを実現
 - マルチAIプロバイダー対応: OpenAI, Anthropic Claude, Google Gemini, Azure OpenAI, Groq, OpenRouter, LM Studio, Ollama, Dify, Custom API の最新LLMに対応
 - 最新モデル対応: Google Gemini 3.8 Flash / 3.7 Flash, OpenAI GPT-4o / GPT-4o-mini 等に対応
@@ -120,20 +121,23 @@ cp .env.example .env.local
 
 `.env.local` をエディタで開き、利用する AI サービス等の設定を行います。
 
-| 設定項目                               | 説明                                                                      | 既定値・設定例           |
-| -------------------------------------- | ------------------------------------------------------------------------- | ------------------------ |
-| `NEXT_PUBLIC_SELECT_AI_SERVICE`        | 利用するAIプロバイダー (`google`, `openai`, `anthropic`, `openrouter` 等) | `google`                 |
-| `NEXT_PUBLIC_SELECT_AI_MODEL`          | 利用するAIモデル名                                                        | `gemini-3.8-flash`       |
-| `GEMINI_API_KEY`                       | Google Gemini API キー                                                    | `AIza...`                |
-| `OPENAI_API_KEY`                       | OpenAI API キー                                                           | `sk-...`                 |
-| `OPENROUTER_API_KEY`                   | OpenRouter API キー                                                       | `sk-or-...`              |
-| `ANTHROPIC_API_KEY`                    | Anthropic Claude API キー                                                 | `sk-ant-...`             |
-| `AITUBERKIT_SERVER_SECRET_ACCESS_MODE` | サーバー側APIキーの利用制限 (`unprotected` でブラウザ側の入力不要に)      | `unprotected`            |
-| `NEXT_PUBLIC_SELECT_LANGUAGE`          | 初期表示言語 (`ja` / `en`)                                                | `ja`                     |
-| `NEXT_PUBLIC_SELECTED_VRM_PATH`        | 初期表示のVRMモデルパス                                                   | `/vrm/ithiel.vrm`        |
-| `NEXT_PUBLIC_BACKGROUND_IMAGE_PATH`    | 初期表示の背景画像パス                                                    | `/backgrounds/bg.jpg`    |
-| `NEXT_PUBLIC_VOICEVOX_SERVER_URL`      | VOICEVOX サーバーのURL                                                    | `http://localhost:50021` |
+| 設定項目                               | 説明                                                                 | 既定値・設定例                  |
+| -------------------------------------- | -------------------------------------------------------------------- | ------------------------------- |
+| `NEXT_PUBLIC_SITE_NAME`                | アプリケーション名                                                   | `iThieL Chatbot` / `C3 Chatbot` |
+| `NEXT_PUBLIC_CHARACTER_NAME`           | キャラクター表示名                                                   | `イティエル` / `アシスタント`   |
+| `NEXT_PUBLIC_SELECTED_VRM_PATH`        | 初期表示のVRMモデルパス                                              | `/vrm/ithiel.vrm`               |
+| `NEXT_PUBLIC_SYSTEM_PROMPT`            | システムプロンプト (人格・役割設定)                                  | (用途に合わせたプロンプト)      |
+| `NEXT_PUBLIC_ENABLE_CANNED_RESPONSES`  | 定型文応答の有効化 (`true` / `false`)                                | `false`                         |
+| `NEXT_PUBLIC_SELECT_AI_SERVICE`        | 利用するAIプロバイダー (`google`, `openai`, `ollama` 等)             | `google`                        |
+| `NEXT_PUBLIC_SELECT_AI_MODEL`          | 利用するAIモデル名                                                   | `gemini-3.8-flash`              |
+| `GEMINI_API_KEY`                       | Google Gemini API キー                                               | `AIza...`                       |
+| `OPENAI_API_KEY`                       | OpenAI API キー                                                      | `sk-...`                        |
+| `AITUBERKIT_SERVER_SECRET_ACCESS_MODE` | サーバー側APIキーの利用制限 (`unprotected` でブラウザ側の入力不要に) | `unprotected`                   |
+| `NEXT_PUBLIC_SELECT_LANGUAGE`          | 初期表示言語 (`ja` / `en`)                                           | `ja`                            |
+| `NEXT_PUBLIC_BACKGROUND_IMAGE_PATH`    | 初期表示の背景画像パス                                               | `/backgrounds/bg.jpg`           |
+| `NEXT_PUBLIC_VOICEVOX_SERVER_URL`      | VOICEVOX サーバーのURL                                               | `http://localhost:50021`        |
 
+※ `.env.example` の末尾に「iThiel Committee（イティエル）」および「C3（ホログラム対話）」のプリセット設定例がコメント形式で記載されています。必要に応じてコピー＆ペーストしてご利用いただけます。
 ※ `AITUBERKIT_SERVER_SECRET_ACCESS_MODE="unprotected"` を指定することで、ブラウザの設定画面でAPIキーを毎回入力しなくても、`.env.local` に記載したAPIキーがサーバー側で自動的に利用されます。
 
 ### 5. 開発サーバーの起動
