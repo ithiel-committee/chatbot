@@ -33,6 +33,7 @@ async function handler(
   res: NextApiResponse,
   gate: PolicyGate
 ) {
+  const startTime = Date.now()
   const {
     messages,
     apiKey,
@@ -50,6 +51,10 @@ async function handler(
     reasoningTokenBudget = 8192,
     customModel = false,
   } = req.body
+
+  logger.log(
+    `[API /api/ai/vercel] 📨 リクエスト受信: service=${aiService}, model=${model}, stream=${Boolean(stream)}, messages=${messages?.length || 0}件`
+  )
 
   // APIキーの取得と検証
   let aiApiKey = apiKey
@@ -76,6 +81,9 @@ async function handler(
         .status(400)
         .json({ error: 'Empty API Key', errorCode: 'EmptyAPIKey' })
     }
+    logger.log(
+      `[API /api/ai/vercel] 🔑 APIキー: ${usesServerSecret ? 'サーバー環境変数 (.env)' : 'クライアント指定'}`
+    )
   }
 
   if (!gate.guardServerSecret(usesServerSecret)) {
@@ -174,6 +182,10 @@ async function handler(
       customModel
     )
 
+    logger.log(
+      `[API /api/ai/vercel] 🤖 AI呼び出し開始 (${aiService}:${modifiedModel})...`
+    )
+
     // ストリーミングレスポンスまたは一括レスポンスの生成
     let response: Response
     if (stream) {
@@ -199,9 +211,13 @@ async function handler(
       })
     }
 
+    const elapsed = Date.now() - startTime
+    logger.log(`[API /api/ai/vercel] ⚡ AI応答開始 (所要時間: ${elapsed}ms)`)
+
     return pipeResponse(response, res)
   } catch (error) {
-    logger.error('Error in AI API call:', error)
+    const elapsed = Date.now() - startTime
+    logger.error(`[API /api/ai/vercel] ❌ エラー (${elapsed}ms):`, error)
 
     return res.status(500).json({
       error: 'Unexpected Error',

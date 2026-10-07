@@ -262,6 +262,9 @@ const createSpeakCharacter = () => {
         displayText: result.displayText,
         ...result.audio,
         onPlaybackStart: () => {
+          logger.log(
+            `[TTS] ▶️ 発話再生開始: "${result.talk.message.slice(0, 30)}${result.talk.message.length > 30 ? '...' : ''}"`
+          )
           markConversationLatency(result.sessionId, 'playback_started')
           result.onPlaybackStart?.()
         },
@@ -367,6 +370,10 @@ const createSpeakCharacter = () => {
           isNeedDecode = false
         } else if (talk.message !== '') {
           markConversationLatency(sessionId, 'tts_request_started')
+          const ttsStartTime = Date.now()
+          logger.log(
+            `[TTS] 🔊 音声合成開始: engine=${ss.selectVoice}, text="${talk.message.slice(0, 30)}${talk.message.length > 30 ? '...' : ''}"`
+          )
           if (
             ss.selectVoice === 'openai' &&
             getCharacterRenderer()?.speakPcm16Stream
@@ -390,6 +397,10 @@ const createSpeakCharacter = () => {
               ? { kind: 'buffer', audioBuffer: buffer, isNeedDecode }
               : null
           }
+          const ttsElapsed = Date.now() - ttsStartTime
+          logger.log(
+            `[TTS] ✨ 音声合成完了: engine=${ss.selectVoice} (所要時間: ${ttsElapsed}ms)`
+          )
           markConversationLatency(sessionId, 'tts_ready')
         } else {
           audio = null

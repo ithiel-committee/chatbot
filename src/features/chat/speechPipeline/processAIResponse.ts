@@ -36,11 +36,19 @@ export const processAIResponse = async (
   homeStore.setState({ chatProcessing: true })
   const thinkingPose = applyThinkingPose()
 
+  const lastUserMsg = messages.filter((m) => m.role === 'user').slice(-1)[0]
+  const userContent =
+    typeof lastUserMsg?.content === 'string' ? lastUserMsg.content : ''
+  const settings = settingsStore.getState()
+  logger.log(
+    `[Chat] 📨 メッセージ送信: "${userContent.slice(0, 50)}${userContent.length > 50 ? '...' : ''}" | service: ${settings.selectAIService}, model: ${settings.selectAIModel}`
+  )
+
   let stream
   try {
     stream = await getAIChatResponseStream(messages)
   } catch (e) {
-    logger.error(e)
+    logger.error('[Chat] ❌ AI応答ストリーム取得エラー:', e)
     thinkingPose.reset()
     homeStore.setState({ chatProcessing: false })
     markConversationLatency(sessionId, 'response_complete')
@@ -48,11 +56,14 @@ export const processAIResponse = async (
   }
 
   if (stream == null) {
+    logger.warn('[Chat] ⚠️ 応答ストリームが空でした')
     thinkingPose.reset()
     homeStore.setState({ chatProcessing: false })
     markConversationLatency(sessionId, 'response_complete')
     return null
   }
+
+  logger.log('[Chat] 🌊 応答ストリームの処理を開始します')
 
   const writer = new MessageLogWriter()
   const dispatcher = createSpeechDispatcher(sessionId)
@@ -85,6 +96,9 @@ export const processAIResponse = async (
   }
   homeStore.setState({ chatProcessing: false })
   markConversationLatency(sessionId, 'response_complete')
+  logger.log(
+    `[Chat] 🏁 応答ストリーム終了 (セッション: ${sessionId.slice(0, 8)})`
+  )
 
   const finalContent = writer.finalize()
   if (finalContent) {
