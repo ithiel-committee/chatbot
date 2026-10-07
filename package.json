@@ -4,6 +4,7 @@
   "packageManager": "pnpm@10.20.0",
   "private": true,
   "scripts": {
+    "preinstall": "npx only-allow pnpm",
     "dev": "node scripts/dev-server.js",
     "dev:webpack": "node scripts/print-startup-logo.js && next dev",
     "dev-https": "node scripts/print-startup-logo.js && next dev --turbo --experimental-https",
@@ -118,7 +119,7 @@
   },
   "engines": {
     "node": "24.x",
-    "npm": "^11.6.2"
+    "pnpm": ">=10.0.0"
   },
   "overrides": {
     "glob": "$glob",
@@ -128,7 +129,6 @@
     "test-exclude": "^8.0.0"
   },
   "volta": {
-    "node": "24.15.0",
-    "npm": "11.12.1"
+    "node": "24.15.0"
   }
 }

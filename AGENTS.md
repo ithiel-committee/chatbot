@@ -12,30 +12,30 @@ AITuberKitは、インタラクティブなAIキャラクターをVTuber機能�
 ### 開発
 
 ```bash
-npm run dev           # 開発サーバーを起動 (http://localhost:3000)
-npm run dev-https     # HTTPS付き開発サーバー
-npm run build         # 本番用ビルド
-npm run start         # ビルド+本番サーバーを起動
-npm run desktop       # Electronデスクトップアプリとして実行（dev+electron並列起動）
+pnpm dev              # 開発サーバーを起動 (http://localhost:3000)
+pnpm run dev-https    # HTTPS付き開発サーバー
+pnpm build            # 本番用ビルド
+pnpm start            # ビルド+本番サーバーを起動
+pnpm run desktop      # Electronデスクトップアプリとして実行（dev+electron並列起動）
 ```
 
 ### テスト・品質
 
 ```bash
-npm test              # すべてのテストを実行
-npm run test:watch    # テストウォッチモード
-npm run test:coverage # カバレッジ付きテスト
-npm run lint:fix && npm run format && npm run build  # lint修正+フォーマット+ビルドを一括実行
+pnpm test             # すべてのテストを実行
+pnpm run test:watch   # テストウォッチモード
+pnpm run test:coverage # カバレッジ付きテスト
+pnpm run lint:fix && pnpm run format && pnpm build  # lint修正+フォーマット+ビルドを一括実行
 ```
 
 ### セットアップ
 
 ```bash
-npm install           # 依存関係をインストール
+pnpm install          # 依存関係をインストール
 cp .env.example .env  # 環境変数を設定
 ```
 
-**動作要件**: Node.js `24.x`、npm `^11.6.2`
+**動作要件**: Node.js `24.x`、pnpm `^10.20.0`
 
 ## アーキテクチャ
 

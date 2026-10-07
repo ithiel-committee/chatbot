@@ -39,7 +39,7 @@ export default defineConfig({
   },
   webServer: {
     command: isProductionMode
-      ? `npm run build && node ${nextBin} start -p ${port}`
+      ? `pnpm run build && node ${nextBin} start -p ${port}`
       : `node scripts/start-e2e-server.js`,
     url: baseURL,
     reuseExistingServer: !process.env.CI && !isProductionMode,

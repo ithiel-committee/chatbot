@@ -7,19 +7,19 @@ echo   AITuberKit - Starting...
 echo ============================================
 echo.
 
-where npm >nul 2>&1
+where pnpm >nul 2>&1
 if errorlevel 1 (
-    echo [ERROR] npm is not installed or not in PATH.
-    echo Please install Node.js from https://nodejs.org/
+    echo [ERROR] pnpm is not installed or not in PATH.
+    echo Please run "corepack enable" or "npm install -g pnpm" to install pnpm.
     pause
     exit /b 1
 )
 
 if not exist node_modules (
     echo Installing dependencies...
-    npm install
+    pnpm install
     if errorlevel 1 (
-        echo [ERROR] npm install failed.
+        echo [ERROR] pnpm install failed.
         pause
         exit /b 1
     )
@@ -33,6 +33,6 @@ echo.
 rem Open browser automatically after server starts
 start /b cmd /c "timeout /t 3 >nul && start http://localhost:3000"
 
-npm run dev
+pnpm dev
 
 pause
