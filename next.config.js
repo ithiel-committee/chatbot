@@ -8,6 +8,11 @@ const nextConfig = {
   env: {
     NEXT_PUBLIC_BASE_PATH: process.env.BASE_PATH || '',
   },
+  devIndicators: {
+    appIsrStatus: false,
+    buildActivity: true,
+    buildActivityPosition: 'bottom-right',
+  },
   turbopack: {
     resolveAlias: {
       fs: { browser: '' },

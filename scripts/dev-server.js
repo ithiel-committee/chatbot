@@ -66,24 +66,51 @@ const run = async () => {
     })
   }
 
-  const warmup = () => {
-    console.log(`\n[warmup] 🔄 サーバー起動を検知しました。トップページ (${TARGET_URL}) を事前コンパイル中...\n`)
+  const warmup = async () => {
+    console.log(
+      `\n[compile] 🔄 サーバー起動を検知しました。トップページとAPIルートを事前コンパイル中...\n`
+    )
     const startTime = Date.now()
-    const req = http.get(TARGET_URL, (res) => {
-      res.on('data', () => {})
-      res.on('end', () => {
-        const elapsed = ((Date.now() - startTime) / 1000).toFixed(1)
-        console.log(
-          `\n=================================================================` +
-            `\n✨ [warmup] 事前コンパイル完了 (${elapsed}s)!` +
-            `\n👉 ブラウザで開く準備が整いました: ${TARGET_URL}` +
-            `\n=================================================================\n`
-        )
+
+    // コンパイル中インジケーター（スピナー + 経過時間）
+    const spinnerFrames = ['⠋', '⠙', '⠹', '⠸', '⠼', '⠴', '⠦', '⠧', '⠇', '⠏']
+    let frameIdx = 0
+    let isCompleted = false
+    const progressTimer = setInterval(() => {
+      if (isCompleted) return
+      const elapsed = ((Date.now() - startTime) / 1000).toFixed(1)
+      const frame = spinnerFrames[frameIdx % spinnerFrames.length]
+      frameIdx++
+      process.stdout.write(
+        `\r[compile] ${frame} 事前コンパイル実行中... (${elapsed}s)`
+      )
+    }, 200)
+
+    const fetchRoute = (url) =>
+      new Promise((resolve) => {
+        const req = http.get(url, (res) => {
+          res.on('data', () => {})
+          res.on('end', () => resolve(true))
+        })
+        req.on('error', () => resolve(false))
       })
-    })
-    req.on('error', (err) => {
-      console.warn('[warmup] 事前コンパイルリクエスト中にエラーが発生しました:', err.message)
-    })
+
+    // トップページと主要APIエンドポイントを同時にウォームアップ
+    await Promise.all([
+      fetchRoute(TARGET_URL),
+      fetchRoute(`${TARGET_URL}api/ai/vercel`),
+    ])
+
+    isCompleted = true
+    clearInterval(progressTimer)
+    const elapsed = ((Date.now() - startTime) / 1000).toFixed(1)
+    process.stdout.write('\r' + ' '.repeat(60) + '\r')
+    console.log(
+      `\n=================================================================` +
+        `\n✨ [compile] 事前コンパイル完了 (${elapsed}s)! (トップページ + AI API)` +
+        `\n👉 ブラウザで開く準備が整いました: ${TARGET_URL}` +
+        `\n=================================================================\n`
+    )
   }
 
   pollServer().catch(() => {})
