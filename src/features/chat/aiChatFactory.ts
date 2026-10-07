@@ -17,9 +17,11 @@ export async function getAIChatResponseStream(
   messages: Message[],
   options: AIChatResponseStreamOptions = {}
 ): Promise<ReadableStream<string> | null> {
-  const cannedText = getCannedResponse(messages)
-  if (cannedText) {
-    return createCannedResponseStream(cannedText)
+  if (process.env.NEXT_PUBLIC_ENABLE_CANNED_RESPONSES === 'true') {
+    const cannedText = getCannedResponse(messages)
+    if (cannedText) {
+      return createCannedResponseStream(cannedText)
+    }
   }
 
   const ss = settingsStore.getState()

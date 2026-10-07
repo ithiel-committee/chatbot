@@ -499,7 +499,7 @@ const getInitialValuesFromEnv = (): SettingsState => ({
     process.env.NEXT_PUBLIC_CHARACTER_PRESET1 ||
     '',
   selectedVrmPath:
-    process.env.NEXT_PUBLIC_SELECTED_VRM_PATH || '/vrm/ithiel.vrm',
+    process.env.NEXT_PUBLIC_SELECTED_VRM_PATH || '/vrm/AvatarSample_A.vrm',
   selectedLive2DPath:
     process.env.NEXT_PUBLIC_SELECTED_LIVE2D_PATH ||
     '/live2d/nike01/nike01.model3.json',

@@ -68,7 +68,11 @@ export const Introduction = () => {
           </div>
 
           <div className="leading-relaxed">
-            <Trans i18nKey="AboutThisApplicationDescription2" />
+            {process.env.NEXT_PUBLIC_ABOUT_DESCRIPTION ? (
+              process.env.NEXT_PUBLIC_ABOUT_DESCRIPTION
+            ) : (
+              <Trans i18nKey="AboutThisApplicationDescription2" />
+            )}
           </div>
 
           <div>

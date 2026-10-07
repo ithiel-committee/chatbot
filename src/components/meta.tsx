@@ -1,14 +1,16 @@
 import Head from 'next/head'
 import { isOfficialSite } from '@/utils/officialSite'
 
-export const SITE_NAME = 'iThieL Chatbot'
+export const SITE_NAME = process.env.NEXT_PUBLIC_SITE_NAME || 'AI Chatbot'
 export const SITE_URL =
   process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, '') ||
   'https://aituberkit.com'
 export const SITE_TITLE =
-  'iThieL Chatbot｜中央大学国際情報学部(iTL) AIキャラクター対話システム'
+  process.env.NEXT_PUBLIC_SITE_TITLE ||
+  `${SITE_NAME}｜AIキャラクター対話システム`
 export const SITE_DESCRIPTION =
-  'iThieL Chatbotは、中央大学国際情報学部(iTL)のAIキャラクター「イティエル」とリアルタイムに対話・相談ができるWebアプリケーションです。'
+  process.env.NEXT_PUBLIC_SITE_DESCRIPTION ||
+  'AIキャラクターとリアルタイムに対話・相談ができるWebアプリケーションです。'
 
 const serializeStructuredData = (value: unknown) =>
   JSON.stringify(value).replace(/</g, '\\u003c')

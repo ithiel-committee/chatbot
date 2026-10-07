@@ -19,7 +19,8 @@ const Description = () => {
         </div>
         <div className="mb-6">
           <div className="my-2 text-sm whitespace-pre-wrap">
-            {t('AboutThisApplicationDescription2')}
+            {process.env.NEXT_PUBLIC_ABOUT_DESCRIPTION ||
+              t('AboutThisApplicationDescription2')}
           </div>
         </div>
         <div className="my-10">
