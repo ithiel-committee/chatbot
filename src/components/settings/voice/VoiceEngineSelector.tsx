@@ -29,6 +29,7 @@ export const VoiceEngineSelector = ({
           }
           className={settingsControlClass.medium}
         >
+          <option value="none">{t('UsingNoVoice')}</option>
           <option value="voicevox">{t('UsingVoiceVox')}</option>
           <option value="koeiromap">{t('UsingKoeiromap')}</option>
           <option value="google">{t('UsingGoogleTTS')}</option>

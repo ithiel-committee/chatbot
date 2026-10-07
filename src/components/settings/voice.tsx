@@ -100,85 +100,98 @@ const Voice = () => {
       </div>
       <VoiceEngineSelector selectVoice={selectVoice} />
 
-      <div className="border-t border-gray-300 pt-6 my-6">
-        <div className="mb-4 text-xl font-bold">{t('VoiceAdjustment')}</div>
-        {(() => {
-          if (selectVoice === 'koeiromap') {
-            return (
-              <KoeiromapSettings
-                koeiromapKey={koeiromapKey}
-                koeiroParam={koeiroParam}
-              />
-            )
-          } else if (selectVoice === 'voicevox') {
-            return (
-              <VoicevoxSettings
-                selectVoice={selectVoice}
-                voicevoxServerUrl={voicevoxServerUrl}
-                voicevoxSpeaker={voicevoxSpeaker}
-                voicevoxSpeed={voicevoxSpeed}
-                voicevoxPitch={voicevoxPitch}
-                voicevoxIntonation={voicevoxIntonation}
-              />
-            )
-          } else if (selectVoice === 'google') {
-            return <GoogleTTSSettings googleTtsType={googleTtsType} />
-          } else if (selectVoice === 'stylebertvits2') {
-            return (
-              <StyleBertVITS2Settings
-                stylebertvits2ServerUrl={stylebertvits2ServerUrl}
-                stylebertvits2ApiKey={stylebertvits2ApiKey}
-                stylebertvits2ModelId={stylebertvits2ModelId}
-                stylebertvits2Style={stylebertvits2Style}
-                stylebertvits2SdpRatio={stylebertvits2SdpRatio}
-                stylebertvits2Length={stylebertvits2Length}
-              />
-            )
-          } else if (selectVoice === 'aivis_speech') {
-            return (
-              <AivisSpeechSettings
-                selectVoice={selectVoice}
-                aivisSpeechServerUrl={aivisSpeechServerUrl}
-                aivisSpeechSpeaker={aivisSpeechSpeaker}
-                aivisSpeechSpeed={aivisSpeechSpeed}
-                aivisSpeechPitch={aivisSpeechPitch}
-                aivisSpeechTempoDynamics={aivisSpeechTempoDynamics}
-                aivisSpeechIntonationScale={aivisSpeechIntonationScale}
-                aivisSpeechPrePhonemeLength={aivisSpeechPrePhonemeLength}
-                aivisSpeechPostPhonemeLength={aivisSpeechPostPhonemeLength}
-              />
-            )
-          } else if (selectVoice === 'aivis_cloud_api') {
-            return (
-              <AivisCloudApiSettings
-                aivisCloudApiKey={aivisCloudApiKey}
-                aivisCloudModelUuid={aivisCloudModelUuid}
-                aivisCloudUseStyleName={aivisCloudUseStyleName}
-                aivisCloudStyleName={aivisCloudStyleName}
-                aivisCloudStyleId={aivisCloudStyleId}
-                aivisCloudSpeed={aivisCloudSpeed}
-                aivisCloudPitch={aivisCloudPitch}
-                aivisCloudTempoDynamics={aivisCloudTempoDynamics}
-                aivisCloudIntonationScale={aivisCloudIntonationScale}
-                aivisCloudPrePhonemeLength={aivisCloudPrePhonemeLength}
-                aivisCloudPostPhonemeLength={aivisCloudPostPhonemeLength}
-              />
-            )
-          } else if (selectVoice === 'openai') {
-            return (
-              <OpenAITTSSettings
-                openaiAPIKey={openaiAPIKey}
-                openaiTTSVoice={openaiTTSVoice}
-                openaiTTSModel={openaiTTSModel}
-                openaiTTSSpeed={openaiTTSSpeed}
-              />
-            )
-          }
-        })()}
-      </div>
+      {selectVoice === 'none' ? (
+        <div className="border-t border-gray-300 pt-6 my-6">
+          <p className="text-sm text-gray-500">
+            {t(
+              'NoVoiceSelectedNotice',
+              '音声合成はオフ（テキストのみ）に設定されています。AIの応答は音声なしで即座に表示されます。'
+            )}
+          </p>
+        </div>
+      ) : (
+        <>
+          <div className="border-t border-gray-300 pt-6 my-6">
+            <div className="mb-4 text-xl font-bold">{t('VoiceAdjustment')}</div>
+            {(() => {
+              if (selectVoice === 'koeiromap') {
+                return (
+                  <KoeiromapSettings
+                    koeiromapKey={koeiromapKey}
+                    koeiroParam={koeiroParam}
+                  />
+                )
+              } else if (selectVoice === 'voicevox') {
+                return (
+                  <VoicevoxSettings
+                    selectVoice={selectVoice}
+                    voicevoxServerUrl={voicevoxServerUrl}
+                    voicevoxSpeaker={voicevoxSpeaker}
+                    voicevoxSpeed={voicevoxSpeed}
+                    voicevoxPitch={voicevoxPitch}
+                    voicevoxIntonation={voicevoxIntonation}
+                  />
+                )
+              } else if (selectVoice === 'google') {
+                return <GoogleTTSSettings googleTtsType={googleTtsType} />
+              } else if (selectVoice === 'stylebertvits2') {
+                return (
+                  <StyleBertVITS2Settings
+                    stylebertvits2ServerUrl={stylebertvits2ServerUrl}
+                    stylebertvits2ApiKey={stylebertvits2ApiKey}
+                    stylebertvits2ModelId={stylebertvits2ModelId}
+                    stylebertvits2Style={stylebertvits2Style}
+                    stylebertvits2SdpRatio={stylebertvits2SdpRatio}
+                    stylebertvits2Length={stylebertvits2Length}
+                  />
+                )
+              } else if (selectVoice === 'aivis_speech') {
+                return (
+                  <AivisSpeechSettings
+                    selectVoice={selectVoice}
+                    aivisSpeechServerUrl={aivisSpeechServerUrl}
+                    aivisSpeechSpeaker={aivisSpeechSpeaker}
+                    aivisSpeechSpeed={aivisSpeechSpeed}
+                    aivisSpeechPitch={aivisSpeechPitch}
+                    aivisSpeechTempoDynamics={aivisSpeechTempoDynamics}
+                    aivisSpeechIntonationScale={aivisSpeechIntonationScale}
+                    aivisSpeechPrePhonemeLength={aivisSpeechPrePhonemeLength}
+                    aivisSpeechPostPhonemeLength={aivisSpeechPostPhonemeLength}
+                  />
+                )
+              } else if (selectVoice === 'aivis_cloud_api') {
+                return (
+                  <AivisCloudApiSettings
+                    aivisCloudApiKey={aivisCloudApiKey}
+                    aivisCloudModelUuid={aivisCloudModelUuid}
+                    aivisCloudUseStyleName={aivisCloudUseStyleName}
+                    aivisCloudStyleName={aivisCloudStyleName}
+                    aivisCloudStyleId={aivisCloudStyleId}
+                    aivisCloudSpeed={aivisCloudSpeed}
+                    aivisCloudPitch={aivisCloudPitch}
+                    aivisCloudTempoDynamics={aivisCloudTempoDynamics}
+                    aivisCloudIntonationScale={aivisCloudIntonationScale}
+                    aivisCloudPrePhonemeLength={aivisCloudPrePhonemeLength}
+                    aivisCloudPostPhonemeLength={aivisCloudPostPhonemeLength}
+                  />
+                )
+              } else if (selectVoice === 'openai') {
+                return (
+                  <OpenAITTSSettings
+                    openaiAPIKey={openaiAPIKey}
+                    openaiTTSVoice={openaiTTSVoice}
+                    openaiTTSModel={openaiTTSModel}
+                    openaiTTSSpeed={openaiTTSSpeed}
+                  />
+                )
+              }
+            })()}
+          </div>
 
-      {/* カスタムテキスト入力と統合テストボタン */}
-      <TestVoiceSection selectVoice={selectVoice} />
+          {/* カスタムテキスト入力と統合テストボタン */}
+          <TestVoiceSection selectVoice={selectVoice} />
+        </>
+      )}
     </div>
   )
 }

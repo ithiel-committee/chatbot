@@ -168,6 +168,8 @@
   "SyntheticVoiceEngineChoice": "合成音声エンジンの選択",
   "VoiceAdjustment": "声の調整",
   "VoiceEngineInstruction": "使用する合成音声エンジンを選択してください。",
+  "UsingNoVoice": "音声なし（テキストのみ）",
+  "NoVoiceSelectedNotice": "音声合成はオフ（テキストのみ）に設定されています。AIの応答は音声なしで即座に表示されます。",
   "UsingKoeiromap": "Koeiromapを使用する",
   "KoeiromapInfo": "KoemotionのKoeiromap APIを使用しています。日本語のみに対応しています。詳しくは下記をご覧ください。",
   "UsingVoiceVox": "VOICEVOXを使用する",

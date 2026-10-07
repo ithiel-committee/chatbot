@@ -80,6 +80,7 @@ export interface AIServiceConfig {
 }
 
 export type AIVoice =
+  | 'none'
   | 'koeiromap'
   | 'google'
   | 'voicevox'
