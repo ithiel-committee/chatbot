@@ -1,6 +1,6 @@
-# iThieL Chatbot
+# Chatbot
 
-中央大学国際情報学部(iTL)のAIキャラクター「イティエル」対話型Webアプリケーション。
+中央大学国際情報学部(iTL)の大学祭「iTLFest.」での展示に使用する、キャラクター対話型Webアプリケーション。
 
 ## 目次
 
@@ -14,9 +14,9 @@
 
 ## 概要
 
-iThieL Chatbot は、中央大学国際情報学部(iTL)のAIキャラクター「イティエル」とリアルタイムに対話・相談ができるWebアプリケーションです。
+AIを使うことで3Dキャラクターとリアルタイムに対話・相談ができるWebアプリケーションです。
 
-オープンソースのAIキャラクターツールキットである [AITuberKit](https://github.com/tegnike/aituber-kit) をベースに、iTL向けの独自機能や応答チューニングを追加して開発されています。
+オープンソースのAIキャラクターツールキットである [AITuberKit](https://github.com/tegnike/aituber-kit) をベースに、独自機能や応答チューニングを追加して開発されています。
 
 ### 主な特徴
 
@@ -135,7 +135,7 @@ cp .env.example .env.local
 | `AITUBERKIT_SERVER_SECRET_ACCESS_MODE` | サーバー側APIキーの利用制限 (`unprotected` でブラウザ側の入力不要に) | `unprotected`                   |
 | `NEXT_PUBLIC_SELECT_LANGUAGE`          | 初期表示言語 (`ja` / `en`)                                           | `ja`                            |
 | `NEXT_PUBLIC_BACKGROUND_IMAGE_PATH`    | 初期表示の背景画像パス                                               | `/backgrounds/bg.jpg`           |
-| `NEXT_PUBLIC_VOICEVOX_SERVER_URL`      | VOICEVOX サーバーのURL                                               | `http://localhost:50021`        |
+| `VOICEVOX_SERVER_URL`                  | VOICEVOX サーバーのURL                                               | `http://localhost:50021`        |
 
 ※ `.env.example` の末尾に「iThiel Committee（イティエル）」および「C3（ホログラム対話）」のプリセット設定例がコメント形式で記載されています。必要に応じてコピー＆ペーストしてご利用いただけます。
 ※ `AITUBERKIT_SERVER_SECRET_ACCESS_MODE="unprotected"` を指定することで、ブラウザの設定画面でAPIキーを毎回入力しなくても、`.env.local` に記載したAPIキーがサーバー側で自動的に利用されます。
