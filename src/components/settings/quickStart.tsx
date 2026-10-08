@@ -308,6 +308,15 @@ const QuickStart = () => {
 
   const renderQuickVoiceSettings = () => {
     switch (selectVoice) {
+      case 'none':
+        return (
+          <p className="mt-3 text-sm text-gray-500">
+            {t(
+              'NoVoiceSelectedNotice',
+              '音声合成はオフ（テキストのみ）に設定されています。AIの応答は音声なしで即座に表示されます。'
+            )}
+          </p>
+        )
       case 'koeiromap':
         return (
           <div className={quickGridClassName}>
@@ -750,6 +759,7 @@ const QuickStart = () => {
             }
             className={`${inputClassName} ${choiceControlClassName}`}
           >
+            <option value="none">{t('UsingNoVoice')}</option>
             <option value="voicevox">{t('UsingVoiceVox')}</option>
             <option value="koeiromap">{t('UsingKoeiromap')}</option>
             <option value="google">{t('UsingGoogleTTS')}</option>

@@ -14,6 +14,7 @@ import { useRestrictedMode } from '@/hooks/useRestrictedMode'
 import { languageOptions } from '@/components/settings/languageOptions'
 import { settingsControlClass } from '@/components/settings/formStyles'
 import { KeyboardShortcutInput } from '@/components/settings/KeyboardShortcutInput'
+import { SETTINGS_SCHEMA } from '@/features/constants/settingsSchema'
 import {
   DEFAULT_SETTINGS_TOGGLE_SHORTCUT,
   DEFAULT_VOICE_INPUT_SHORTCUT,
@@ -23,6 +24,7 @@ const Based = () => {
   const { t } = useTranslation()
   const { isRestrictedMode } = useRestrictedMode()
   const selectLanguage = settingsStore((s) => s.selectLanguage)
+  const screenOrientation = settingsStore((s) => s.screenOrientation)
   const showAssistantText = settingsStore((s) => s.showAssistantText)
   const chatLogMode = settingsStore((s) => s.chatLogMode)
   const assistantTextStyle = settingsStore((s) => s.assistantTextStyle)
@@ -168,6 +170,34 @@ const Based = () => {
             enabled={showMouseCursor}
             onChange={(v) => settingsStore.setState({ showMouseCursor: v })}
           />
+        </div>
+      </div>
+      <div className="border-t border-gray-300 pt-6 my-6">
+        <div className="my-4 text-xl font-bold">
+          {t('ScreenOrientation', '画面の向き・反転')}
+        </div>
+        <div className="my-2 text-sm whitespace-pre-wrap">
+          {t(
+            'ScreenOrientationDescription',
+            '画面全体の表示方向を設定します。左右反転や上下反転、180度回転が可能です。'
+          )}
+        </div>
+        <div className="my-2">
+          <select
+            className={settingsControlClass.medium}
+            value={screenOrientation}
+            onChange={(e) =>
+              settingsStore.setState({
+                screenOrientation: e.target.value as any,
+              })
+            }
+          >
+            {SETTINGS_SCHEMA.screenOrientationOptions.map((opt) => (
+              <option key={opt.value} value={opt.value}>
+                {opt.label}
+              </option>
+            ))}
+          </select>
         </div>
       </div>
       <div className="border-t border-gray-300 pt-6 my-6">

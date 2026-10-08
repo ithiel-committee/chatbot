@@ -1,5 +1,7 @@
 {
   "Description": "アプリについて",
+  "ScreenOrientation": "画面の向き・反転",
+  "ScreenOrientationDescription": "画面全体の表示方向を設定します。左右反転や上下反転、180度回転が可能です。",
   "BasedSettings": "基本設定",
   "AISettings": "AI設定",
   "CharacterSettings": "キャラクター設定",
