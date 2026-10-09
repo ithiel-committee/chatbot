@@ -396,7 +396,9 @@ export const getSettingCategories = (
           disabled: () => settingsStore.getState().modelType !== 'live2d',
           getValue: () => settingsStore.getState().selectedLive2DPath,
           setValue: (val) => loadSelectedModelWithSync('live2d', val),
-          options: getLive2DOptions(settingsStore.getState().selectedLive2DPath),
+          options: getLive2DOptions(
+            settingsStore.getState().selectedLive2DPath
+          ),
         },
         // PNGTuberモデル選択
         {

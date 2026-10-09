@@ -47,7 +47,9 @@ describe('設定項目の従来設定・クイック設定間 整合性テスト
     it('単位が「秒」であり、スケールが0〜60秒の範囲に統一されていること', () => {
       const categories = getSettingCategories(mockT)
       const voiceCat = categories.find((c) => c.id === 'voice')
-      const timeoutItem = voiceCat?.items.find((i) => i.id === 'initialSpeechTimeout')
+      const timeoutItem = voiceCat?.items.find(
+        (i) => i.id === 'initialSpeechTimeout'
+      )
 
       expect(timeoutItem).toBeDefined()
       expect(timeoutItem?.unit).toBe('秒')
@@ -62,12 +64,18 @@ describe('設定項目の従来設定・クイック設定間 整合性テスト
     it('クイック設定およびスキーマの選択肢に none が含まれていること', () => {
       const categories = getSettingCategories(mockT)
       const voiceCat = categories.find((c) => c.id === 'voice')
-      const selectVoiceItem = voiceCat?.items.find((i) => i.id === 'selectVoice')
+      const selectVoiceItem = voiceCat?.items.find(
+        (i) => i.id === 'selectVoice'
+      )
 
       expect(selectVoiceItem).toBeDefined()
-      const noneOption = selectVoiceItem?.options?.find((o) => o.value === 'none')
+      const noneOption = selectVoiceItem?.options?.find(
+        (o) => o.value === 'none'
+      )
       expect(noneOption).toBeDefined()
-      expect(SETTINGS_SCHEMA.voiceOptions.some((o) => o.value === 'none')).toBe(true)
+      expect(SETTINGS_SCHEMA.voiceOptions.some((o) => o.value === 'none')).toBe(
+        true
+      )
     })
   })
 
@@ -76,7 +84,9 @@ describe('設定項目の従来設定・クイック設定間 整合性テスト
       const categories = getSettingCategories(mockT)
       const aiCat = categories.find((c) => c.id === 'ai')
 
-      const maxPastMessagesItem = aiCat?.items.find((i) => i.id === 'maxPastMessages')
+      const maxPastMessagesItem = aiCat?.items.find(
+        (i) => i.id === 'maxPastMessages'
+      )
       expect(maxPastMessagesItem?.min).toBe(0)
       expect(maxPastMessagesItem?.max).toBe(50)
 
@@ -129,17 +139,23 @@ describe('設定項目の従来設定・クイック設定間 整合性テスト
 
       const categories = getSettingCategories(mockT)
       const voiceCat = categories.find((c) => c.id === 'voice')
-      const selectVoiceItem = voiceCat?.items.find((i) => i.id === 'selectVoice')
+      const selectVoiceItem = voiceCat?.items.find(
+        (i) => i.id === 'selectVoice'
+      )
       expect(selectVoiceItem?.disabled?.()).toBe(true)
     })
 
     it('slideMode が ON のとき、会話継続モードが無効化されること', () => {
       settingsStore.setState({ slideMode: true })
-      expect(isConversationContinuityDisabled(settingsStore.getState())).toBe(true)
+      expect(isConversationContinuityDisabled(settingsStore.getState())).toBe(
+        true
+      )
 
       const categories = getSettingCategories(mockT)
       const featuresCat = categories.find((c) => c.id === 'features')
-      const continuityItem = featuresCat?.items.find((i) => i.id === 'conversationContinuityMode')
+      const continuityItem = featuresCat?.items.find(
+        (i) => i.id === 'conversationContinuityMode'
+      )
       expect(continuityItem?.disabled?.()).toBe(true)
     })
 
@@ -214,7 +230,9 @@ describe('設定項目の従来設定・クイック設定間 整合性テスト
     it('basic カテゴリに userDisplayName が配置されていること', () => {
       const categories = getSettingCategories(mockT)
       const basicCat = categories.find((c) => c.id === 'basic')
-      const userDisplayNameItem = basicCat?.items.find((i) => i.id === 'userDisplayName')
+      const userDisplayNameItem = basicCat?.items.find(
+        (i) => i.id === 'userDisplayName'
+      )
       expect(userDisplayNameItem).toBeDefined()
     })
 
@@ -224,7 +242,9 @@ describe('設定項目の従来設定・クイック設定間 整合性テスト
       const charCat = categories.find((c) => c.id === 'character')
 
       const vrmItem = charCat?.items.find((i) => i.id === 'selectedVrmPath')
-      const live2dItem = charCat?.items.find((i) => i.id === 'selectedLive2DPath')
+      const live2dItem = charCat?.items.find(
+        (i) => i.id === 'selectedLive2DPath'
+      )
 
       expect(vrmItem?.disabled?.()).toBe(true)
       expect(live2dItem?.disabled?.()).toBe(false)
@@ -236,11 +256,15 @@ describe('設定項目の従来設定・クイック設定間 整合性テスト
       })
       const categories = getSettingCategories(mockT)
       const charCat = categories.find((c) => c.id === 'character')
-      const presetItem = charCat?.items.find((i) => i.id === 'selectedPresetIndex')
+      const presetItem = charCat?.items.find(
+        (i) => i.id === 'selectedPresetIndex'
+      )
 
       presetItem?.setValue?.(1)
       expect(settingsStore.getState().selectedPresetIndex).toBe(1)
-      expect(settingsStore.getState().systemPrompt).toBe('プリセット2のプロンプト内容')
+      expect(settingsStore.getState().systemPrompt).toBe(
+        'プリセット2のプロンプト内容'
+      )
     })
   })
 })

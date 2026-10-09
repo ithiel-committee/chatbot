@@ -84,7 +84,10 @@ export const uploadAndLoadVRM = async (file: File): Promise<boolean> => {
     fetchModelCatalogs()
     return true
   } catch (error) {
-    logger.error('Failed to upload VRM from quick settings, falling back to local Blob:', error)
+    logger.error(
+      'Failed to upload VRM from quick settings, falling back to local Blob:',
+      error
+    )
     // フォールバック: アップロード失敗時はBlob URLで即時プレビュー
     const blob = new Blob([file], { type: 'application/octet-stream' })
     const url = URL.createObjectURL(blob)
@@ -245,7 +248,9 @@ export const setSafeKioskMode = (enabled: boolean): boolean => {
   const passcode = state.kioskPasscode?.trim()
   if (!passcode) {
     if (typeof window !== 'undefined') {
-      window.alert('キオスクモードを有効にする前に、従来設定画面でパスコードを設定してください。')
+      window.alert(
+        'キオスクモードを有効にする前に、従来設定画面でパスコードを設定してください。'
+      )
     }
     return false
   }
