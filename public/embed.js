@@ -66,7 +66,6 @@
       showCharacterName: getOption(options, element, 'showCharacterName'),
       showPresetQuestions: getOption(options, element, 'showPresetQuestions'),
       presetQuestions: getOption(options, element, 'presetQuestions'),
-      colorTheme: getOption(options, element, 'colorTheme'),
       backgroundImageUrl: getOption(options, element, 'backgroundImageUrl'),
     })
     iframe.title =

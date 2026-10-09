@@ -1,22 +1,16 @@
 import { useEffect, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
+import dynamic from 'next/dynamic'
 import { Form } from '@/components/form'
 import MessageReceiver from '@/components/messageReceiver'
-import { Introduction } from '@/components/introduction'
 import { Menu } from '@/components/menu'
 import { Meta } from '@/components/meta'
 import ModalImage from '@/components/modalImage'
 import VrmViewer from '@/components/vrmViewer'
-import Live2DViewer from '@/components/live2DViewer'
-import PNGTuberViewer from '@/components/pngTuberViewer'
 import { Toasts } from '@/components/toasts'
 import { WebSocketManager } from '@/components/websocketManager'
-import CharacterPresetMenu from '@/components/characterPresetMenu'
 import ImageOverlay from '@/components/ImageOverlay'
-import PresenceManager from '@/components/presenceManager'
 import IdleManager from '@/components/idleManager'
-import GameCommentaryManager from '@/components/gameCommentaryManager'
-import { KioskOverlay } from '@/features/kiosk/kioskOverlay'
 import homeStore from '@/features/stores/home'
 import settingsStore from '@/features/stores/settings'
 import '@/lib/i18n'
@@ -27,6 +21,24 @@ import toastStore from '@/features/stores/toast'
 import { usePresetLoader } from '@/features/presets/usePresetLoader'
 import { useLive2DEnabled } from '@/hooks/useLive2DEnabled'
 import { SeoSummary } from '@/components/seoSummary'
+
+import { Introduction } from '@/components/introduction'
+import { KioskOverlay } from '@/features/kiosk/kioskOverlay'
+import { ChatResetModal } from '@/components/chatResetModal'
+
+const Live2DViewer = dynamic(() => import('@/components/live2DViewer'), {
+  ssr: false,
+})
+const PNGTuberViewer = dynamic(() => import('@/components/pngTuberViewer'), {
+  ssr: false,
+})
+const PresenceManager = dynamic(() => import('@/components/presenceManager'), {
+  ssr: false,
+})
+const GameCommentaryManager = dynamic(
+  () => import('@/components/gameCommentaryManager'),
+  { ssr: false }
+)
 
 const Home = () => {
   const webcamStatus = homeStore((s) => s.webcamStatus)
@@ -105,12 +117,29 @@ const Home = () => {
     }
   }, [characterPresets, t])
 
-  const backgroundStyle =
-    (webcamStatus || captureStatus) && useVideoAsBackground
+  const screenOrientation = settingsStore((s) => s.screenOrientation)
+
+  const orientationStyle = useMemo(() => {
+    switch (screenOrientation) {
+      case 'flip-h':
+        return { transform: 'scaleX(-1)' }
+      case 'flip-v':
+        return { transform: 'scaleY(-1)' }
+      case 'flip-hv':
+        return { transform: 'scale(-1, -1)' }
+      default:
+        return {}
+    }
+  }, [screenOrientation])
+
+  const backgroundStyle = {
+    ...((webcamStatus || captureStatus) && useVideoAsBackground
       ? {}
       : backgroundImageUrl === 'green'
         ? { backgroundColor: '#00FF00' }
-        : { backgroundImage: bgUrl }
+        : { backgroundImage: bgUrl }),
+    ...orientationStyle,
+  }
 
   return (
     <div className="h-[100svh] bg-cover" style={backgroundStyle}>
@@ -134,7 +163,6 @@ const Home = () => {
       <WebSocketManager />
       <YoutubeManager />
       <MemoryServiceInitializer />
-      <CharacterPresetMenu />
       <ImageOverlay />
       <PresenceManager />
       <div className="absolute top-4 left-4 z-30">
@@ -142,6 +170,7 @@ const Home = () => {
         <GameCommentaryManager />
       </div>
       <KioskOverlay />
+      <ChatResetModal />
     </div>
   )
 }

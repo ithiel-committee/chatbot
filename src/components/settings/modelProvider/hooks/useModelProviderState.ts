@@ -22,18 +22,12 @@ export const useModelProviderState = () => {
   const googleKey = settingsStore((s) => s.googleKey)
   const azureKey = settingsStore((s) => s.azureKey)
   const azureEndpoint = settingsStore((s) => s.azureEndpoint)
-  const xaiKey = settingsStore((s) => s.xaiKey)
   const groqKey = settingsStore((s) => s.groqKey)
-  const cohereKey = settingsStore((s) => s.cohereKey)
-  const mistralaiKey = settingsStore((s) => s.mistralaiKey)
-  const perplexityKey = settingsStore((s) => s.perplexityKey)
-  const fireworksKey = settingsStore((s) => s.fireworksKey)
   const difyKey = settingsStore((s) => s.difyKey)
   const useSearchGrounding = settingsStore((s) => s.useSearchGrounding)
   const dynamicRetrievalThreshold = settingsStore(
     (s) => s.dynamicRetrievalThreshold
   )
-  const deepseekKey = settingsStore((s) => s.deepseekKey)
   const openrouterKey = settingsStore((s) => s.openrouterKey)
   const maxPastMessages = settingsStore((s) => s.maxPastMessages)
   const temperature = settingsStore((s) => s.temperature)
@@ -103,16 +97,10 @@ export const useModelProviderState = () => {
     googleKey,
     azureKey,
     azureEndpoint,
-    xaiKey,
     groqKey,
-    cohereKey,
-    mistralaiKey,
-    perplexityKey,
-    fireworksKey,
     difyKey,
     useSearchGrounding,
     dynamicRetrievalThreshold,
-    deepseekKey,
     openrouterKey,
     maxPastMessages,
     temperature,

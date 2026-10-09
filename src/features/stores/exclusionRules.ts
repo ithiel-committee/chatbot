@@ -39,7 +39,6 @@ const JA_ONLY_VOICES: AIVoice[] = [
   'koeiromap',
   'aivis_speech',
   'aivis_cloud_api',
-  'gsvitts',
 ]
 
 export const exclusionRules: ExclusionRule[] = [

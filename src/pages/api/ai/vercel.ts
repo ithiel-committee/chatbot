@@ -33,6 +33,7 @@ async function handler(
   res: NextApiResponse,
   gate: PolicyGate
 ) {
+  const startTime = Date.now()
   const {
     messages,
     apiKey,
@@ -51,6 +52,10 @@ async function handler(
     customModel = false,
   } = req.body
 
+  logger.log(
+    `[API /api/ai/vercel] 📨 リクエスト受信: service=${aiService}, model=${model}, stream=${Boolean(stream)}, messages=${messages?.length || 0}件`
+  )
+
   // APIキーの取得と検証
   let aiApiKey = apiKey
   let usesServerSecret = false
@@ -62,6 +67,13 @@ async function handler(
         process.env[`${servicePrefix}_KEY`] ||
         process.env[`${servicePrefix}_API_KEY`] ||
         ''
+      if (!aiApiKey && aiService === 'google') {
+        aiApiKey =
+          process.env.GEMINI_API_KEY ||
+          process.env.GEMINI_KEY ||
+          process.env.GOOGLE_GENERATIVE_AI_API_KEY ||
+          ''
+      }
       usesServerSecret = Boolean(aiApiKey)
     }
     if (!aiApiKey) {
@@ -69,6 +81,9 @@ async function handler(
         .status(400)
         .json({ error: 'Empty API Key', errorCode: 'EmptyAPIKey' })
     }
+    logger.log(
+      `[API /api/ai/vercel] 🔑 APIキー: ${usesServerSecret ? 'サーバー環境変数 (.env)' : 'クライアント指定'}`
+    )
   }
 
   if (!gate.guardServerSecret(usesServerSecret)) {
@@ -167,6 +182,12 @@ async function handler(
       customModel
     )
 
+    logger.log(
+      `[API /api/ai/vercel] 🤖 AI呼び出し開始 (${aiService}:${modifiedModel}) [reasoning: ${reasoningMode ? `${reasoningEffort || 'default'}` : 'off'}, search: ${Boolean(isUseSearchGrounding)}]...`
+    )
+
+    const callStartTime = Date.now()
+
     // ストリーミングレスポンスまたは一括レスポンスの生成
     let response: Response
     if (stream) {
@@ -192,9 +213,19 @@ async function handler(
       })
     }
 
+    const aiCallElapsed = Date.now() - callStartTime
+    const totalElapsed = Date.now() - startTime
+    logger.log(
+      `[API /api/ai/vercel] ⚡ AI応答ストリーム確立 (AI呼び出し所要: ${(aiCallElapsed / 1000).toFixed(2)}秒 / ${aiCallElapsed}ms, リクエスト総計: ${(totalElapsed / 1000).toFixed(2)}秒)`
+    )
+
     return pipeResponse(response, res)
   } catch (error) {
-    logger.error('Error in AI API call:', error)
+    const elapsed = Date.now() - startTime
+    logger.error(
+      `[API /api/ai/vercel] ❌ エラー (${(elapsed / 1000).toFixed(2)}秒 / ${elapsed}ms):`,
+      error
+    )
 
     return res.status(500).json({
       error: 'Unexpected Error',

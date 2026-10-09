@@ -5,21 +5,14 @@ import { wait } from '@/utils/wait'
 import { Talk } from './messages'
 import { synthesizeStyleBertVITS2Api } from './synthesizeStyleBertVITS2'
 import { synthesizeVoiceKoeiromapApi } from './synthesizeVoiceKoeiromap'
-import {
-  synthesizeVoiceElevenlabsApi,
-  synthesizeVoiceElevenlabsStreamApi,
-} from './synthesizeVoiceElevenlabs'
-import { synthesizeVoiceCartesiaApi } from './synthesizeVoiceCartesia'
 import { synthesizeVoiceGoogleApi } from './synthesizeVoiceGoogle'
 import { synthesizeVoiceVoicevoxApi } from './synthesizeVoiceVoicevox'
 import { synthesizeVoiceAivisSpeechApi } from './synthesizeVoiceAivisSpeech'
 import { synthesizeVoiceAivisCloudApi } from './synthesizeVoiceAivisCloudApi'
-import { synthesizeVoiceGSVIApi } from './synthesizeVoiceGSVI'
 import {
   synthesizeVoiceOpenAIApi,
   synthesizeVoiceOpenAIStreamApi,
 } from './synthesizeVoiceOpenAI'
-import { synthesizeVoiceAzureOpenAIApi } from './synthesizeVoiceAzureOpenAI'
 import toastStore from '@/features/stores/toast'
 import i18next from 'i18next'
 import { SpeakQueue } from './speakQueue'
@@ -128,6 +121,8 @@ async function synthesizeVoice(
 
   try {
     switch (voiceType) {
+      case 'none':
+        return null
       case 'koeiromap':
         return await synthesizeVoiceKoeiromapApi(
           talk,
@@ -187,42 +182,12 @@ async function synthesizeVoice(
           ss.aivisCloudPrePhonemeLength,
           ss.aivisCloudPostPhonemeLength
         )
-      case 'gsvitts':
-        return await synthesizeVoiceGSVIApi(
-          talk,
-          ss.gsviTtsServerUrl,
-          ss.gsviTtsModelId,
-          ss.gsviTtsBatchSize,
-          ss.gsviTtsSpeechRate
-        )
-      case 'elevenlabs':
-        return await synthesizeVoiceElevenlabsApi(
-          talk,
-          ss.elevenlabsApiKey,
-          ss.elevenlabsVoiceId,
-          ss.selectLanguage
-        )
-      case 'cartesia':
-        return await synthesizeVoiceCartesiaApi(
-          talk,
-          ss.cartesiaApiKey,
-          ss.cartesiaVoiceId,
-          ss.selectLanguage
-        )
       case 'openai':
         return await synthesizeVoiceOpenAIApi(
           talk,
           ss.openaiKey,
           ss.openaiTTSVoice,
           ss.openaiTTSModel,
-          ss.openaiTTSSpeed
-        )
-      case 'azure':
-        return await synthesizeVoiceAzureOpenAIApi(
-          talk,
-          ss.azureTTSKey || ss.azureKey,
-          ss.azureTTSEndpoint || ss.azureEndpoint,
-          ss.openaiTTSVoice,
           ss.openaiTTSSpeed
         )
       default:
@@ -299,6 +264,9 @@ const createSpeakCharacter = () => {
         displayText: result.displayText,
         ...result.audio,
         onPlaybackStart: () => {
+          logger.log(
+            `[TTS] ▶️ 発話再生開始: "${result.talk.message.slice(0, 30)}${result.talk.message.length > 30 ? '...' : ''}"`
+          )
           markConversationLatency(result.sessionId, 'playback_started')
           result.onPlaybackStart?.()
         },
@@ -403,47 +371,47 @@ const createSpeakCharacter = () => {
           }
           isNeedDecode = false
         } else if (talk.message !== '') {
-          markConversationLatency(sessionId, 'tts_request_started')
-          if (
-            ss.selectVoice === 'elevenlabs' &&
-            getCharacterRenderer()?.speakPcm16Stream
-          ) {
-            const streamed = await synthesizeVoiceElevenlabsStreamApi(
-              talk,
-              ss.elevenlabsApiKey,
-              ss.elevenlabsVoiceId,
-              ss.selectLanguage,
-              () => markConversationLatency(sessionId, 'first_audio_chunk')
+          if (ss.selectVoice === 'none') {
+            logger.log(
+              `[TTS] 🔇 音声なしモード: テキストのみ表示します ("${talk.message.slice(0, 30)}${talk.message.length > 30 ? '...' : ''}")`
             )
-            audio = {
-              kind: 'pcm16-stream',
-              audioStream: streamed.stream,
-              sampleRate: streamed.sampleRate,
-            }
-          } else if (
-            ss.selectVoice === 'openai' &&
-            getCharacterRenderer()?.speakPcm16Stream
-          ) {
-            const streamed = await synthesizeVoiceOpenAIStreamApi(
-              talk,
-              ss.openaiKey,
-              ss.openaiTTSVoice,
-              ss.openaiTTSModel,
-              ss.openaiTTSSpeed,
-              () => markConversationLatency(sessionId, 'first_audio_chunk')
-            )
-            audio = {
-              kind: 'pcm16-stream',
-              audioStream: streamed.stream,
-              sampleRate: streamed.sampleRate,
-            }
+            markConversationLatency(sessionId, 'tts_ready')
+            audio = null
           } else {
-            const buffer = await synthesizeVoice(talk, ss.selectVoice)
-            audio = buffer
-              ? { kind: 'buffer', audioBuffer: buffer, isNeedDecode }
-              : null
+            markConversationLatency(sessionId, 'tts_request_started')
+            const ttsStartTime = Date.now()
+            logger.log(
+              `[TTS] 🔊 音声合成開始: engine=${ss.selectVoice}, text="${talk.message.slice(0, 30)}${talk.message.length > 30 ? '...' : ''}"`
+            )
+            if (
+              ss.selectVoice === 'openai' &&
+              getCharacterRenderer()?.speakPcm16Stream
+            ) {
+              const streamed = await synthesizeVoiceOpenAIStreamApi(
+                talk,
+                ss.openaiKey,
+                ss.openaiTTSVoice,
+                ss.openaiTTSModel,
+                ss.openaiTTSSpeed,
+                () => markConversationLatency(sessionId, 'first_audio_chunk')
+              )
+              audio = {
+                kind: 'pcm16-stream',
+                audioStream: streamed.stream,
+                sampleRate: streamed.sampleRate,
+              }
+            } else {
+              const buffer = await synthesizeVoice(talk, ss.selectVoice)
+              audio = buffer
+                ? { kind: 'buffer', audioBuffer: buffer, isNeedDecode }
+                : null
+            }
+            const ttsElapsed = Date.now() - ttsStartTime
+            logger.log(
+              `[TTS] ✨ 音声合成完了: engine=${ss.selectVoice} (所要時間: ${ttsElapsed}ms)`
+            )
+            markConversationLatency(sessionId, 'tts_ready')
           }
-          markConversationLatency(sessionId, 'tts_ready')
         } else {
           audio = null
         }
@@ -539,17 +507,14 @@ export const testVoice = async (voiceType: AIVoice, customText?: string) => {
   const ss = settingsStore.getState()
 
   const defaultMessages: Record<AIVoice, string> = {
+    none: '音声なし（テキストのみ）',
     voicevox: 'ボイスボックスを使用します',
     aivis_speech: 'AivisSpeechを使用します',
     aivis_cloud_api: 'Aivis Cloud APIを使用します',
     koeiromap: 'コエイロマップを使用します',
     google: 'Google Text-to-Speechを使用します',
     stylebertvits2: 'StyleBertVITS2を使用します',
-    gsvitts: 'GSVI TTSを使用します',
-    elevenlabs: 'ElevenLabsを使用します',
-    cartesia: 'Cartesiaを使用します',
     openai: 'OpenAI TTSを使用します',
-    azure: 'Azure TTSを使用します',
   }
 
   const message = customText || defaultMessages[voiceType]

@@ -73,34 +73,7 @@ export const routePolicies = {
     restrictedBehavior: 'none',
     waf: { embedAllowed: true },
   },
-  '/api/azureOpenAITTS': {
-    path: '/api/azureOpenAITTS',
-    featureName: 'azureOpenAITTS',
-    methods: ['POST'],
-    resources: ['server-secret'],
-    secret: {
-      kind: 'pairs',
-      pairs: [
-        { source: 'body', key: 'apiKey', envVars: ['AZURE_TTS_KEY'] },
-        { source: 'body', key: 'endpoint', envVars: ['AZURE_TTS_ENDPOINT'] },
-      ],
-    },
-    restrictedBehavior: 'none',
-  },
-  '/api/cartesia': {
-    path: '/api/cartesia',
-    featureName: 'cartesia',
-    methods: ['POST'],
-    resources: ['server-secret'],
-    secret: {
-      kind: 'pairs',
-      pairs: [
-        { source: 'body', key: 'apiKey', envVars: ['CARTESIA_API_KEY'] },
-        { source: 'body', key: 'voiceId', envVars: ['CARTESIA_VOICE_ID'] },
-      ],
-    },
-    restrictedBehavior: 'none',
-  },
+
   '/api/convertMarkdown': {
     path: '/api/convertMarkdown',
     featureName: 'convertMarkdown',
@@ -143,20 +116,6 @@ export const routePolicies = {
           onlyIfAbsent: { source: 'body', key: 'url' },
         },
         { source: 'body', key: 'url', envVars: ['DIFY_URL'] },
-      ],
-    },
-    restrictedBehavior: 'none',
-  },
-  '/api/elevenLabs': {
-    path: '/api/elevenLabs',
-    featureName: 'elevenLabs',
-    methods: ['POST'],
-    resources: ['server-secret'],
-    secret: {
-      kind: 'pairs',
-      pairs: [
-        { source: 'body', key: 'apiKey', envVars: ['ELEVENLABS_API_KEY'] },
-        { source: 'body', key: 'voiceId', envVars: ['ELEVENLABS_VOICE_ID'] },
       ],
     },
     restrictedBehavior: 'none',
@@ -358,24 +317,7 @@ export const routePolicies = {
     secret: { kind: 'always' },
     restrictedBehavior: 'none',
   },
-  '/api/tts-gsvi': {
-    path: '/api/tts-gsvi',
-    featureName: 'tts-gsvi',
-    methods: ['POST'],
-    resources: ['server-secret', 'server-url'],
-    secret: {
-      kind: 'pairs',
-      pairs: [{ source: 'body', key: 'serverUrl', envVars: ['GSVI_TTS_URL'] }],
-    },
-    serverUrl: {
-      source: 'body',
-      key: 'serverUrl',
-      envVar: 'GSVI_TTS_URL',
-      defaultUrl: 'http://127.0.0.1:5000/tts',
-      allowLocalLoopback: true,
-    },
-    restrictedBehavior: 'none',
-  },
+
   '/api/tts-koeiromap': {
     path: '/api/tts-koeiromap',
     featureName: 'tts-koeiromap',

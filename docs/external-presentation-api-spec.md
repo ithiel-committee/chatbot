@@ -907,12 +907,12 @@ src/pages/api/v1/presentation/status.ts
 ### 23.4 品質確認
 
 ```bash
-npm test
-npm run lint
-npm run build
+pnpm test
+pnpm run lint
+pnpm build
 ```
 
-Node.js 24.x、npm ^11.6.2を使用すること。
+Node.js 24.x、pnpm ^10.20.0を使用すること。
 
 ## 24. 受入条件
 

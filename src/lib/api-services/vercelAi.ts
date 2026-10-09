@@ -2,14 +2,8 @@ import { logger } from '@/lib/logger'
 import { Message } from '@/features/messages/messages'
 import { createOpenAI } from '@ai-sdk/openai'
 import { createAnthropic } from '@ai-sdk/anthropic'
-import { createXai } from '@ai-sdk/xai'
 import { createGoogleGenerativeAI } from '@ai-sdk/google'
-import { createCohere } from '@ai-sdk/cohere'
-import { createMistral } from '@ai-sdk/mistral'
 import { createAzure } from '@ai-sdk/azure'
-import { createDeepSeek } from '@ai-sdk/deepseek'
-import { createPerplexity } from '@ai-sdk/perplexity'
-import { createFireworks } from '@ai-sdk/fireworks'
 import { createOpenAICompatible } from '@ai-sdk/openai-compatible'
 import { createOpenRouter } from '@openrouter/ai-sdk-provider'
 import {
@@ -61,41 +55,11 @@ export function createAIRegistry(
         apiKey: params.apiKey,
       }) as unknown as ReturnType<typeof createOpenAI>
       break
-    case 'xai':
-      providers.xai = createXai({
-        apiKey: params.apiKey,
-      }) as unknown as ReturnType<typeof createOpenAI>
-      break
     case 'groq':
       providers.groq = createOpenAI({
         baseURL: 'https://api.groq.com/openai/v1',
         apiKey: params.apiKey,
       })
-      break
-    case 'cohere':
-      providers.cohere = createCohere({
-        apiKey: params.apiKey,
-      }) as unknown as ReturnType<typeof createOpenAI>
-      break
-    case 'mistralai':
-      providers.mistralai = createMistral({
-        apiKey: params.apiKey,
-      }) as unknown as ReturnType<typeof createOpenAI>
-      break
-    case 'perplexity':
-      providers.perplexity = createPerplexity({
-        apiKey: params.apiKey,
-      }) as unknown as ReturnType<typeof createOpenAI>
-      break
-    case 'fireworks':
-      providers.fireworks = createFireworks({
-        apiKey: params.apiKey,
-      }) as unknown as ReturnType<typeof createOpenAI>
-      break
-    case 'deepseek':
-      providers.deepseek = createDeepSeek({
-        apiKey: params.apiKey,
-      }) as unknown as ReturnType<typeof createOpenAI>
       break
     case 'openrouter':
       providers.openrouter = createOpenRouter({

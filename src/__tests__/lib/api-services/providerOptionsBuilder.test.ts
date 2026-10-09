@@ -107,21 +107,6 @@ describe('buildReasoningProviderOptions', () => {
     })
   })
 
-  describe('xAI', () => {
-    it('returns xai providerOptions with reasoningEffort', () => {
-      const result = buildReasoningProviderOptions(
-        'xai',
-        'grok-3-mini',
-        true,
-        'medium',
-        8192
-      )
-      expect(result).toEqual({
-        xai: { reasoningEffort: 'medium' },
-      })
-    })
-  })
-
   describe('Groq', () => {
     it('returns openai-namespaced providerOptions (OpenAI compatible)', () => {
       const result = buildReasoningProviderOptions(
@@ -178,23 +163,6 @@ describe('buildReasoningProviderOptions', () => {
         anthropic: {
           thinking: { type: 'enabled', budgetTokens: 12000 },
           effort: 'medium',
-        },
-      })
-    })
-  })
-
-  describe('Cohere', () => {
-    it('returns cohere providerOptions with thinking', () => {
-      const result = buildReasoningProviderOptions(
-        'cohere',
-        'command-a-reasoning-08-2025',
-        true,
-        'high',
-        5000
-      )
-      expect(result).toEqual({
-        cohere: {
-          thinking: { type: 'enabled', tokenBudget: 5000 },
         },
       })
     })

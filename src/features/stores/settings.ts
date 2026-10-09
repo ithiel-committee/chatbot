@@ -61,24 +61,14 @@ interface APIKeys {
   anthropicKey: string
   googleKey: string
   azureKey: string
-  xaiKey: string
   groqKey: string
   difyKey: string
-  cohereKey: string
-  mistralaiKey: string
-  perplexityKey: string
-  fireworksKey: string
-  deepseekKey: string
   openrouterKey: string
   lmstudioKey: string
   ollamaKey: string
   koeiromapKey: string
   youtubeApiKey: string
-  elevenlabsApiKey: string
-  cartesiaApiKey: string
   azureEndpoint: string
-  azureTTSKey: string
-  azureTTSEndpoint: string
   customApiUrl: string
   customApiHeaders: string
   customApiBody: string
@@ -140,12 +130,6 @@ interface ModelProvider extends Live2DSettings {
   stylebertvits2Style: string
   stylebertvits2SdpRatio: number
   stylebertvits2Length: number
-  gsviTtsServerUrl: string
-  gsviTtsModelId: string
-  gsviTtsBatchSize: number
-  gsviTtsSpeechRate: number
-  elevenlabsVoiceId: string
-  cartesiaVoiceId: string
   openaiTTSVoice: OpenAITTSVoice
   openaiTTSModel: OpenAITTSModel
   openaiTTSSpeed: number
@@ -243,7 +227,7 @@ interface General {
   showInputForm: boolean
   settingsToggleShortcut: string
   voiceInputShortcut: string
-  showQuickMenu: boolean
+  showMouseCursor: boolean
   externalLinkageMode: boolean
   externalLinkageUrl: string
   realtimeAPIMode: boolean
@@ -283,15 +267,15 @@ interface General {
   imageDisplayPosition: 'input' | 'side' | 'icon'
   multiModalAiDecisionPrompt: string
   enableMultiModal: boolean
-  colorTheme: 'default' | 'cool' | 'mono' | 'ocean' | 'forest' | 'sunset'
   customModel: boolean
+  screenOrientation: 'normal' | 'flip-h' | 'flip-v' | 'flip-hv'
 }
 
 interface ModelType {
   modelType: 'vrm' | 'live2d' | 'pngtuber'
 }
 
-// Presence detection sensitivity type
+// presence detection sensitivity type
 export type PresenceDetectionSensitivity = 'low' | 'medium' | 'high'
 
 interface PresenceDetectionSettings {
@@ -325,7 +309,7 @@ const parseEnvInt = (value: string | undefined, fallback: number): number => {
   return Number.isNaN(parsed) ? fallback : parsed
 }
 
-// Function to get initial values from environment variables
+// function to get initial values from environment variables
 const getInitialWhisperTranscriptionModel = (): WhisperTranscriptionModel => {
   const configuredModel = migrateOpenAITranscriptionModel(
     process.env.NEXT_PUBLIC_WHISPER_TRANSCRIPTION_MODEL ||
@@ -348,24 +332,16 @@ const getInitialValuesFromEnv = (): SettingsState => ({
     process.env.NEXT_PUBLIC_AZURE_API_KEY ||
     process.env.NEXT_PUBLIC_AZURE_KEY ||
     '',
-  xaiKey: '',
   groqKey: '',
-  cohereKey: '',
-  mistralaiKey: '',
-  perplexityKey: '',
-  fireworksKey: '',
   difyKey: '',
-  deepseekKey: '',
   openrouterKey: '',
   lmstudioKey: '',
   ollamaKey: '',
   koeiromapKey: process.env.NEXT_PUBLIC_KOEIROMAP_KEY || '',
   youtubeApiKey: process.env.NEXT_PUBLIC_YOUTUBE_API_KEY || '',
-  elevenlabsApiKey: '',
-  cartesiaApiKey: '',
   azureEndpoint: process.env.NEXT_PUBLIC_AZURE_ENDPOINT || '',
 
-  // Model Provider
+  // model provider
   selectAIService:
     (process.env.NEXT_PUBLIC_SELECT_AI_SERVICE as AIService) || 'openai',
   selectAIModel: migrateOpenAIModelName(
@@ -443,22 +419,12 @@ const getInitialValuesFromEnv = (): SettingsState => ({
     0.2,
   stylebertvits2Length:
     parseFloat(process.env.NEXT_PUBLIC_STYLEBERTVITS2_LENGTH || '1.0') || 1.0,
-  gsviTtsServerUrl: process.env.NEXT_PUBLIC_GSVI_TTS_URL || '',
-  gsviTtsModelId: process.env.NEXT_PUBLIC_GSVI_TTS_MODEL_ID || '0',
-  gsviTtsBatchSize:
-    parseInt(process.env.NEXT_PUBLIC_GSVI_TTS_BATCH_SIZE || '2') || 2,
-  gsviTtsSpeechRate:
-    parseFloat(process.env.NEXT_PUBLIC_GSVI_TTS_SPEECH_RATE || '1.0') || 1.0,
-  elevenlabsVoiceId: process.env.NEXT_PUBLIC_ELEVENLABS_VOICE_ID || '',
-  cartesiaVoiceId: process.env.NEXT_PUBLIC_CARTESIA_VOICE_ID || '',
   openaiTTSVoice:
     (process.env.NEXT_PUBLIC_OPENAI_TTS_VOICE as OpenAITTSVoice) || 'shimmer',
   openaiTTSModel:
     (process.env.NEXT_PUBLIC_OPENAI_TTS_MODEL as OpenAITTSModel) || 'tts-1',
   openaiTTSSpeed:
     parseFloat(process.env.NEXT_PUBLIC_OPENAI_TTS_SPEED || '1.0') || 1.0,
-  azureTTSKey: '',
-  azureTTSEndpoint: '',
   customApiUrl: process.env.NEXT_PUBLIC_CUSTOM_API_URL || '',
   customApiHeaders: process.env.NEXT_PUBLIC_CUSTOM_API_HEADERS || '{}',
   customApiBody: process.env.NEXT_PUBLIC_CUSTOM_API_BODY || '{}',
@@ -468,7 +434,7 @@ const getInitialValuesFromEnv = (): SettingsState => ({
   customApiIncludeMimeType:
     process.env.NEXT_PUBLIC_CUSTOM_API_INCLUDE_MIME_TYPE !== 'false',
 
-  // Integrations
+  // integrations
   difyUrl: '',
   difyConversationId: '',
   youtubeMode: process.env.NEXT_PUBLIC_YOUTUBE_MODE === 'true' ? true : false,
@@ -506,8 +472,8 @@ const getInitialValuesFromEnv = (): SettingsState => ({
   youtubeCommentInterval:
     parseInt(process.env.NEXT_PUBLIC_YOUTUBE_COMMENT_INTERVAL || '10') || 10,
 
-  // Character
-  characterName: process.env.NEXT_PUBLIC_CHARACTER_NAME || 'イティエル',
+  // character
+  characterName: process.env.NEXT_PUBLIC_CHARACTER_NAME || 'キャラクター',
   userDisplayName: process.env.NEXT_PUBLIC_USER_DISPLAY_NAME || 'あなた',
   characterPreset1: process.env.NEXT_PUBLIC_CHARACTER_PRESET1 || '',
   characterPreset2: process.env.NEXT_PUBLIC_CHARACTER_PRESET2 || '',
@@ -533,7 +499,7 @@ const getInitialValuesFromEnv = (): SettingsState => ({
     process.env.NEXT_PUBLIC_CHARACTER_PRESET1 ||
     '',
   selectedVrmPath:
-    process.env.NEXT_PUBLIC_SELECTED_VRM_PATH || '/vrm/ithiel.vrm',
+    process.env.NEXT_PUBLIC_SELECTED_VRM_PATH || '/vrm/AvatarSample_A.vrm',
   selectedLive2DPath:
     process.env.NEXT_PUBLIC_SELECTED_LIVE2D_PATH ||
     '/live2d/nike01/nike01.model3.json',
@@ -568,7 +534,7 @@ const getInitialValuesFromEnv = (): SettingsState => ({
     parseFloat(process.env.NEXT_PUBLIC_LIGHTING_INTENSITY || '1.0') || 1.0,
   poseAdjustMode: false,
 
-  // General
+  // general
   selectLanguage: (process.env.NEXT_PUBLIC_SELECT_LANGUAGE as Language) || 'ja',
   changeEnglishToJapanese:
     process.env.NEXT_PUBLIC_CHANGE_ENGLISH_TO_JAPANESE === 'true',
@@ -584,7 +550,7 @@ const getInitialValuesFromEnv = (): SettingsState => ({
     process.env.NEXT_PUBLIC_VOICE_INPUT_SHORTCUT,
     DEFAULT_VOICE_INPUT_SHORTCUT
   ),
-  showQuickMenu: process.env.NEXT_PUBLIC_SHOW_QUICK_MENU === 'true',
+  showMouseCursor: process.env.NEXT_PUBLIC_SHOW_MOUSE_CURSOR !== 'false',
   externalLinkageMode: process.env.NEXT_PUBLIC_EXTERNAL_LINKAGE_MODE === 'true',
   externalLinkageUrl:
     process.env.NEXT_PUBLIC_EXTERNAL_LINKAGE_URL || 'ws://localhost:8000/ws',
@@ -655,7 +621,7 @@ const getInitialValuesFromEnv = (): SettingsState => ({
     parseFloat(process.env.NEXT_PUBLIC_CHAT_LOG_WIDTH || '400') || 400,
   chatLogMode: (() => {
     const mode = process.env.NEXT_PUBLIC_CHAT_LOG_MODE
-    return mode === 'hidden' || mode === 'chat-log' ? mode : 'assistant'
+    return mode === 'hidden' || mode === 'assistant' ? mode : 'chat-log'
   })(),
   chatLogPosition:
     process.env.NEXT_PUBLIC_CHAT_LOG_POSITION === 'left' ? 'left' : 'right',
@@ -675,19 +641,19 @@ const getInitialValuesFromEnv = (): SettingsState => ({
   multiModalAiDecisionPrompt:
     process.env.NEXT_PUBLIC_MULTIMODAL_AI_DECISION_PROMPT || '',
   enableMultiModal: process.env.NEXT_PUBLIC_ENABLE_MULTIMODAL !== 'false',
-  colorTheme:
-    (process.env.NEXT_PUBLIC_COLOR_THEME as
-      | 'default'
-      | 'cool'
-      | 'mono'
-      | 'ocean'
-      | 'forest'
-      | 'sunset') || 'mono',
 
-  // Custom model toggle
+  // custom model toggle
   customModel: process.env.NEXT_PUBLIC_CUSTOM_MODEL === 'true',
 
-  // Settings
+  // screen orientation
+  screenOrientation:
+    (process.env.NEXT_PUBLIC_SCREEN_ORIENTATION as
+      | 'normal'
+      | 'flip-h'
+      | 'flip-v'
+      | 'flip-hv') || 'normal',
+
+  // settings
   modelType:
     (process.env.NEXT_PUBLIC_MODEL_TYPE as
       | 'vrm'
@@ -737,7 +703,7 @@ const getInitialValuesFromEnv = (): SettingsState => ({
     process.env.NEXT_PUBLIC_THINKING_POSE_ENABLED === 'true' || false,
   thinkingPoseId: process.env.NEXT_PUBLIC_THINKING_POSE_ID || 'think',
 
-  // Memory settings
+  // memory settings
   memoryEnabled:
     process.env.NEXT_PUBLIC_MEMORY_ENABLED === 'true' ||
     DEFAULT_MEMORY_CONFIG.memoryEnabled,
@@ -751,7 +717,7 @@ const getInitialValuesFromEnv = (): SettingsState => ({
     parseInt(process.env.NEXT_PUBLIC_MEMORY_MAX_CONTEXT_TOKENS || '') ||
     DEFAULT_MEMORY_CONFIG.memoryMaxContextTokens,
 
-  // Presence detection settings
+  // presence detection settings
   presenceDetectionEnabled:
     process.env.NEXT_PUBLIC_PRESENCE_DETECTION_ENABLED === 'true',
   presenceGreetingPhrases: (() => {
@@ -780,7 +746,7 @@ const getInitialValuesFromEnv = (): SettingsState => ({
   presenceSelectedCameraId:
     process.env.NEXT_PUBLIC_PRESENCE_SELECTED_CAMERA_ID || '',
 
-  // Idle mode settings
+  // idle mode settings
   idleModeEnabled:
     process.env.NEXT_PUBLIC_IDLE_MODE_ENABLED === 'true' ||
     DEFAULT_IDLE_CONFIG.idleModeEnabled,
@@ -822,7 +788,7 @@ const getInitialValuesFromEnv = (): SettingsState => ({
     DEFAULT_IDLE_CONFIG.idleAiGenerationEnabled,
   idleAiPromptTemplate: process.env.NEXT_PUBLIC_IDLE_AI_PROMPT_TEMPLATE || '',
 
-  // Kiosk mode settings
+  // kiosk mode settings
   kioskModeEnabled:
     process.env.NEXT_PUBLIC_KIOSK_MODE_ENABLED === 'true' ||
     DEFAULT_KIOSK_CONFIG.kioskModeEnabled,
@@ -846,7 +812,7 @@ const getInitialValuesFromEnv = (): SettingsState => ({
     DEFAULT_KIOSK_CONFIG.kioskGuidanceTimeout,
   kioskTemporaryUnlock: DEFAULT_KIOSK_CONFIG.kioskTemporaryUnlock,
 
-  // Game commentary settings
+  // game commentary settings
   gameCommentaryEnabled:
     process.env.NEXT_PUBLIC_GAME_COMMENTARY_ENABLED === 'true' ||
     DEFAULT_GAME_COMMENTARY_CONFIG.gameCommentaryEnabled,
@@ -891,7 +857,7 @@ const getInitialValuesFromEnv = (): SettingsState => ({
     )
   ),
 
-  // Live2D settings
+  // live2D settings
   neutralEmotions: process.env.NEXT_PUBLIC_NEUTRAL_EMOTIONS?.split(',') || [],
   happyEmotions: process.env.NEXT_PUBLIC_HAPPY_EMOTIONS?.split(',') || [],
   sadEmotions: process.env.NEXT_PUBLIC_SAD_EMOTIONS?.split(',') || [],
@@ -1107,10 +1073,6 @@ const mergePersistedSettings = (
     mergedState.userDisplayName = currentState.userDisplayName
   }
 
-  if (mergedState.colorTheme === 'default' || !mergedState.colorTheme) {
-    mergedState.colorTheme = currentState.colorTheme
-  }
-
   if (process.env.NEXT_PUBLIC_ALWAYS_OVERRIDE_WITH_ENV_VARIABLES === 'true') {
     return {
       ...mergedState,
@@ -1126,21 +1088,13 @@ export const selectPersistedSettings = (state: SettingsState) => ({
   anthropicKey: state.anthropicKey,
   googleKey: state.googleKey,
   azureKey: state.azureKey,
-  xaiKey: state.xaiKey,
   groqKey: state.groqKey,
-  cohereKey: state.cohereKey,
-  mistralaiKey: state.mistralaiKey,
-  perplexityKey: state.perplexityKey,
-  fireworksKey: state.fireworksKey,
   difyKey: state.difyKey,
-  deepseekKey: state.deepseekKey,
   openrouterKey: state.openrouterKey,
   lmstudioKey: state.lmstudioKey,
   ollamaKey: state.ollamaKey,
   koeiromapKey: state.koeiromapKey,
   youtubeApiKey: state.youtubeApiKey,
-  elevenlabsApiKey: state.elevenlabsApiKey,
-  cartesiaApiKey: state.cartesiaApiKey,
   azureEndpoint: state.azureEndpoint,
   selectAIService: state.selectAIService,
   selectAIModel: state.selectAIModel,
@@ -1178,12 +1132,6 @@ export const selectPersistedSettings = (state: SettingsState) => ({
   stylebertvits2Style: state.stylebertvits2Style,
   stylebertvits2SdpRatio: state.stylebertvits2SdpRatio,
   stylebertvits2Length: state.stylebertvits2Length,
-  gsviTtsServerUrl: state.gsviTtsServerUrl,
-  gsviTtsModelId: state.gsviTtsModelId,
-  gsviTtsBatchSize: state.gsviTtsBatchSize,
-  gsviTtsSpeechRate: state.gsviTtsSpeechRate,
-  elevenlabsVoiceId: state.elevenlabsVoiceId,
-  cartesiaVoiceId: state.cartesiaVoiceId,
   difyUrl: state.difyUrl,
   difyConversationId: state.difyConversationId,
   youtubeMode: state.youtubeMode,
@@ -1243,8 +1191,6 @@ export const selectPersistedSettings = (state: SettingsState) => ({
   openaiTTSVoice: state.openaiTTSVoice,
   openaiTTSModel: state.openaiTTSModel,
   openaiTTSSpeed: state.openaiTTSSpeed,
-  azureTTSKey: state.azureTTSKey,
-  azureTTSEndpoint: state.azureTTSEndpoint,
   selectedVrmPath: state.selectedVrmPath,
   selectedLive2DPath: state.selectedLive2DPath,
   fixedCharacterPosition: state.fixedCharacterPosition,
@@ -1280,7 +1226,7 @@ export const selectPersistedSettings = (state: SettingsState) => ({
   hideVideoDisplay: state.hideVideoDisplay,
   showControlPanel: state.showControlPanel,
   showInputForm: state.showInputForm,
-  showQuickMenu: state.showQuickMenu,
+  showMouseCursor: state.showMouseCursor,
   temperature: state.temperature,
   maxTokens: state.maxTokens,
   reasoningMode: state.reasoningMode,
@@ -1309,7 +1255,6 @@ export const selectPersistedSettings = (state: SettingsState) => ({
   imageDisplayPosition: state.imageDisplayPosition,
   multiModalAiDecisionPrompt: state.multiModalAiDecisionPrompt,
   enableMultiModal: state.enableMultiModal,
-  colorTheme: state.colorTheme,
   customModel: state.customModel,
   memoryEnabled: state.memoryEnabled,
   memorySimilarityThreshold: state.memorySimilarityThreshold,
@@ -1325,7 +1270,7 @@ export const selectPersistedSettings = (state: SettingsState) => ({
   presenceDeparturePhrases: state.presenceDeparturePhrases,
   presenceClearChatOnDeparture: state.presenceClearChatOnDeparture,
   presenceSelectedCameraId: state.presenceSelectedCameraId,
-  // Idle mode settings
+  // idle mode settings
   idleModeEnabled: state.idleModeEnabled,
   idlePhrases: state.idlePhrases,
   idlePlaybackMode: state.idlePlaybackMode,
@@ -1340,7 +1285,7 @@ export const selectPersistedSettings = (state: SettingsState) => ({
   idleTimePeriodEveningEmotion: state.idleTimePeriodEveningEmotion,
   idleAiGenerationEnabled: state.idleAiGenerationEnabled,
   idleAiPromptTemplate: state.idleAiPromptTemplate,
-  // Kiosk mode settings (kioskTemporaryUnlock is NOT persisted)
+  // kiosk mode settings (kioskTemporaryUnlock is NOT persisted)
   kioskModeEnabled: state.kioskModeEnabled,
   kioskPasscode: state.kioskPasscode,
   kioskGuidanceMessage: state.kioskGuidanceMessage,
@@ -1350,7 +1295,7 @@ export const selectPersistedSettings = (state: SettingsState) => ({
   kioskNgWordEnabled: state.kioskNgWordEnabled,
   thinkingPoseEnabled: state.thinkingPoseEnabled,
   thinkingPoseId: state.thinkingPoseId,
-  // Game commentary settings
+  // game commentary settings
   gameCommentaryEnabled: state.gameCommentaryEnabled,
   gameCommentaryCaptureInterval: state.gameCommentaryCaptureInterval,
   gameCommentaryContextCount: state.gameCommentaryContextCount,

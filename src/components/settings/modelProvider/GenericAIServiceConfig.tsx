@@ -53,13 +53,7 @@ export const GenericAIServiceConfig = ({
         anthropic: 'anthropicKey',
         google: 'googleKey',
         azure: 'azureKey',
-        xai: 'xaiKey',
         groq: 'groqKey',
-        cohere: 'cohereKey',
-        mistralai: 'mistralaiKey',
-        perplexity: 'perplexityKey',
-        fireworks: 'fireworksKey',
-        deepseek: 'deepseekKey',
         openrouter: 'openrouterKey',
       }
 

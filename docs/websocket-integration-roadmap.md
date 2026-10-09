@@ -283,7 +283,7 @@ server内部では全メッセージを `v2` として扱い、`v1` は入力境
 
 - AITuberKit targeted Jest
 - AITuberKit targeted ESLint
-- AITuberKit `npm run build`
+- AITuberKit `pnpm build`
 - server protocol/websocket helper pytest
 - server agent backend pytest
 - server websocket session service cancel pytest

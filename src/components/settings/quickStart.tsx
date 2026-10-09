@@ -115,16 +115,8 @@ const QuickStart = () => {
   const stylebertvits2ApiKey = settingsStore((s) => s.stylebertvits2ApiKey)
   const stylebertvits2ModelId = settingsStore((s) => s.stylebertvits2ModelId)
   const stylebertvits2Style = settingsStore((s) => s.stylebertvits2Style)
-  const gsviTtsServerUrl = settingsStore((s) => s.gsviTtsServerUrl)
-  const gsviTtsModelId = settingsStore((s) => s.gsviTtsModelId)
-  const elevenlabsApiKey = settingsStore((s) => s.elevenlabsApiKey)
-  const elevenlabsVoiceId = settingsStore((s) => s.elevenlabsVoiceId)
-  const cartesiaApiKey = settingsStore((s) => s.cartesiaApiKey)
-  const cartesiaVoiceId = settingsStore((s) => s.cartesiaVoiceId)
   const openaiTTSVoice = settingsStore((s) => s.openaiTTSVoice)
   const openaiTTSModel = settingsStore((s) => s.openaiTTSModel)
-  const azureTTSKey = settingsStore((s) => s.azureTTSKey)
-  const azureTTSEndpoint = settingsStore((s) => s.azureTTSEndpoint)
   const [aivisSpeakers, setAivisSpeakers] = useState<SpeakerOption[]>([])
 
   useEffect(() => {
@@ -167,20 +159,8 @@ const QuickStart = () => {
         return modelState.googleKey
       case 'azure':
         return modelState.azureKey
-      case 'xai':
-        return modelState.xaiKey
       case 'groq':
         return modelState.groqKey
-      case 'cohere':
-        return modelState.cohereKey
-      case 'mistralai':
-        return modelState.mistralaiKey
-      case 'perplexity':
-        return modelState.perplexityKey
-      case 'fireworks':
-        return modelState.fireworksKey
-      case 'deepseek':
-        return modelState.deepseekKey
       case 'openrouter':
         return modelState.openrouterKey
       case 'dify':
@@ -204,26 +184,8 @@ const QuickStart = () => {
       case 'azure':
         settingsStore.setState({ azureKey: value })
         break
-      case 'xai':
-        settingsStore.setState({ xaiKey: value })
-        break
       case 'groq':
         settingsStore.setState({ groqKey: value })
-        break
-      case 'cohere':
-        settingsStore.setState({ cohereKey: value })
-        break
-      case 'mistralai':
-        settingsStore.setState({ mistralaiKey: value })
-        break
-      case 'perplexity':
-        settingsStore.setState({ perplexityKey: value })
-        break
-      case 'fireworks':
-        settingsStore.setState({ fireworksKey: value })
-        break
-      case 'deepseek':
-        settingsStore.setState({ deepseekKey: value })
         break
       case 'openrouter':
         settingsStore.setState({ openrouterKey: value })
@@ -346,6 +308,15 @@ const QuickStart = () => {
 
   const renderQuickVoiceSettings = () => {
     switch (selectVoice) {
+      case 'none':
+        return (
+          <p className="mt-3 text-sm text-gray-500">
+            {t(
+              'NoVoiceSelectedNotice',
+              '音声合成はオフ（テキストのみ）に設定されています。AIの応答は音声なしで即座に表示されます。'
+            )}
+          </p>
+        )
       case 'koeiromap':
         return (
           <div className={quickGridClassName}>
@@ -567,83 +538,7 @@ const QuickStart = () => {
             )}
           </div>
         )
-      case 'gsvitts':
-        return (
-          <div className={quickGridClassName}>
-            <LabeledField label={t('GSVITTSServerUrl')}>
-              <input
-                className={inputClassName}
-                value={gsviTtsServerUrl}
-                onChange={(e) =>
-                  settingsStore.setState({ gsviTtsServerUrl: e.target.value })
-                }
-                placeholder="http://127.0.0.1:5000/tts"
-              />
-            </LabeledField>
-            <LabeledField label={t('GSVITTSModelID')}>
-              <input
-                className={inputClassName}
-                value={gsviTtsModelId}
-                onChange={(e) =>
-                  settingsStore.setState({ gsviTtsModelId: e.target.value })
-                }
-                placeholder="0"
-              />
-            </LabeledField>
-          </div>
-        )
-      case 'elevenlabs':
-        return (
-          <div className={quickGridClassName}>
-            <LabeledField label={t('APIKey')}>
-              <input
-                className={inputClassName}
-                type="password"
-                value={elevenlabsApiKey}
-                onChange={(e) =>
-                  settingsStore.setState({ elevenlabsApiKey: e.target.value })
-                }
-                placeholder="..."
-              />
-            </LabeledField>
-            <LabeledField label={t('ElevenLabsVoiceId')}>
-              <input
-                className={inputClassName}
-                value={elevenlabsVoiceId}
-                onChange={(e) =>
-                  settingsStore.setState({ elevenlabsVoiceId: e.target.value })
-                }
-                placeholder="..."
-              />
-            </LabeledField>
-          </div>
-        )
-      case 'cartesia':
-        return (
-          <div className={quickGridClassName}>
-            <LabeledField label={t('APIKey')}>
-              <input
-                className={inputClassName}
-                type="password"
-                value={cartesiaApiKey}
-                onChange={(e) =>
-                  settingsStore.setState({ cartesiaApiKey: e.target.value })
-                }
-                placeholder="..."
-              />
-            </LabeledField>
-            <LabeledField label={t('CartesiaVoiceId')}>
-              <input
-                className={inputClassName}
-                value={cartesiaVoiceId}
-                onChange={(e) =>
-                  settingsStore.setState({ cartesiaVoiceId: e.target.value })
-                }
-                placeholder="..."
-              />
-            </LabeledField>
-          </div>
-        )
+
       case 'openai':
         return (
           <div className={quickGridClassName}>
@@ -688,49 +583,6 @@ const QuickStart = () => {
                 {getOpenAITTSModels().map((model) => (
                   <option key={model} value={model}>
                     {model}
-                  </option>
-                ))}
-              </select>
-            </LabeledField>
-          </div>
-        )
-      case 'azure':
-        return (
-          <div className={quickGridClassName}>
-            <LabeledField label={t('AzureAPIKeyLabel')}>
-              <input
-                className={inputClassName}
-                type="password"
-                value={azureTTSKey}
-                onChange={(e) =>
-                  settingsStore.setState({ azureTTSKey: e.target.value })
-                }
-                placeholder="..."
-              />
-            </LabeledField>
-            <LabeledField label={t('AzureEndpoint')}>
-              <input
-                className={inputClassName}
-                value={azureTTSEndpoint}
-                onChange={(e) =>
-                  settingsStore.setState({ azureTTSEndpoint: e.target.value })
-                }
-                placeholder="https://resource.openai.azure.com/openai/deployments/deployment/audio/speech?api-version=2024-05-01-preview"
-              />
-            </LabeledField>
-            <LabeledField label={t('OpenAITTSVoice')}>
-              <select
-                className={inputClassName}
-                value={openaiTTSVoice}
-                onChange={(e) =>
-                  settingsStore.setState({
-                    openaiTTSVoice: e.target.value as OpenAITTSVoice,
-                  })
-                }
-              >
-                {openAITTSVoiceOptions.map((voice) => (
-                  <option key={voice} value={voice}>
-                    {voice}
                   </option>
                 ))}
               </select>
@@ -907,17 +759,14 @@ const QuickStart = () => {
             }
             className={`${inputClassName} ${choiceControlClassName}`}
           >
+            <option value="none">{t('UsingNoVoice')}</option>
             <option value="voicevox">{t('UsingVoiceVox')}</option>
             <option value="koeiromap">{t('UsingKoeiromap')}</option>
             <option value="google">{t('UsingGoogleTTS')}</option>
             <option value="stylebertvits2">{t('UsingStyleBertVITS2')}</option>
             <option value="aivis_speech">{t('UsingAivisSpeech')}</option>
             <option value="aivis_cloud_api">{t('UsingAivisCloudAPI')}</option>
-            <option value="gsvitts">{t('UsingGSVITTS')}</option>
-            <option value="elevenlabs">{t('UsingElevenLabs')}</option>
-            <option value="cartesia">{t('UsingCartesia')}</option>
             <option value="openai">{t('UsingOpenAITTS')}</option>
-            <option value="azure">{t('UsingAzureTTS')}</option>
           </select>
         </LabeledField>
         {renderQuickVoiceSettings()}

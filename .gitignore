@@ -75,33 +75,17 @@ public/pngtuber/*
 
 /public/images/uploaded/*
 !/public/images/placed/.keep
-
-.claude/settings.local.json
-
-.kiro/specs/*
-
-# Playwright reports
-/reports
-/playwright-report
-/test-results
-
-# Cloudflare
-.open-next
-.public-stash
-
-aituber-kit-lp/*
-aituber-kit-docs/*
-promo-video/*
-.claude/skills/remotion-*
+# Agent / AI tooling
+.agent/
 .agents/skills/remotion-*
 
 # Local caches
 .mypy_cache
 .swc
-.wrangler
 
 .team/*
-.claude/scheduled_tasks.lock
 
 # External presentation persistent storage
 /.aituber-kit/
+
+repomix.config.json

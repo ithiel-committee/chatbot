@@ -4,24 +4,24 @@ AITuberKit の E2E テストは Playwright で実行します。設定は `playw
 
 ## 初回セットアップ
 
-E2E はプロジェクト標準の Node.js `24.x` と npm `^11.6.2` で実行します。ローカルで Node.js を切り替える場合は `.nvmrc` を使ってください。
+E2E はプロジェクト標準の Node.js `24.x` と pnpm `^10.20.0` で実行します。ローカルで Node.js を切り替える場合は `.nvmrc` を使ってください。
 
 ```bash
 nvm use
-npm install -g npm@^11.6.2
+corepack enable
 node --version
-npm --version
+pnpm --version
 ```
 
 ```bash
-npm install
-npm run test:e2e:install
+pnpm install
+pnpm run test:e2e:install
 ```
 
 Linux CI やブラウザ実行に必要な OS 依存もまとめて入れる場合は次を使います。
 
 ```bash
-npm run test:e2e:install:with-deps
+pnpm run test:e2e:install:with-deps
 ```
 
 ## ローカル実行
@@ -29,46 +29,46 @@ npm run test:e2e:install:with-deps
 通常のヘッドレス実行です。
 
 ```bash
-npm run test:e2e
+pnpm run test:e2e
 ```
 
-通常実行では `chromium` project が desktop spec を、`mobile-chromium` project が `*.mobile.spec.ts` の最小 smoke を実行します。現在のテスト件数は `npx playwright test --list` で確認してください。既存の desktop spec は mobile project では実行しません。
+通常実行では `chromium` project が desktop spec を、`mobile-chromium` project が `*.mobile.spec.ts` の最小 smoke を実行します。現在のテスト件数は `pnpm exec playwright test --list` で確認してください。既存の desktop spec は mobile project では実行しません。
 
 ブラウザを表示して動きを確認する場合は headed 実行を使います。
 
 ```bash
-npm run test:e2e:headed
+pnpm run test:e2e:headed
 ```
 
 Playwright の UI モードでテストを選択・再実行する場合は次を使います。
 
 ```bash
-npm run test:e2e:ui
+pnpm run test:e2e:ui
 ```
 
 ステップ実行やセレクタ確認をしながら調査する場合は debug 実行を使います。
 
 ```bash
-npm run test:e2e:debug
+pnpm run test:e2e:debug
 ```
 
-特定ファイルだけを実行する場合は、npm script の後ろに Playwright の引数を渡します。
+特定ファイルだけを実行する場合は、pnpm script の後ろに Playwright の引数を渡します。
 
 ```bash
-npm run test:e2e -- tests/e2e/youtube-mode.spec.ts
-npm run test:e2e:headed -- tests/e2e/game-commentary-mode.spec.ts
+pnpm run test:e2e -- tests/e2e/youtube-mode.spec.ts
+pnpm run test:e2e:headed -- tests/e2e/game-commentary-mode.spec.ts
 ```
 
 mobile smoke だけを実行する場合は project を指定します。
 
 ```bash
-npm run test:e2e -- --project=mobile-chromium
+pnpm run test:e2e -- --project=mobile-chromium
 ```
 
-production mode 相当の smoke は、通常の E2E から分離しています。`E2E_MODE=production` を指定すると `next build && next start` でサーバーを起動し、`*.production.spec.ts` だけを `production-chromium` project で実行します。現在のテスト件数は `E2E_MODE=production npx playwright test --list` で確認してください。
+production mode 相当の smoke は、通常の E2E から分離しています。`E2E_MODE=production` を指定すると `next build && next start` でサーバーを起動し、`*.production.spec.ts` だけを `production-chromium` project で実行します。現在のテスト件数は `E2E_MODE=production pnpm exec playwright test --list` で確認してください。
 
 ```bash
-npm run test:e2e:production
+pnpm run test:e2e:production
 ```
 
 ## 開発サーバー
@@ -78,13 +78,13 @@ Playwright は `webServer` 設定で `node scripts/start-e2e-server.js` を起�
 デフォルトの URL は `http://127.0.0.1:3100` です。ポートを変える場合は `E2E_PORT` を指定します。
 
 ```bash
-E2E_PORT=3200 npm run test:e2e
+E2E_PORT=3200 pnpm run test:e2e
 ```
 
 production smoke では既存サーバーを再利用しません。dev server を誤って production smoke として検証しないため、`E2E_MODE=production` 実行時は専用ポートを使うことを推奨します。
 
 ```bash
-E2E_PORT=3201 npm run test:e2e:production
+E2E_PORT=3201 pnpm run test:e2e:production
 ```
 
 E2E 用サーバーでは次の初期値を固定しています。
@@ -93,7 +93,7 @@ E2E 用サーバーでは次の初期値を固定しています。
 - `NEXT_PUBLIC_MODEL_TYPE=pngtuber`
 - `NEXT_PUBLIC_SELECTED_PNGTUBER_PATH=/pngtuber/nike01`
 
-起動時には `process.execPath`、`process.version`、platform / arch、`NEXT_TEST_WASM`、npm user agent をログに出します。CI や Codex 環境で Next.js の SWC 読み込みに失敗した場合は、まずこのログで想定どおり Node.js `24.x` が使われているか確認してください。
+起動時には `process.execPath`、`process.version`、platform / arch、`NEXT_TEST_WASM`、npm/pnpm user agent をログに出します。CI や Codex 環境で Next.js の SWC 読み込みに失敗した場合は、まずこのログで想定どおり Node.js `24.x` が使われているか確認してください。
 
 テスト側でも `tests/e2e/helpers/app.ts` で localStorage とメディア API を初期化し、外部 API キーや実デバイスに依存しない状態にしています。`setupTestNetwork` は TTS / embedding / save-chat-log など副作用のある API を mock し、必要に応じて API / 外部リクエストの diagnostics を記録できます。
 
@@ -103,44 +103,44 @@ macOS やエージェント環境で Next.js の native SWC が code signature �
 
 ```bash
 node --version
-npm --version
+pnpm --version
 node scripts/start-e2e-server.js
 ```
 
 `node --version` が `24.x` でない場合は `.nvmrc` に合わせて Node.js を切り替えてから再実行します。Node.js が正しいのに native SWC だけが失敗する場合は、一時的な切り分けとして WASM 版 SWC を使って E2E を実行できます。
 
 ```bash
-NEXT_TEST_WASM=1 npm run test:e2e
+NEXT_TEST_WASM=1 pnpm run test:e2e
 ```
 
-`Attempted to load @next/swc-wasm-nodejs, but it was not installed` が出る場合は、現在の `node_modules` では WASM 版 SWC の回避を使えません。この回避は原因調査用です。通常のローカル実行と CI では Node.js `24.x` / npm `^11.6.2` と native SWC を前提にします。
+`Attempted to load @next/swc-wasm-nodejs, but it was not installed` が出る場合は、現在の `node_modules` では WASM 版 SWC の回避を使えません。この回避は原因調査用です。通常のローカル実行と CI では Node.js `24.x` / pnpm `^10.20.0` と native SWC を前提にします。
 
 ## レポートと失敗時の確認
 
 CI では GitHub reporter と HTML report を出力します。ローカルで HTML report を開く場合は次を使います。
 
 ```bash
-npm run test:e2e:report
+pnpm run test:e2e:report
 ```
 
-失敗時はスクリーンショットが保存されます。リトライが発生した場合は trace も保存されるため、Playwright の出力に表示される trace zip を `npx playwright show-trace <trace.zip>` で確認します。
+失敗時はスクリーンショットが保存されます。リトライが発生した場合は trace も保存されるため、Playwright の出力に表示される trace zip を `pnpm exec playwright show-trace <trace.zip>` で確認します。
 
 ## CI 運用
 
-GitHub Actions では `Run Tests` workflow の `e2e` job が E2E を実行します。CI は Node.js `24.x` を `actions/setup-node` で固定し、npm は `npm@^11.6.2` を明示的にインストールしてから検証します。
+GitHub Actions では `Run Tests` workflow の `e2e` job が E2E を実行します。CI は Node.js `24.x` を `actions/setup-node` で固定し、pnpm を使用して検証します。
 
 CI では次の順で実行します。
 
 ```bash
-npm install -g npm@^11.6.2
+corepack enable
 node --version
-npm --version
-npm ci
-npm run test:e2e:install:with-deps
-npm run test:e2e -- --list
-npm run test:e2e
-npm run test:e2e:production -- --list
-E2E_PORT=3201 npm run test:e2e:production
+pnpm --version
+pnpm install --frozen-lockfile
+pnpm run test:e2e:install:with-deps
+pnpm run test:e2e -- --list
+pnpm run test:e2e
+pnpm run test:e2e:production -- --list
+E2E_PORT=3201 pnpm run test:e2e:production
 ```
 
 `CI` 環境変数が設定されている場合、Playwright は失敗時に最大 2 回リトライし、HTML report は自動で開きません。CI の artifact には `playwright-report/` と `test-results/` を保存します。通常 E2E は `playwright-report-e2e` / `playwright-test-results-e2e`、production smoke は `playwright-report-e2e-production` / `playwright-test-results-e2e-production` から確認します。
@@ -180,10 +180,10 @@ Project 分離はファイル名で行います。通常 desktop project は `*.
 対応済み:
 
 - GitHub Actions の `Run Tests` workflow に `e2e` job を追加する。
-- CI では `npm ci`、`npm run test:e2e:install:with-deps`、`npm run test:e2e` の順で実行する。
+- CI では `pnpm install --frozen-lockfile`、`pnpm run test:e2e:install:with-deps`、`pnpm run test:e2e` の順で実行する。
 - Playwright report / trace / screenshot を artifact として保存する。
-- CI 上の Node.js は `24.x`、npm は `^11.6.2` に固定する。
-- production smoke は `e2e-production` job で `npm run test:e2e:production` として通常 E2E から分離して実行する。
+- CI 上の Node.js は `24.x`、pnpm は `^10.20.0` に固定する。
+- production smoke は `e2e-production` job で `pnpm run test:e2e:production` として通常 E2E から分離して実行する。
 
 完了条件:
 
@@ -202,14 +202,14 @@ Project 分離はファイル名で行います。通常 desktop project は `*.
 
 対応済み:
 
-- README に Node.js `24.x` と npm `^11.6.2` を前提として明記する。
+- README に Node.js `24.x` と pnpm `^10.20.0` を前提として明記する。
 - CI では `actions/setup-node` で Node.js を固定する。
 - ローカルで SWC エラーが出る場合の切り分け手順を README に追記する。
 - `scripts/start-e2e-server.js` で起動時の `process.execPath` と `process.version` をログ出力する。
 
 完了条件:
 
-- `npm run test:e2e` で Next dev server が安定起動する。
+- `pnpm run test:e2e` で Next dev server が安定起動する。
 - SWC 起動エラー時の原因切り分けが README だけでできる。
 
 ### P1: Kiosk の解除・ロックアウトを追加する
@@ -285,7 +285,7 @@ Status: 完了。`slide-mode.spec.ts` で `/api/getSlideFolders` と markdown �
 対応済み:
 
 - `E2E_MODE=production` で `next build && next start` を起動する `production-chromium` project を追加する。
-- `*.production.spec.ts` のみに絞り、通常の `npm run test:e2e` からは分離する。
+- `*.production.spec.ts` のみに絞り、通常の `pnpm run test:e2e` からは分離する。
 
 現在の smoke:
 

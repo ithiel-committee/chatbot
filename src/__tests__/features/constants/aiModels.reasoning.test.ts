@@ -33,26 +33,12 @@ describe('isReasoningModel', () => {
       expect(isReasoningModel('google', 'gemini-2.5-flash')).toBe(true)
     })
 
-    it('xAI grok-4は推論対応', () => {
-      expect(isReasoningModel('xai', 'grok-4')).toBe(true)
-    })
-
-    it('xAI grok-3は推論対応', () => {
-      expect(isReasoningModel('xai', 'grok-3')).toBe(true)
-    })
-
     it('Groq openai/gpt-oss-20bは推論対応', () => {
       expect(isReasoningModel('groq', 'openai/gpt-oss-20b')).toBe(true)
     })
 
     it('Groq qwen/qwen3-32bは推論対応', () => {
       expect(isReasoningModel('groq', 'qwen/qwen3-32b')).toBe(true)
-    })
-
-    it('Cohere command-a-reasoning-08-2025は推論対応', () => {
-      expect(isReasoningModel('cohere', 'command-a-reasoning-08-2025')).toBe(
-        true
-      )
     })
   })
 
@@ -75,20 +61,8 @@ describe('isReasoningModel', () => {
       expect(isReasoningModel('google', 'gemini-2.0-flash')).toBe(false)
     })
 
-    it('xAI grok-2は推論非対応', () => {
-      expect(isReasoningModel('xai', 'grok-2')).toBe(false)
-    })
-
-    it('xAI grok-4-fast-non-reasoningは推論非対応', () => {
-      expect(isReasoningModel('xai', 'grok-4-fast-non-reasoning')).toBe(false)
-    })
-
     it('Groq llama-3.3-70b-versatileは推論非対応', () => {
       expect(isReasoningModel('groq', 'llama-3.3-70b-versatile')).toBe(false)
-    })
-
-    it('Cohere command-a-03-2025は推論非対応', () => {
-      expect(isReasoningModel('cohere', 'command-a-03-2025')).toBe(false)
     })
 
     it('difyは推論非対応', () => {
@@ -223,14 +197,6 @@ describe('getReasoningEfforts', () => {
     expect(getReasoningEfforts('google', 'gemini-2.5-flash')).toEqual([])
   })
 
-  it('xAI grok-4はlow/highの2択', () => {
-    expect(getReasoningEfforts('xai', 'grok-4')).toEqual(['low', 'high'])
-  })
-
-  it('xAI grok-2は空配列（推論非対応）', () => {
-    expect(getReasoningEfforts('xai', 'grok-2')).toEqual([])
-  })
-
   it('Groq openai/gpt-oss-20bはlow/medium/highの3択', () => {
     expect(getReasoningEfforts('groq', 'openai/gpt-oss-20b')).toEqual([
       'low',
@@ -243,12 +209,6 @@ describe('getReasoningEfforts', () => {
     expect(getReasoningEfforts('groq', 'qwen/qwen3-32b')).toEqual([])
   })
 
-  it('Cohere command-a-reasoning-08-2025は空配列（tokenBudgetのみ）', () => {
-    expect(
-      getReasoningEfforts('cohere', 'command-a-reasoning-08-2025')
-    ).toEqual([])
-  })
-
   describe('カスタムモデルのフォールバック', () => {
     it('OpenAIカスタムモデルは全effort', () => {
       const efforts = getReasoningEfforts('openai', 'custom', true)
@@ -259,13 +219,6 @@ describe('getReasoningEfforts', () => {
         'medium',
         'high',
         'xhigh',
-      ])
-    })
-
-    it('xAIカスタムモデルはlow/high', () => {
-      expect(getReasoningEfforts('xai', 'custom', true)).toEqual([
-        'low',
-        'high',
       ])
     })
   })
@@ -304,18 +257,8 @@ describe('needsReasoningTokenBudget', () => {
     )
   })
 
-  it('Cohere command-a-reasoning-08-2025はtokenBudget必要', () => {
-    expect(
-      needsReasoningTokenBudget('cohere', 'command-a-reasoning-08-2025')
-    ).toBe(true)
-  })
-
   it('OpenAI gpt-5はtokenBudget不要', () => {
     expect(needsReasoningTokenBudget('openai', 'gpt-5')).toBe(false)
-  })
-
-  it('xAI grok-4はtokenBudget不要', () => {
-    expect(needsReasoningTokenBudget('xai', 'grok-4')).toBe(false)
   })
 
   describe('カスタムモデルのフォールバック', () => {

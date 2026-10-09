@@ -323,13 +323,7 @@ const ModelProvider = () => {
 
         const apiKeyMap: Record<string, string> = {
           anthropic: state.anthropicKey,
-          xai: state.xaiKey,
           groq: state.groqKey,
-          cohere: state.cohereKey,
-          mistralai: state.mistralaiKey,
-          perplexity: state.perplexityKey,
-          fireworks: state.fireworksKey,
-          deepseek: state.deepseekKey,
         }
 
         return (

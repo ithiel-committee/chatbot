@@ -393,13 +393,13 @@ describe('排他エンジン (computeExclusions)', () => {
       expect(corrections.reasoningMode).toBe(false)
     })
 
-    it('xAI grok-2（非推論）からgrok-4（推論）への変更ではreasoningModeはリセットされない', () => {
+    it('OpenAI gpt-4.1（非推論）からgpt-5（推論）への変更ではreasoningModeはリセットされない', () => {
       const prev = createBaseState({
-        selectAIService: 'xai',
-        selectAIModel: 'grok-2',
+        selectAIService: 'openai',
+        selectAIModel: 'gpt-4.1',
         reasoningMode: false,
       })
-      const incoming = { selectAIModel: 'grok-4' }
+      const incoming = { selectAIModel: 'gpt-5' }
       const { corrections } = computeExclusions(incoming, prev)
 
       // reasoningModeはfalseのままなのでリセット不要

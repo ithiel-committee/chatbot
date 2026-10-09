@@ -254,11 +254,11 @@ export class SpeakQueue {
               if (model && task.talk.emotion) {
                 await model.playEmotion(task.talk.emotion)
               }
-              const displayLength = (
-                task.displayText ?? task.talk.message
-              ).length
+              const displayLength = (task.displayText ?? task.talk.message)
+                .length
               const duration =
-                task.durationMs ?? Math.min(6000, Math.max(1500, displayLength * 80))
+                task.durationMs ??
+                Math.min(6000, Math.max(1500, displayLength * 80))
               await new Promise((resolve) => setTimeout(resolve, duration))
             } else if (task.kind === 'pcm16-stream') {
               if (!renderer?.speakPcm16Stream) {

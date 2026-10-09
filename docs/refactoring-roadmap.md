@@ -218,7 +218,7 @@
 
 - `guardServerSecretAccess` の4モード（disabled / protected / demo / unprotected）を模倣する共有テストヘルパー `mockServerSecretGuard()` を作成し、APIルートテストのボイラープレートを削減。
 - 「Nodeランタイムルートで `new Response` を return」アンチパターンを検出する静的テストを追加（B1の再発防止）。
-- `npm run test:coverage` の結果をCI/READMEに表面化（カバレッジの可視化）。
+- `pnpm run test:coverage` の結果をCI/READMEに表面化（カバレッジの可視化）。
 
 ### 重複排除・共通化系
 
@@ -295,7 +295,7 @@
 `defaultModels.openaiAudio` / `openAIAudioModels`（`gpt-4o-*-audio-preview`）が新しいAPIキーで404 `model_not_found` になる問題を修正し、`gpt-audio` / `gpt-audio-mini` 系へ更新した（コミット `3d3cf14c`）。設定マイグレーション（version 5）で旧モデル名保存済みユーザーも自動移行する。
 
 - **検証済み**: 2026-07-08に`.env.local`のOpenAI APIキーで `models.list` を実行し、`gpt-audio` / `gpt-audio-mini` / `gpt-audio-2025-08-28` / `gpt-audio-mini-2025-10-06` が取得可能であることを確認。公式ドキュメントとAPI一覧に合わせて `gpt-audio-1.5` / `gpt-audio-mini-2025-12-15` も選択肢へ追加した。デフォルトは挙動・コスト変更を避けるため `gpt-audio-mini` のまま維持。
-- **追加検証**: Realtime APIの短命client secret発行は `POST /v1/realtime/client_secrets` で実API確認済み。対象差分は `npm run lint:fix`、対象ファイルPrettier、該当テスト、全テスト、buildで確認済み。
+- **追加検証**: Realtime APIの短命client secret発行は `POST /v1/realtime/client_secrets` で実API確認済み。対象差分は `pnpm run lint:fix`、対象ファイルPrettier、該当テスト、全テスト、buildで確認済み。
 
 ---
 

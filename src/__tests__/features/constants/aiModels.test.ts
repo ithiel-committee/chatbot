@@ -32,13 +32,7 @@ describe('aiModels', () => {
     'anthropic',
     'google',
     'azure',
-    'xai',
     'groq',
-    'cohere',
-    'mistralai',
-    'perplexity',
-    'fireworks',
-    'deepseek',
     'openrouter',
     'lmstudio',
     'ollama',
@@ -79,11 +73,10 @@ describe('aiModels', () => {
       })
     })
 
-    it('should include newly released OpenAI and xAI models', () => {
+    it('should include newly released OpenAI models', () => {
       expect(getModels('openai')).toEqual(
         expect.arrayContaining(openAI56Models)
       )
-      expect(getModels('xai')).toContain('grok-4.5')
     })
   })
 
@@ -96,16 +89,12 @@ describe('aiModels', () => {
       expect(getDefaultModel('anthropic')).toBe('claude-sonnet-4-6')
     })
 
-    it('should return gemini-2.5-flash for google', () => {
-      expect(getDefaultModel('google')).toBe('gemini-2.5-flash')
+    it('should return gemini-3.6-flash for google', () => {
+      expect(getDefaultModel('google')).toBe('gemini-3.6-flash')
     })
 
     it('should return empty string for azure (no predefined models)', () => {
       expect(getDefaultModel('azure')).toBe('')
-    })
-
-    it('should return grok-4 for xai', () => {
-      expect(getDefaultModel('xai')).toBe('grok-4')
     })
 
     it('should return llama-3.3-70b-versatile for groq', () => {
@@ -164,17 +153,6 @@ describe('aiModels', () => {
       expect(models).not.toContain('gemma-3-27b-it')
     })
 
-    it('should return subset for xai (some are not multimodal)', () => {
-      const models = getMultiModalModels('xai')
-      const allModels = getModels('xai')
-      expect(models.length).toBeLessThan(allModels.length)
-      expect(models).not.toContain('grok-4-fast-non-reasoning')
-      expect(models).not.toContain('grok-4-fast-reasoning')
-      expect(models).not.toContain('grok-code-fast-1')
-      expect(models).toContain('grok-4')
-      expect(models).toContain('grok-4.5')
-    })
-
     it('should return subset for groq (most are not multimodal)', () => {
       const models = getMultiModalModels('groq')
       expect(models).toEqual(['meta-llama/llama-4-scout-17b-16e-instruct'])
@@ -198,14 +176,10 @@ describe('aiModels', () => {
       expect(isMultiModalModel('openai', 'gpt-4o')).toBe(true)
       expect(isMultiModalModel('anthropic', 'claude-opus-4-5')).toBe(true)
       expect(isMultiModalModel('google', 'gemini-2.5-flash')).toBe(true)
-      expect(isMultiModalModel('mistralai', 'pixtral-large-latest')).toBe(true)
     })
 
     it('should return false for non-multimodal models', () => {
       expect(isMultiModalModel('groq', 'gemma2-9b-it')).toBe(false)
-      expect(isMultiModalModel('cohere', 'command')).toBe(false)
-      expect(isMultiModalModel('xai', 'grok-4-fast-non-reasoning')).toBe(false)
-      expect(isMultiModalModel('deepseek', 'deepseek-chat')).toBe(false)
     })
 
     it('should return false for unknown models', () => {
@@ -299,16 +273,7 @@ describe('aiModels', () => {
   })
 
   describe('isReasoningModel', () => {
-    it('should treat Fireworks thinking models as reasoning models', () => {
-      expect(
-        isReasoningModel(
-          'fireworks',
-          'accounts/fireworks/models/kimi-k2-thinking'
-        )
-      ).toBe(true)
-    })
-
-    it('should treat latest OpenAI and xAI models as reasoning models', () => {
+    it('should treat latest OpenAI models as reasoning models', () => {
       for (const model of openAI56Models) {
         expect(isReasoningModel('openai', model)).toBe(true)
         expect(getReasoningEfforts('openai', model)).toEqual([
@@ -319,13 +284,6 @@ describe('aiModels', () => {
           'xhigh',
         ])
       }
-
-      expect(isReasoningModel('xai', 'grok-4.5')).toBe(true)
-      expect(getReasoningEfforts('xai', 'grok-4.5')).toEqual([
-        'low',
-        'medium',
-        'high',
-      ])
     })
   })
 

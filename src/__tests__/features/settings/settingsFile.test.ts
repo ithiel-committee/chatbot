@@ -21,7 +21,7 @@ describe('settings file export and import', () => {
     process.env.NEXT_PUBLIC_ALWAYS_OVERRIDE_WITH_ENV_VARIABLES = 'false'
     settingsStore.setState({
       openaiKey: 'openai-secret',
-      cartesiaApiKey: 'cartesia-secret',
+      anthropicKey: 'anthropic-secret',
       customApiHeaders: '{"Authorization":"Bearer secret"}',
       kioskPasscode: '1234',
       characterName: 'ニケ',
@@ -54,7 +54,7 @@ describe('settings file export and import', () => {
     expect(data.settings.showControlPanel).toBe(false)
     expect(data.settings.backgroundImageUrl).toBe('green')
     expect(data.settings).not.toHaveProperty('openaiKey')
-    expect(data.settings).not.toHaveProperty('cartesiaApiKey')
+    expect(data.settings).not.toHaveProperty('anthropicKey')
     expect(data.settings).not.toHaveProperty('customApiHeaders')
     expect(data.settings).not.toHaveProperty('kioskPasscode')
   })
@@ -64,7 +64,7 @@ describe('settings file export and import', () => {
 
     expect(data.secretsIncluded).toBe(true)
     expect(data.settings.openaiKey).toBe('openai-secret')
-    expect(data.settings.cartesiaApiKey).toBe('cartesia-secret')
+    expect(data.settings.anthropicKey).toBe('anthropic-secret')
     expect(data.settings.customApiHeaders).toContain('Bearer secret')
     expect(data.settings.kioskPasscode).toBe('1234')
   })
@@ -359,7 +359,7 @@ describe('settings file export and import', () => {
     expect(state.characterName).toBe('インポート後')
     expect(state.showControlPanel).toBe(true)
     expect(state.openaiKey).toBe('openai-secret')
-    expect(state.cartesiaApiKey).toBe('cartesia-secret')
+    expect(state.anthropicKey).toBe('anthropic-secret')
   })
 
   it('refuses imports when environment settings always override the browser', () => {

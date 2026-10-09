@@ -4,37 +4,38 @@
 
 ## プロジェクト概要
 
-AITuberKitは、インタラクティブなAIキャラクターをVTuber機能付きで作成するためのWebアプリケーションツールキットです。16種類のAIプロバイダー、3種類のキャラクターモデル（VRM/Live2D/PNGTuber）、11種類の音声合成エンジンをサポートし、YouTube配信、キオスクモード、人感検知など多彩な機能を備えています。
+本リポジトリは、AITuberKitをベースに「iThiel Committee」と「C3」の2プロジェクトで共有するよう整理したアプリです（運用方針は`OPERATION-METHOD.md`を参照）。
+AITuberKitは、インタラクティブなAIキャラクターをVTuber機能付きで作成するためのWebアプリケーションツールキットです。10種類のAIサービス、3種類のキャラクターモデル（VRM/Live2D/PNGTuber）、7種類の音声合成エンジンをサポートし、YouTube配信、キオスクモード、人感検知など多彩な機能を備えています。
 
 ## よく使うコマンド
 
 ### 開発
 
 ```bash
-npm run dev           # 開発サーバーを起動 (http://localhost:3000)
-npm run dev-https     # HTTPS付き開発サーバー
-npm run build         # 本番用ビルド
-npm run start         # ビルド+本番サーバーを起動
-npm run desktop       # Electronデスクトップアプリとして実行（dev+electron並列起動）
+pnpm dev              # 開発サーバーを起動 (http://localhost:3000)
+pnpm run dev-https    # HTTPS付き開発サーバー
+pnpm build            # 本番用ビルド
+pnpm start            # ビルド+本番サーバーを起動
+pnpm run desktop      # Electronデスクトップアプリとして実行（dev+electron並列起動）
 ```
 
 ### テスト・品質
 
 ```bash
-npm test              # すべてのテストを実行
-npm run test:watch    # テストウォッチモード
-npm run test:coverage # カバレッジ付きテスト
-npm run lint:fix && npm run format && npm run build  # lint修正+フォーマット+ビルドを一括実行
+pnpm test             # すべてのテストを実行
+pnpm run test:watch   # テストウォッチモード
+pnpm run test:coverage # カバレッジ付きテスト
+pnpm run lint:fix && pnpm run format && pnpm build  # lint修正+フォーマット+ビルドを一括実行
 ```
 
 ### セットアップ
 
 ```bash
-npm install           # 依存関係をインストール
+pnpm install          # 依存関係をインストール
 cp .env.example .env  # 環境変数を設定
 ```
 
-**動作要件**: Node.js `24.x`、npm `^11.6.2`
+**動作要件**: Node.js `24.x`、pnpm `^10.20.0`
 
 ## アーキテクチャ
 
@@ -49,7 +50,7 @@ cp .env.example .env  # 環境変数を設定
 - **2Dレンダリング**: pixi.js ^7.4.2 + pixi-live2d-display-lipsyncpatch
 - **テスト**: Jest ^29.7.0 + React Testing Library ^16.3.1
 - **Lint/Format**: ESLint ^9.39.2（Flat Config）+ Prettier ^3.7.4
-- **i18n**: i18next ^23.6.0 + react-i18next（16言語対応）
+- **i18n**: i18next ^23.6.0 + react-i18next（ja / en の2言語）
 - **デスクトップ**: Electron ^39.2.7
 
 ### ディレクトリ構造
@@ -95,11 +96,11 @@ src/
 
 **ファクトリーパターン**: `aiChatFactory.ts` → 設定に基づきプロバイダーを自動選択
 
-| ルーティング                      | 対応プロバイダー                                                                                                                          |
-| --------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
-| `vercelAIChat.ts` (Vercel AI SDK) | openai, anthropic, google, azure, xai, groq, cohere, mistralai, perplexity, fireworks, deepseek, openrouter, lmstudio, ollama, custom-api |
-| `openAIAudioChat.ts`              | openai（audioMode時）                                                                                                                     |
-| `difyChat.ts`                     | dify                                                                                                                                      |
+| ルーティング                      | 対応プロバイダー                                                                 |
+| --------------------------------- | -------------------------------------------------------------------------------- |
+| `vercelAIChat.ts` (Vercel AI SDK) | openai, anthropic, google, azure, groq, openrouter, lmstudio, ollama, custom-api |
+| `openAIAudioChat.ts`              | openai（audioMode時）                                                            |
+| `difyChat.ts`                     | dify                                                                             |
 
 **サーバー側**: `/api/ai/vercel.ts`（Edge Runtime、`createAIRegistry`で動的プロバイダー登録）
 
@@ -109,7 +110,7 @@ src/
 - `modelDefinitions` マスターデータから `aiModels`, `defaultModels`, `multiModalModels` を導出
 - ヘルパー関数群: `isMultiModalModel()`, `isReasoningModel()`, `isSearchGroundingModel()` 等
 
-### 音声合成（TTS）- 11エンジン
+### 音声合成（TTS）- 7エンジン
 
 | エンジン         | synthesizeファイル                | APIルート                  |
 | ---------------- | --------------------------------- | -------------------------- |
@@ -119,11 +120,7 @@ src/
 | Koeiromap        | `synthesizeVoiceKoeiromap.ts`     | `/api/tts-koeiromap`       |
 | Google TTS       | `synthesizeVoiceGoogle.ts`        | `/api/tts-google`          |
 | Style-Bert-VITS2 | `synthesizeStyleBertVITS2.ts`     | `/api/stylebertvits2`      |
-| GSVI TTS         | `synthesizeVoiceGSVI.ts`          | 直接呼び出し               |
-| ElevenLabs       | `synthesizeVoiceElevenlabs.ts`    | `/api/elevenLabs`          |
-| Cartesia         | `synthesizeVoiceCartesia.ts`      | `/api/cartesia`            |
 | OpenAI TTS       | `synthesizeVoiceOpenAI.ts`        | `/api/openAITTS`           |
-| Azure OpenAI TTS | `synthesizeVoiceAzureOpenAI.ts`   | `/api/azureOpenAITTS`      |
 
 ### 音声認識（STT）- 3モード
 
@@ -239,7 +236,7 @@ description, based, character, ai, voice, speechInput, youtube, slide, images, m
 - **言語ファイルの更新は日本語（`/locales/ja/`）のみ行う**
 - 他の言語ファイル（en、ko、zh-CN、zh-TW等）は手動で更新しない
 - 翻訳は別途専用のプロセスで管理される
-- 対応16言語: ja, en, zh-CN, zh-TW, ko, vi, fr, es, pt, de, ru, it, ar, hi, pl, th
+- 対応2言語: ja, en（他言語は削除済み）
 
 ### テスト
 

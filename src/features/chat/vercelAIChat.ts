@@ -162,16 +162,40 @@ export async function getVercelAIChatResponse(messages: Message[]) {
       })
     }
 
-    const response = await fetch(apiEndpoint, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(requestData),
-    })
+    const reqStartTime = Date.now()
+    logger.log(
+      `[AI API] 🚀 POST ${apiEndpoint} にリクエスト送信中... (service: ${selectAIService}, model: ${selectAIModel}, stream: false)`
+    )
+
+    const waitTimer = setInterval(() => {
+      const sec = ((Date.now() - reqStartTime) / 1000).toFixed(1)
+      logger.log(`[AI API] ⏳ レスポンス待機中... (${sec}秒経過)`)
+    }, 2000)
+
+    let response: Response
+    try {
+      response = await fetch(apiEndpoint, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(requestData),
+      })
+    } finally {
+      clearInterval(waitTimer)
+    }
+
+    const elapsed = Date.now() - reqStartTime
+    logger.log(
+      `[AI API] 📥 レスポンス受信: HTTP ${response.status} (待ち時間: ${(elapsed / 1000).toFixed(2)}秒 / ${elapsed}ms)`
+    )
 
     if (!response.ok) {
       const responseBody = await response.json()
+      logger.error(
+        `[AI API] ❌ エラー (${(elapsed / 1000).toFixed(2)}秒):`,
+        responseBody
+      )
       throw new Error(
         `API request to ${selectAIService} failed with status ${response.status} and body ${responseBody.error}`,
         { cause: { errorCode: responseBody.errorCode } }
@@ -179,6 +203,10 @@ export async function getVercelAIChatResponse(messages: Message[]) {
     }
 
     const data = await response.json()
+    const totalElapsed = Date.now() - reqStartTime
+    logger.log(
+      `[AI API] ✅ 応答取得完了 (文字数: ${data.text?.length || 0}文字, トータル時間: ${(totalElapsed / 1000).toFixed(2)}秒 / ${totalElapsed}ms)`
+    )
     return { text: data.text }
   } catch (error) {
     logger.error(`Error fetching ${selectAIService} API response:`, error)
@@ -264,14 +292,38 @@ export async function getVercelAIChatResponseStream(
     fetchOptions.signal = options.signal
   }
 
-  const response = await fetch(apiEndpoint, fetchOptions)
+  const requestStartTime = Date.now()
+  logger.log(
+    `[AI API] 🚀 POST ${apiEndpoint} にリクエスト送信中... (service: ${selectAIService}, model: ${selectAIModel}, stream: true)`
+  )
 
+  const waitTimer = setInterval(() => {
+    const sec = ((Date.now() - requestStartTime) / 1000).toFixed(1)
+    logger.log(`[AI API] ⏳ レスポンス待機中... (${sec}秒経過)`)
+  }, 2000)
+
+  let response: Response
+  try {
+    response = await fetch(apiEndpoint, fetchOptions)
+  } finally {
+    clearInterval(waitTimer)
+  }
+
+  const ttfb = Date.now() - requestStartTime
   const contentType = response.headers.get('content-type') || ''
   const isPlainTextStream = contentType.includes('text/plain')
+
+  logger.log(
+    `[AI API] 📥 レスポンス受信: HTTP ${response.status} (TTFB: ${(ttfb / 1000).toFixed(2)}秒 / ${ttfb}ms, contentType: ${contentType})`
+  )
 
   try {
     if (!response.ok) {
       const responseBody = await response.json()
+      logger.error(
+        `[AI API] ❌ エラー (${(ttfb / 1000).toFixed(2)}秒):`,
+        responseBody
+      )
       throw new Error(
         `API request to ${selectAIService} failed with status ${response.status} and body ${responseBody.error}`,
         { cause: { errorCode: responseBody.errorCode } }
@@ -290,6 +342,14 @@ export async function getVercelAIChatResponseStream(
         const reader = response.body.getReader()
         const decoder = new TextDecoder('utf-8')
         let buffer = ''
+        let isFirstChunk = true
+        let totalChars = 0
+
+        const chunkWaitTimer = setInterval(() => {
+          if (!isFirstChunk) return
+          const sec = ((Date.now() - requestStartTime) / 1000).toFixed(1)
+          logger.log(`[AI API] ⏳ 初回トークン生成待機中... (${sec}秒経過)`)
+        }, 2000)
 
         try {
           while (true) {
@@ -297,6 +357,14 @@ export async function getVercelAIChatResponseStream(
             if (done) break
 
             const decodedChunk = decoder.decode(value, { stream: true })
+            if (isFirstChunk && decodedChunk.trim()) {
+              isFirstChunk = false
+              clearInterval(chunkWaitTimer)
+              const firstChunkElapsed = Date.now() - requestStartTime
+              logger.log(
+                `[AI API] ⚡ 初回チャンク受信 (送信から初回トークンまで: ${(firstChunkElapsed / 1000).toFixed(2)}秒 / ${firstChunkElapsed}ms)`
+              )
+            }
 
             if (isPlainTextStream) {
               if (decodedChunk) {
@@ -332,6 +400,7 @@ export async function getVercelAIChatResponseStream(
 
                   if (data.type === 'text-delta' && data.delta) {
                     controller.enqueue(data.delta)
+                    totalChars += data.delta.length
                   } else if (data.type === 'reasoning-delta' && data.delta) {
                     controller.enqueue(THINKING_MARKER + data.delta)
                   } else if (
@@ -382,13 +451,33 @@ export async function getVercelAIChatResponseStream(
 
           if (isPlainTextStream && buffer) {
             controller.enqueue(buffer)
+            totalChars += buffer.length
           }
+          clearInterval(chunkWaitTimer)
+          const totalDuration = Date.now() - requestStartTime
+          const totalSec = (totalDuration / 1000).toFixed(2)
+          const speed =
+            totalDuration > 0
+              ? (totalChars / (totalDuration / 1000)).toFixed(1)
+              : '0'
+          logger.log(
+            `[AI API] ✅ ストリーム完了 (文字数: ${totalChars}文字, トータル時間: ${totalSec}秒 / ${totalDuration}ms, 生成速度: ${speed}文字/秒)`
+          )
         } catch (error) {
+          clearInterval(chunkWaitTimer)
           if (error instanceof DOMException && error.name === 'AbortError') {
+            const abortSec = ((Date.now() - requestStartTime) / 1000).toFixed(2)
+            logger.log(
+              `[AI API] ⏹️ ストリームが中断されました (${abortSec}秒時点)`
+            )
             return
           }
 
-          logger.error(`Error fetching ${selectAIService} API response:`, error)
+          const errDuration = Date.now() - requestStartTime
+          logger.error(
+            `[AI API] ❌ エラー (${(errDuration / 1000).toFixed(2)}秒 / ${errDuration}ms):`,
+            error
+          )
 
           const errorMessage = handleApiError('AIAPIError')
           toastStore.getState().addToast({

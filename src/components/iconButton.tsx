@@ -162,6 +162,21 @@ const OUTLINE_ICONS: Record<string, JSX.Element> = {
       <line x1="12" y1="17" x2="12" y2="21" />
     </>
   ),
+  presets: (
+    <>
+      <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
+      <circle cx="9" cy="7" r="4" />
+      <path d="M22 21v-2a4 4 0 0 0-3-3.87" />
+      <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+    </>
+  ),
+  layers: (
+    <>
+      <polygon points="12 2 2 7 12 12 22 7 12 2" />
+      <polyline points="2 17 12 22 22 17" />
+      <polyline points="2 12 12 17 22 12" />
+    </>
+  ),
 }
 
 const OutlineIcon = ({
@@ -207,7 +222,13 @@ export const InlineOutlineIcon = ({
 }
 
 type Props = ButtonHTMLAttributes<HTMLButtonElement> & {
-  iconName: keyof KnownIconType | 'screen-share' | 'stop' | 'game-controller'
+  iconName:
+    | keyof KnownIconType
+    | 'screen-share'
+    | 'stop'
+    | 'game-controller'
+    | 'presets'
+    | 'layers'
   isProcessing: boolean
   isProcessingIcon?: keyof KnownIconType
   label?: string
@@ -241,7 +262,7 @@ export const IconButton = ({
   return (
     <button
       {...rest}
-      className={`${backgroundColor} rounded-2xl text-sm p-2 min-w-[44px] min-h-[44px] justify-center text-center inline-flex items-center
+      className={`${backgroundColor} rounded-2xl text-sm p-2 min-w-[44px] min-h-[44px] justify-center text-center inline-flex items-center outline-none focus:outline-none focus-visible:outline-none
         ${iconColor || 'text-theme'}
         ${rest.className}
       `}

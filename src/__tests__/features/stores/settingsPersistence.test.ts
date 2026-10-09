@@ -65,7 +65,7 @@ describe('settingsStore persistence', () => {
       storageKey,
       JSON.stringify({
         state: {
-          selectedVrmPath: '/vrm/nikechan_v1.vrm',
+          selectedVrmPath: '/vrm/custom.vrm',
         },
         version: 0,
       })
@@ -73,9 +73,7 @@ describe('settingsStore persistence', () => {
 
     const settingsStore = loadStore()
 
-    expect(settingsStore.getState().selectedVrmPath).toBe(
-      '/vrm/nikechan_v1.vrm'
-    )
+    expect(settingsStore.getState().selectedVrmPath).toBe('/vrm/custom.vrm')
   })
 
   it('uses environment defaults for chat log and input form visibility', () => {
@@ -88,12 +86,12 @@ describe('settingsStore persistence', () => {
     expect(settingsStore.getState().chatLogMode).toBe('hidden')
   })
 
-  it('falls back to the assistant view for an invalid chat log mode', () => {
+  it('falls back to the chat-log view for an invalid chat log mode', () => {
     process.env.NEXT_PUBLIC_CHAT_LOG_MODE = 'invalid'
 
     const settingsStore = loadStore()
 
-    expect(settingsStore.getState().chatLogMode).toBe('assistant')
+    expect(settingsStore.getState().chatLogMode).toBe('chat-log')
   })
 
   it('persists customized keyboard shortcuts', () => {
@@ -114,7 +112,7 @@ describe('settingsStore persistence', () => {
     const settingsStore = loadStore()
 
     settingsStore.setState({
-      cartesiaApiKey: 'cartesia-test-key',
+      anthropicKey: 'anthropic-test-key',
       dynamicRetrievalThreshold: 0.65,
       showControlPanel: false,
       showInputForm: false,
@@ -123,7 +121,7 @@ describe('settingsStore persistence', () => {
     })
 
     const persisted = JSON.parse(localStorage.getItem(storageKey) ?? '{}')
-    expect(persisted.state.cartesiaApiKey).toBe('cartesia-test-key')
+    expect(persisted.state.anthropicKey).toBe('anthropic-test-key')
     expect(persisted.state.dynamicRetrievalThreshold).toBe(0.65)
     expect(persisted.state.showControlPanel).toBe(false)
     expect(persisted.state.showInputForm).toBe(false)
@@ -131,8 +129,8 @@ describe('settingsStore persistence', () => {
     expect(persisted.state.backgroundImageUrl).toBe('green')
 
     const reloadedSettingsStore = loadStore()
-    expect(reloadedSettingsStore.getState().cartesiaApiKey).toBe(
-      'cartesia-test-key'
+    expect(reloadedSettingsStore.getState().anthropicKey).toBe(
+      'anthropic-test-key'
     )
     expect(reloadedSettingsStore.getState().dynamicRetrievalThreshold).toBe(
       0.65

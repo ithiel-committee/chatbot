@@ -160,7 +160,6 @@ const defaultHarmlessApiMocks: Record<string, NetworkMockResponse> = {
   '/api/difyChat': createDifyMockResponse,
   '/api/whisper': { json: { text: '' } },
   '/api/openAITTS': { contentType: 'audio/wav', body: emptyAudioBody },
-  '/api/azureOpenAITTS': { contentType: 'audio/wav', body: emptyAudioBody },
   '/api/tts-google': { contentType: 'audio/wav', body: emptyAudioBody },
   '/api/tts-voicevox': { contentType: 'audio/wav', body: emptyAudioBody },
   '/api/tts-aivisspeech': { contentType: 'audio/wav', body: emptyAudioBody },
@@ -170,8 +169,6 @@ const defaultHarmlessApiMocks: Record<string, NetworkMockResponse> = {
   },
   '/api/tts-koeiromap': { contentType: 'audio/wav', body: emptyAudioBody },
   '/api/stylebertvits2': { contentType: 'audio/wav', body: emptyAudioBody },
-  '/api/elevenLabs': { contentType: 'audio/wav', body: emptyAudioBody },
-  '/api/cartesia': { contentType: 'audio/wav', body: emptyAudioBody },
 }
 
 const unhandledApiMock: NetworkMockResponseInit = {

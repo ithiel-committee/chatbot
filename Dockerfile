@@ -1,6 +1,9 @@
 # ベースイメージとしてNode.js 24を使用
 FROM node:24
 
+# pnpmを有効化
+RUN corepack enable && corepack prepare pnpm@10.20.0 --activate
+
 # 必要なシステムライブラリをインストール
 RUN apt-get update && apt-get install -y \
     libcairo2-dev \
@@ -14,11 +17,11 @@ RUN apt-get update && apt-get install -y \
 # 作業ディレクトリを設定
 WORKDIR /app
 
-# package.jsonとpackage-lock.jsonをコピー
-COPY package*.json ./
+# package.jsonとpnpm-lock.yamlをコピー
+COPY package.json pnpm-lock.yaml ./
 
 # 依存関係をインストール
-RUN npm ci
+RUN pnpm install --frozen-lockfile
 
 # アプリケーションのソースコードをコピー
 COPY . .
@@ -27,4 +30,4 @@ COPY . .
 EXPOSE 3000
 
 # 開発モードでアプリケーションを起動
-CMD ["npm", "run", "dev"]
+CMD ["pnpm", "dev"]

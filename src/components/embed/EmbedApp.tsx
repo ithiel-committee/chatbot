@@ -47,7 +47,6 @@ const applyEmbedConfig = (embedId?: string) => {
 
   settingsStore.setState({
     showControlPanel: false,
-    showQuickMenu: false,
     messageReceiverEnabled: false,
     slideMode: false,
     characterName: config.characterName ?? defaultSettings.characterName,
@@ -68,13 +67,7 @@ const applyEmbedConfig = (embedId?: string) => {
     presetQuestions: config.presetQuestions
       ? toPresetQuestions(config.presetQuestions)
       : defaultSettings.presetQuestions,
-    colorTheme: config.colorTheme ?? defaultSettings.colorTheme,
   })
-
-  document.documentElement.setAttribute(
-    'data-theme',
-    config.colorTheme ?? defaultSettings.colorTheme
-  )
 
   return {
     allowed: true,
