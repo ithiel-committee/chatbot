@@ -75,6 +75,13 @@ export const MessageInput = ({
   const chatLogWidth = settingsStore((s) => s.chatLogWidth)
   const chatLogPosition = settingsStore((s) => s.chatLogPosition)
   const chatLogEdgeOffset = settingsStore((s) => s.chatLogEdgeOffset)
+  const assistantTextStyle = settingsStore((s) => s.assistantTextStyle)
+  const characterName = settingsStore((s) => s.characterName)
+  const userDisplayName = settingsStore((s) => s.userDisplayName) || 'あなた'
+  const showCharacterName = settingsStore((s) => s.showCharacterName)
+  const showPresetQuestions = settingsStore((s) => s.showPresetQuestions)
+  const presetQuestions = settingsStore((s) => s.presetQuestions)
+  const chatLog = homeStore((s) => s.chatLog)
 
   const isRightAligned = chatLogPosition === 'right'
   const isInputRightAligned = !isRightAligned
@@ -435,6 +442,294 @@ export const MessageInput = ({
     },
     [processImageFile]
   )
+
+  // C案: ノベルゲーム風UI（下部ダイアログ内に会話テキスト表示と入力欄を一体化）
+  if (assistantTextStyle === 'novel') {
+    const emotionPattern =
+      /\[(neutral|happy|angry|sad|relaxed|surprised)\]/gi
+    const lastMessage =
+      chatLog.length > 0 ? chatLog[chatLog.length - 1] : null
+
+    let isUserSpeaking = false
+    let speakerName = characterName
+    let novelDisplayText = ''
+
+    if (lastMessage) {
+      if (lastMessage.role === 'user') {
+        isUserSpeaking = true
+        speakerName = userDisplayName
+        if (typeof lastMessage.content === 'string') {
+          novelDisplayText = lastMessage.content
+        } else if (Array.isArray(lastMessage.content)) {
+          const tPart = lastMessage.content.find((c) => c.type === 'text')
+          novelDisplayText = tPart ? tPart.text : ''
+        }
+      } else if (lastMessage.role === 'assistant') {
+        isUserSpeaking = false
+        speakerName = characterName
+        if (typeof lastMessage.content === 'string') {
+          novelDisplayText = lastMessage.content
+            .replace(emotionPattern, '')
+            .replace(/\[motion:[^\]]*\]/gi, '')
+        }
+      }
+    }
+
+    const shouldShowPresetQuestions =
+      showPresetQuestions && presetQuestions.length > 0
+
+    return (
+      <>
+        {showPermissionModal && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+            <div className="theme-surface-elevated max-w-[calc(100vw-2rem)] rounded-xl border p-4 text-theme-default shadow-xl sm:max-w-md sm:p-6">
+              <h3 className="mb-4 text-lg font-bold sm:text-xl">
+                {t('MicrophonePermission')}
+              </h3>
+              <p className="mb-4">{t('MicrophonePermissionMessage')}</p>
+              <button
+                className="rounded-lg bg-secondary px-4 py-2 font-bold text-theme transition-colors hover:bg-secondary-hover"
+                onClick={() => setShowPermissionModal(false)}
+              >
+                {t('Close')}
+              </button>
+            </div>
+          </div>
+        )}
+
+        <div
+          className="animate-aurora-bubble-in fixed bottom-3 left-1/2 z-20 w-[94vw] max-w-[840px] -translate-x-1/2 rounded-[24px] border border-white/20 bg-slate-950/85 p-4 shadow-[0_16px_40px_rgba(0,0,0,0.6)] backdrop-blur-2xl sm:bottom-6 sm:p-5"
+          onDragOver={handleDragOver}
+          onDrop={handleDrop}
+        >
+          {/* 光沢ハイライトライン */}
+          <div className="pointer-events-none absolute inset-x-0 top-0 h-px rounded-t-[24px] bg-gradient-to-r from-transparent via-white/30 to-transparent" />
+
+          {/* 発話者ネームプレート（左上に配置） */}
+          {showCharacterName && (
+            <div
+              className={`absolute -top-3.5 left-6 flex items-center gap-1.5 rounded-full px-3.5 py-1 text-xs font-bold tracking-wider shadow-md sm:left-8 ${
+                isUserSpeaking
+                  ? 'border border-white/20 bg-gradient-to-r from-slate-700 to-slate-800 text-slate-100 shadow-black/40'
+                  : 'border border-white/30 bg-gradient-to-r from-primary to-primary-hover text-white shadow-[0_2px_10px_var(--color-primary-disabled)]'
+              }`}
+            >
+              <span className="text-[11px] opacity-80">
+                {isUserSpeaking ? '💬' : '✨'}
+              </span>
+              <span>{speakerName}</span>
+            </div>
+          )}
+
+          {/* 上段: 会話メッセージテキスト */}
+          <div className="scroll-hidden relative mb-2.5 min-h-[2.8rem] max-h-[88px] overflow-y-auto px-1 pt-1 sm:min-h-[3.4rem] sm:max-h-[100px]">
+            {novelDisplayText ? (
+              <p className="text-[15px] font-medium leading-[1.75] text-[var(--aurora-text-strong)] [text-shadow:0_1px_3px_rgba(0,0,0,0.6)] sm:text-[16px]">
+                {novelDisplayText}
+              </p>
+            ) : chatProcessing ? (
+              <div className="flex items-center gap-2 text-sm text-[var(--aurora-text-muted)]">
+                <span className="italic">{characterName}が考え中</span>
+                <span className="flex items-center gap-1">
+                  <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-primary" />
+                  <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-primary delay-75" />
+                  <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-primary delay-150" />
+                </span>
+              </div>
+            ) : (
+              <p className="text-sm italic text-[var(--aurora-text-muted)]">
+                {t('EnterYourQuestion', '聞きたいことを話しかけてみてね')}
+              </p>
+            )}
+
+            {/* 右下のADV送り/待機マーク */}
+            <div className="absolute bottom-0 right-1 flex items-center gap-1.5">
+              {chatProcessing && !isSpeaking ? (
+                <div className="flex items-center gap-1 text-[11px] text-white/50">
+                  <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-primary" />
+                  <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-primary delay-75" />
+                  <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-primary delay-150" />
+                </div>
+              ) : isSpeaking ? (
+                <div className="flex items-center gap-0.5 text-xs text-primary animate-pulse">
+                  <span className="h-2 w-0.5 rounded-full bg-primary" />
+                  <span className="h-3 w-0.5 rounded-full bg-primary" />
+                  <span className="h-2 w-0.5 rounded-full bg-primary" />
+                </div>
+              ) : (
+                <span className="animate-bounce select-none text-[10px] font-bold text-primary">
+                  ▼
+                </span>
+              )}
+            </div>
+          </div>
+
+          {/* 区切り線 */}
+          <div className="mb-2 h-px w-full bg-gradient-to-r from-transparent via-white/15 to-transparent" />
+
+          {/* 無音タイムアウトバー（マイク録音時） */}
+          {isMicRecording && showSilenceProgressBar && (
+            <div className="aurora-glass-bubble mb-2 h-1.5 w-full shrink-0 overflow-hidden rounded-full">
+              <div
+                className="h-full rounded-full bg-secondary transition-all duration-200 ease-linear"
+                style={{
+                  width:
+                    silenceTimeoutRemaining !== null
+                      ? `${Math.min(
+                          100,
+                          Math.max(
+                            0,
+                            ((settingsStore.getState().noSpeechTimeout * 1000 -
+                              silenceTimeoutRemaining -
+                              300) /
+                              (settingsStore.getState().noSpeechTimeout * 1000 -
+                                600)) *
+                              100
+                          )
+                        )}%`
+                      : '0%',
+                }}
+              />
+            </div>
+          )}
+
+          {/* エラー表示 */}
+          {fileError && (
+            <div className="mb-2 rounded-xl border border-red-200 bg-red-50/90 p-1.5 text-xs font-medium text-red-700">
+              {fileError}
+            </div>
+          )}
+          {inputValidationError && (
+            <div className="mb-2 rounded-xl border border-red-200 bg-red-50/90 p-1.5 text-xs font-medium text-red-700">
+              {inputValidationError}
+            </div>
+          )}
+
+          {/* 下段: 一体化された入力バー */}
+          <div className="flex items-center gap-2">
+            {/* 画像添付 */}
+            {isMultiModalSupported && (
+              <div className="shrink-0">
+                <input
+                  ref={attachInputRef}
+                  type="file"
+                  accept="image/png,image/jpeg,image/gif,image/webp"
+                  className="hidden"
+                  onChange={handleAttachChange}
+                />
+                <button
+                  type="button"
+                  title={t('AttachImage')}
+                  aria-label={t('AttachImage')}
+                  onClick={handleAttachClick}
+                  disabled={chatProcessing || slidePlaying || realtimeAPIMode}
+                  className="flex h-9 w-9 items-center justify-center rounded-full text-[var(--aurora-text-subtle)] transition-colors hover:bg-white/10 disabled:opacity-40"
+                >
+                  <svg
+                    width="18"
+                    height="18"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="1.8"
+                    strokeLinecap="round"
+                  >
+                    <line x1="12" y1="5" x2="12" y2="19" />
+                    <line x1="5" y1="12" x2="19" y2="12" />
+                  </svg>
+                </button>
+              </div>
+            )}
+
+            {/* 一行テキスト入力欄 */}
+            <div className="relative min-h-0 flex-1">
+              <textarea
+                ref={textareaRef}
+                data-testid="chat-message-input"
+                placeholder={
+                  chatProcessing
+                    ? `${t('AnswerGenerating')}${loadingDots}`
+                    : continuousMicListeningMode && isMicRecording
+                      ? t('ListeningContinuously')
+                      : isMultiModalSupported && !isSmallScreen
+                        ? `${t('EnterYourQuestion')} (${t('PasteImageSupported') || 'Paste image supported'})`
+                        : t('EnterYourQuestion')
+                }
+                onChange={handleTextChange}
+                onPaste={handlePaste}
+                onKeyDown={handleKeyPress}
+                onDragOver={handleDragOver}
+                onDrop={handleDrop}
+                disabled={chatProcessing || slidePlaying || realtimeAPIMode}
+                className="scroll-hidden block h-9 w-full resize-none rounded-full bg-white/10 px-4 py-1.5 text-[14px] font-medium text-[var(--aurora-text-strong)] outline-none transition-all placeholder:text-[var(--aurora-text-muted)] focus:bg-white/15 disabled:opacity-60"
+                value={userMessage}
+                rows={1}
+                maxLength={maxInputLength}
+                style={{
+                  lineHeight: '1.4',
+                  whiteSpace: 'pre-wrap',
+                }}
+              />
+            </div>
+
+            {/* ボタン群: マイク、送信、停止 */}
+            <div className="flex shrink-0 items-center gap-1.5 sm:gap-2">
+              <IconButton
+                iconName={
+                  continuousMicListeningMode ? '24/Close' : '24/Microphone'
+                }
+                backgroundColor={
+                  continuousMicListeningMode
+                    ? isMicRecording
+                      ? 'bg-green-500 text-theme'
+                      : 'bg-green-600 text-theme'
+                    : isMicRecording
+                      ? 'bg-secondary text-theme'
+                      : 'bg-[var(--aurora-control-bg)] hover:bg-[var(--aurora-control-bg-hover)] disabled:bg-[var(--aurora-control-bg-disabled)]'
+                }
+                iconColor={
+                  continuousMicListeningMode || isMicRecording
+                    ? 'text-theme'
+                    : 'text-[var(--aurora-icon)]'
+                }
+                isProcessing={isMicRecording}
+                isProcessingIcon={
+                  continuousMicListeningMode ? '24/Microphone' : '24/PauseAlt'
+                }
+                disabled={
+                  continuousMicListeningMode || chatProcessing || isSpeaking
+                }
+                onClick={handleMicClick}
+                className={`!h-9 !min-h-9 !w-9 !min-w-9 !rounded-full !p-1.5 ring-0 transition-colors duration-200 focus:outline-none ${
+                  isMicRecording && !continuousMicListeningMode
+                    ? 'animate-[aurora-mic-pulse_1.5s_ease-out_infinite]'
+                    : ''
+                }`}
+              />
+
+              <IconButton
+                iconName="24/Send"
+                className="!h-9 !min-h-9 !w-9 !min-w-9 !rounded-full !p-1.5 shadow-[0_2px_8px_rgba(0,0,0,0.2)] ring-0 transition duration-200 hover:brightness-110 focus:outline-none disabled:shadow-none"
+                isProcessing={chatProcessing}
+                disabled={chatProcessing || !userMessage || realtimeAPIMode}
+                onClick={handleSendClick}
+                data-testid="chat-send-button"
+              />
+
+              <IconButton
+                iconName="stop"
+                backgroundColor="bg-[var(--aurora-control-bg)] hover:bg-[var(--aurora-control-bg-hover)]"
+                className="!h-9 !min-h-9 !w-9 !min-w-9 !rounded-full !p-1.5 ring-0 transition-colors duration-200 focus:outline-none"
+                onClick={onClickStopButton}
+                isProcessing={false}
+                data-testid="chat-stop-button"
+              />
+            </div>
+          </div>
+        </div>
+      </>
+    )
+  }
 
   return (
     <>

@@ -75,6 +75,7 @@ export const Menu = () => {
   const showCapture = menuStore((s) => s.showCapture)
   const slidePlaying = slideStore((s) => s.isPlaying)
   const showAssistantText = settingsStore((s) => s.showAssistantText)
+  const assistantTextStyle = settingsStore((s) => s.assistantTextStyle)
   const settingsToggleShortcut =
     settingsStore((s) => s.settingsToggleShortcut) ||
     DEFAULT_SETTINGS_TOGGLE_SHORTCUT
@@ -887,7 +888,9 @@ export const Menu = () => {
         <Settings onClickClose={() => setShowAdvancedSettings(false)} />
       )}
       {chatLogMode === CHAT_LOG_MODE.ASSISTANT &&
-        latestAssistantMessage &&
+        (assistantTextStyle === 'novel'
+          ? Boolean(chatLog.length > 0 || latestAssistantMessage)
+          : Boolean(latestAssistantMessage)) &&
         (!slideMode || !slideVisible) &&
         showAssistantText && <AssistantText message={latestAssistantMessage} />}
       {showWebcam && navigator.mediaDevices && <Webcam />}

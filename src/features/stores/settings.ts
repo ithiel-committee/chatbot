@@ -173,7 +173,7 @@ interface Character {
   customPresetName5: string
   selectedPresetIndex: number
   showAssistantText: boolean
-  assistantTextStyle: 'bubble' | 'borderless'
+  assistantTextStyle: 'bubble' | 'borderless' | 'novel'
   showCharacterName: boolean
   systemPrompt: string
   selectedVrmPath: string
@@ -488,10 +488,17 @@ const getInitialValuesFromEnv = (): SettingsState => ({
   selectedPresetIndex: 0,
   showAssistantText:
     process.env.NEXT_PUBLIC_SHOW_ASSISTANT_TEXT === 'true' ? true : false,
-  assistantTextStyle:
-    process.env.NEXT_PUBLIC_ASSISTANT_TEXT_STYLE === 'borderless'
-      ? 'borderless'
-      : 'bubble',
+  assistantTextStyle: (() => {
+    const style = (
+      process.env.NEXT_PUBLIC_ASSISTANT_TEXT_STYLE ||
+      process.env.NEXT_PUBLIC_UI_STYLE ||
+      ''
+    ).toLowerCase()
+    if (style === 'borderless' || style === 'novel' || style === 'novel-game') {
+      return style === 'novel-game' ? 'novel' : style
+    }
+    return 'bubble'
+  })(),
   showCharacterName:
     process.env.NEXT_PUBLIC_SHOW_CHARACTER_NAME === 'true' ? true : false,
   systemPrompt:
@@ -621,7 +628,18 @@ const getInitialValuesFromEnv = (): SettingsState => ({
     parseFloat(process.env.NEXT_PUBLIC_CHAT_LOG_WIDTH || '400') || 400,
   chatLogMode: (() => {
     const mode = process.env.NEXT_PUBLIC_CHAT_LOG_MODE
-    return mode === 'hidden' || mode === 'assistant' ? mode : 'chat-log'
+    if (mode === 'hidden' || mode === 'assistant' || mode === 'chat-log') {
+      return mode
+    }
+    const textStyle = (
+      process.env.NEXT_PUBLIC_ASSISTANT_TEXT_STYLE ||
+      process.env.NEXT_PUBLIC_UI_STYLE ||
+      ''
+    ).toLowerCase()
+    if (textStyle === 'novel' || textStyle === 'novel-game') {
+      return 'assistant'
+    }
+    return 'chat-log'
   })(),
   chatLogPosition:
     process.env.NEXT_PUBLIC_CHAT_LOG_POSITION === 'left' ? 'left' : 'right',

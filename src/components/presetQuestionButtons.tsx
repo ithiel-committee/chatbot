@@ -53,8 +53,17 @@ export const PresetQuestionButtons = ({ onSelectQuestion }: Props) => {
   // Sort questions by order
   const sortedQuestions = [...presetQuestions].sort((a, b) => a.order - b.order)
 
+  const assistantTextStyle = settingsStore((s) => s.assistantTextStyle)
+  const isNovel = assistantTextStyle === 'novel'
+
   return (
-    <div className="pointer-events-none absolute bottom-[94px] z-20 w-full sm:bottom-[100px]">
+    <div
+      className={`pointer-events-none absolute z-20 w-full ${
+        isNovel
+          ? 'bottom-[148px] sm:bottom-[176px]'
+          : 'bottom-[94px] sm:bottom-[100px]'
+      }`}
+    >
       <div
         className="pointer-events-auto mx-auto max-w-4xl px-3 sm:px-4"
         ref={containerRef}

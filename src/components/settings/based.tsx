@@ -292,13 +292,19 @@ const Based = () => {
               value={assistantTextStyle}
               onChange={(e) =>
                 settingsStore.setState({
-                  assistantTextStyle: e.target.value as 'bubble' | 'borderless',
+                  assistantTextStyle: e.target.value as
+                    | 'bubble'
+                    | 'borderless'
+                    | 'novel',
                 })
               }
             >
               <option value="bubble">{t('AssistantTextStyleBubble')}</option>
               <option value="borderless">
                 {t('AssistantTextStyleBorderless')}
+              </option>
+              <option value="novel">
+                {t('AssistantTextStyleNovel', 'ノベルゲーム風')}
               </option>
             </select>
           </div>

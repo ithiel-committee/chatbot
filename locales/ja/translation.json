@@ -308,6 +308,7 @@
   "AssistantTextStyleInfo": "AIの返答の表示スタイルを選択できます。",
   "AssistantTextStyleBubble": "バブル（すりガラスパネル）",
   "AssistantTextStyleBorderless": "縁無し（映画字幕風）",
+  "AssistantTextStyleNovel": "ノベルゲーム風（ADV対話ダイアログ）",
   "ChatLogPosition": "会話ログの表示位置",
   "ChatLogPositionInfo": "会話ログを画面のどちら側に表示するかを選択できます。",
   "ChatLogPositionRight": "右",
