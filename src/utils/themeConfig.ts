@@ -173,7 +173,9 @@ export function getThemeConfig(): ThemeConfig {
 /**
  * HTMLの<head>内に挿入するインラインCSS文字列を生成する
  */
-export function getThemeInlineCss(config: ThemeConfig = getThemeConfig()): string {
+export function getThemeInlineCss(
+  config: ThemeConfig = getThemeConfig()
+): string {
   const rules: string[] = []
 
   if (config.colors) {
@@ -187,7 +189,9 @@ export function getThemeInlineCss(config: ThemeConfig = getThemeConfig()): strin
       rules.push(`  --color-primary-press: ${config.colors.primaryPress};`)
     }
     if (config.colors.primaryDisabled) {
-      rules.push(`  --color-primary-disabled: ${config.colors.primaryDisabled};`)
+      rules.push(
+        `  --color-primary-disabled: ${config.colors.primaryDisabled};`
+      )
     }
   }
 
@@ -215,10 +219,16 @@ export function applyThemeToDOM(config: ThemeConfig = getThemeConfig()): void {
       root.style.setProperty('--color-primary', config.colors.primary)
     }
     if (config.colors.primaryHover) {
-      root.style.setProperty('--color-primary-hover', config.colors.primaryHover)
+      root.style.setProperty(
+        '--color-primary-hover',
+        config.colors.primaryHover
+      )
     }
     if (config.colors.primaryPress) {
-      root.style.setProperty('--color-primary-press', config.colors.primaryPress)
+      root.style.setProperty(
+        '--color-primary-press',
+        config.colors.primaryPress
+      )
     }
     if (config.colors.primaryDisabled) {
       root.style.setProperty(
@@ -232,4 +242,3 @@ export function applyThemeToDOM(config: ThemeConfig = getThemeConfig()): void {
     root.style.setProperty('--font-family', config.fontFamily)
   }
 }
-

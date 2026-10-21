@@ -11,9 +11,7 @@ describe('useTypewriter', () => {
   })
 
   it('immediately returns full text when enabled is false', () => {
-    const { result } = renderHook(() =>
-      useTypewriter('こんにちは', false)
-    )
+    const { result } = renderHook(() => useTypewriter('こんにちは', false))
 
     expect(result.current.displayedText).toBe('こんにちは')
     expect(result.current.isTyping).toBe(false)

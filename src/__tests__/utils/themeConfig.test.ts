@@ -69,8 +69,12 @@ describe('themeConfig', () => {
 
       const css = getThemeInlineCss()
       expect(css).toContain('--color-primary: #3b82f6;')
-      expect(css).toContain(`--color-primary-hover: ${darkenHex('#3b82f6', 0.8)};`)
-      expect(css).toContain(`--color-primary-press: ${darkenHex('#3b82f6', 0.65)};`)
+      expect(css).toContain(
+        `--color-primary-hover: ${darkenHex('#3b82f6', 0.8)};`
+      )
+      expect(css).toContain(
+        `--color-primary-press: ${darkenHex('#3b82f6', 0.65)};`
+      )
       expect(css).toContain('--color-primary-disabled: #3b82f64d;')
     })
 

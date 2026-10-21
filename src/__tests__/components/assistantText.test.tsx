@@ -39,7 +39,10 @@ describe('AssistantText component', () => {
   describe('novel style (ノベルゲーム風UI)', () => {
     beforeEach(() => {
       jest.useFakeTimers()
-      settingsStore.setState({ assistantTextStyle: 'novel', showInputForm: false })
+      settingsStore.setState({
+        assistantTextStyle: 'novel',
+        showInputForm: false,
+      })
     })
 
     afterEach(() => {
@@ -48,9 +51,7 @@ describe('AssistantText component', () => {
 
     it('types character message one by one and displays full text upon completion', () => {
       homeStore.setState({
-        chatLog: [
-          { role: 'assistant', content: 'こんにちは' },
-        ],
+        chatLog: [{ role: 'assistant', content: 'こんにちは' }],
       })
 
       const { act } = require('@testing-library/react')

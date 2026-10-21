@@ -46,12 +46,15 @@ export const AssistantText = ({ message }: { message: string }) => {
       if (typeof lastMessage.content === 'string') return lastMessage.content
       if (Array.isArray(lastMessage.content)) {
         const textPart = lastMessage.content.find((c) => c.type === 'text')
-        return textPart ? textPart.text : ''
+        return textPart && 'text' in textPart ? textPart.text : ''
       }
       return ''
     }
     if (sanitizedAssistantMessage) return sanitizedAssistantMessage
-    if (lastMessage?.role === 'assistant' && typeof lastMessage.content === 'string') {
+    if (
+      lastMessage?.role === 'assistant' &&
+      typeof lastMessage.content === 'string'
+    ) {
       return lastMessage.content
         .replace(emotionPattern, '')
         .replace(/\[motion:[^\]]*\]/gi, '')
@@ -84,27 +87,22 @@ export const AssistantText = ({ message }: { message: string }) => {
     return (
       <div
         className={`pointer-events-none absolute bottom-0 left-1/2 z-10 flex w-[94vw] max-w-[840px] -translate-x-1/2 justify-center px-2 ${
-          shouldShowPresetQuestions
-            ? 'mb-[86px] sm:mb-[104px]'
-            : 'mb-3 sm:mb-6'
+          shouldShowPresetQuestions ? 'mb-[86px] sm:mb-[104px]' : 'mb-3 sm:mb-6'
         }`}
       >
-        <div className="animate-aurora-bubble-in pointer-events-auto relative w-full rounded-[22px] border border-white/20 bg-slate-950/85 px-6 pb-4 pt-5 shadow-[0_16px_40px_rgba(0,0,0,0.6)] backdrop-blur-2xl sm:px-8 sm:pb-5 sm:pt-6">
+        <div className="animate-aurora-bubble-in pointer-events-auto relative w-full rounded-[22px] border border-white/15 bg-slate-950/50 px-6 pb-4 pt-5 shadow-[0_12px_36px_rgba(0,0,0,0.4),0_1px_0_rgba(255,255,255,0.08)_inset] backdrop-blur-xl sm:px-8 sm:pb-5 sm:pt-6">
           {/* 光沢ハイライトライン */}
-          <div className="pointer-events-none absolute inset-x-0 top-0 h-px rounded-t-[22px] bg-gradient-to-r from-transparent via-white/30 to-transparent" />
+          <div className="pointer-events-none absolute inset-x-0 top-0 h-px rounded-t-[22px] bg-gradient-to-r from-transparent via-white/25 to-transparent" />
 
-          {/* 発話者ネームプレート（左上に配置） */}
+          {/* 発話者ネームプレート（左上に配置、絵文字なしのモダンデザイン） */}
           {showCharacterName && (
             <div
-              className={`absolute -top-3.5 left-6 flex items-center gap-1.5 rounded-full px-3.5 py-1 text-xs font-bold tracking-wider shadow-md sm:left-8 ${
+              className={`absolute -top-3.5 left-6 flex items-center rounded-full px-3.5 py-0.5 text-xs font-semibold tracking-wider shadow-sm sm:left-8 ${
                 isUser
-                  ? 'border border-white/20 bg-gradient-to-r from-slate-700 to-slate-800 text-slate-100 shadow-black/40'
-                  : 'border border-white/30 bg-gradient-to-r from-primary to-primary-hover text-white shadow-[0_2px_10px_var(--color-primary-disabled)]'
+                  ? 'border border-white/15 bg-slate-900/70 text-slate-200 backdrop-blur-md'
+                  : 'border border-white/25 bg-primary/80 text-white shadow-[0_2px_8px_var(--color-primary-disabled)] backdrop-blur-md'
               }`}
             >
-              <span className="text-[11px] opacity-80">
-                {isUser ? '💬' : '✨'}
-              </span>
               <span>{speakerName}</span>
             </div>
           )}
@@ -196,4 +194,3 @@ export const AssistantText = ({ message }: { message: string }) => {
     </div>
   )
 }
-

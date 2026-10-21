@@ -26,7 +26,10 @@ export function useTypewriter(
     enabled ? 0 : text.length
   )
   const lengthRef = useRef(displayedLength)
-  lengthRef.current = displayedLength
+
+  useEffect(() => {
+    lengthRef.current = displayedLength
+  }, [displayedLength])
 
   const textRef = useRef(text)
   const timerRef = useRef<NodeJS.Timeout | null>(null)

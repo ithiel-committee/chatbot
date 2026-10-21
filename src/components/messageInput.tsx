@@ -106,7 +106,7 @@ export const MessageInput = ({
       if (typeof lastMessage.content === 'string') return lastMessage.content
       if (Array.isArray(lastMessage.content)) {
         const tPart = lastMessage.content.find((c) => c.type === 'text')
-        return tPart ? tPart.text : ''
+        return tPart && 'text' in tPart ? tPart.text : ''
       }
       return ''
     }
@@ -506,25 +506,22 @@ export const MessageInput = ({
         )}
 
         <div
-          className="animate-aurora-bubble-in fixed bottom-3 left-1/2 z-20 w-[94vw] max-w-[840px] -translate-x-1/2 rounded-[24px] border border-white/20 bg-slate-950/85 p-4 shadow-[0_16px_40px_rgba(0,0,0,0.6)] backdrop-blur-2xl sm:bottom-6 sm:p-5"
+          className="animate-aurora-bubble-in fixed bottom-3 left-1/2 z-20 w-[94vw] max-w-[840px] -translate-x-1/2 rounded-[24px] border border-white/15 bg-slate-950/50 p-4 shadow-[0_12px_36px_rgba(0,0,0,0.4),0_1px_0_rgba(255,255,255,0.08)_inset] backdrop-blur-xl sm:bottom-6 sm:p-5"
           onDragOver={handleDragOver}
           onDrop={handleDrop}
         >
           {/* 光沢ハイライトライン */}
-          <div className="pointer-events-none absolute inset-x-0 top-0 h-px rounded-t-[24px] bg-gradient-to-r from-transparent via-white/30 to-transparent" />
+          <div className="pointer-events-none absolute inset-x-0 top-0 h-px rounded-t-[24px] bg-gradient-to-r from-transparent via-white/25 to-transparent" />
 
-          {/* 発話者ネームプレート（左上に配置） */}
+          {/* 発話者ネームプレート（左上に配置、絵文字なしのモダンデザイン） */}
           {showCharacterName && (
             <div
-              className={`absolute -top-3.5 left-6 flex items-center gap-1.5 rounded-full px-3.5 py-1 text-xs font-bold tracking-wider shadow-md sm:left-8 ${
+              className={`absolute -top-3.5 left-6 flex items-center rounded-full px-3.5 py-0.5 text-xs font-semibold tracking-wider shadow-sm sm:left-8 ${
                 isUserSpeaking
-                  ? 'border border-white/20 bg-gradient-to-r from-slate-700 to-slate-800 text-slate-100 shadow-black/40'
-                  : 'border border-white/30 bg-gradient-to-r from-primary to-primary-hover text-white shadow-[0_2px_10px_var(--color-primary-disabled)]'
+                  ? 'border border-white/15 bg-slate-900/70 text-slate-200 backdrop-blur-md'
+                  : 'border border-white/25 bg-primary/80 text-white shadow-[0_2px_8px_var(--color-primary-disabled)] backdrop-blur-md'
               }`}
             >
-              <span className="text-[11px] opacity-80">
-                {isUserSpeaking ? '💬' : '✨'}
-              </span>
               <span>{novelSpeakerName}</span>
             </div>
           )}
@@ -536,7 +533,9 @@ export const MessageInput = ({
               isNovelTyping ? 'cursor-pointer select-none' : ''
             }`}
             onClick={isNovelTyping ? skipNovelTypewriter : undefined}
-            title={isNovelTyping ? t('ClickToSkip', 'クリックで全文表示') : undefined}
+            title={
+              isNovelTyping ? t('ClickToSkip', 'クリックで全文表示') : undefined
+            }
           >
             {novelDisplayText ? (
               <p className="text-[15px] font-medium leading-[1.75] text-[var(--aurora-text-strong)] [text-shadow:0_1px_3px_rgba(0,0,0,0.6)] sm:text-[16px]">
@@ -678,7 +677,7 @@ export const MessageInput = ({
                 onDragOver={handleDragOver}
                 onDrop={handleDrop}
                 disabled={chatProcessing || slidePlaying || realtimeAPIMode}
-                className="scroll-hidden block h-9 w-full resize-none rounded-full bg-white/10 px-4 py-1.5 text-[14px] font-medium text-[var(--aurora-text-strong)] outline-none transition-all placeholder:text-[var(--aurora-text-muted)] focus:bg-white/15 disabled:opacity-60"
+                className="scroll-hidden block h-9 w-full resize-none rounded-full border border-white/10 bg-white/[0.08] px-4 py-1.5 text-[14px] font-medium text-[var(--aurora-text-strong)] outline-none transition-all placeholder:text-[var(--aurora-text-muted)] hover:bg-white/[0.12] focus:border-white/25 focus:bg-white/[0.15] disabled:opacity-60"
                 value={userMessage}
                 rows={1}
                 maxLength={maxInputLength}
