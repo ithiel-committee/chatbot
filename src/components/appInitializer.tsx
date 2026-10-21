@@ -6,9 +6,14 @@ import homeStore from '@/features/stores/home'
 import settingsStore from '@/features/stores/settings'
 import i18n from '@/lib/i18n'
 import migrateStore from '@/utils/migrateStore'
+import { applyThemeToDOM } from '@/utils/themeConfig'
 
 export default function AppInitializer() {
   const showMouseCursor = settingsStore((s) => s.showMouseCursor)
+
+  useEffect(() => {
+    applyThemeToDOM()
+  }, [])
 
   useEffect(() => {
     if (typeof document !== 'undefined') {

@@ -51,8 +51,18 @@ div {
   color: inherit;
 }
 
+/* フォント設定 */
+body,
+button,
+input,
+select,
+textarea {
+  font-family: var(--font-family, inherit);
+}
+
 /* Default テーマ（デフォルト） */
 :root {
+  --font-family: inherit;
   --color-primary: #f5800b;
   --color-primary-hover: #c26904;
   --color-primary-press: #9e5501;
