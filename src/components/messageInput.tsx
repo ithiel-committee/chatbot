@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from 'react'
+import { useState, useEffect, useRef, useCallback, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 import Image from 'next/image'
 
@@ -8,6 +8,7 @@ import slideStore from '@/features/stores/slide'
 import { isMultiModalAvailable } from '@/features/constants/aiModels'
 import { IconButton } from './iconButton'
 import { useKioskMode } from '@/hooks/useKioskMode'
+import { useTypewriter } from '@/hooks/useTypewriter'
 
 // file validation settings
 const FILE_VALIDATION = {
@@ -91,6 +92,46 @@ export const MessageInput = ({
     : 'left-3 sm:left-6'
 
   const { t } = useTranslation()
+
+  // ノベルゲーム用の最新テキストと発話者情報の導出
+  const isNovelMode = assistantTextStyle === 'novel'
+  const lastMessage =
+    chatLog && chatLog.length > 0 ? chatLog[chatLog.length - 1] : null
+  const isUserSpeaking = lastMessage?.role === 'user'
+  const novelSpeakerName = isUserSpeaking ? userDisplayName : characterName
+
+  const rawNovelText = useMemo(() => {
+    if (!isNovelMode || !lastMessage) return ''
+    if (lastMessage.role === 'user') {
+      if (typeof lastMessage.content === 'string') return lastMessage.content
+      if (Array.isArray(lastMessage.content)) {
+        const tPart = lastMessage.content.find((c) => c.type === 'text')
+        return tPart ? tPart.text : ''
+      }
+      return ''
+    }
+    if (lastMessage.role === 'assistant') {
+      if (typeof lastMessage.content === 'string') {
+        const emotionPattern =
+          /\[(neutral|happy|angry|sad|relaxed|surprised)\]/gi
+        return lastMessage.content
+          .replace(emotionPattern, '')
+          .replace(/\[motion:[^\]]*\]/gi, '')
+      }
+    }
+    return ''
+  }, [isNovelMode, lastMessage])
+
+  // アシスタント発話時のみタイプライター演出を有効化（ユーザー入力は即時表示）
+  const enableTypewriter = isNovelMode && !isUserSpeaking && !chatProcessing
+  const {
+    displayedText: novelDisplayText,
+    isTyping: isNovelTyping,
+    skip: skipNovelTypewriter,
+  } = useTypewriter(rawNovelText, enableTypewriter, {
+    speed: 30,
+    punctuationWait: 100,
+  })
 
   useEffect(() => {
     const mql = window.matchMedia('(min-width: 640px)')
@@ -445,39 +486,6 @@ export const MessageInput = ({
 
   // C案: ノベルゲーム風UI（下部ダイアログ内に会話テキスト表示と入力欄を一体化）
   if (assistantTextStyle === 'novel') {
-    const emotionPattern =
-      /\[(neutral|happy|angry|sad|relaxed|surprised)\]/gi
-    const lastMessage =
-      chatLog.length > 0 ? chatLog[chatLog.length - 1] : null
-
-    let isUserSpeaking = false
-    let speakerName = characterName
-    let novelDisplayText = ''
-
-    if (lastMessage) {
-      if (lastMessage.role === 'user') {
-        isUserSpeaking = true
-        speakerName = userDisplayName
-        if (typeof lastMessage.content === 'string') {
-          novelDisplayText = lastMessage.content
-        } else if (Array.isArray(lastMessage.content)) {
-          const tPart = lastMessage.content.find((c) => c.type === 'text')
-          novelDisplayText = tPart ? tPart.text : ''
-        }
-      } else if (lastMessage.role === 'assistant') {
-        isUserSpeaking = false
-        speakerName = characterName
-        if (typeof lastMessage.content === 'string') {
-          novelDisplayText = lastMessage.content
-            .replace(emotionPattern, '')
-            .replace(/\[motion:[^\]]*\]/gi, '')
-        }
-      }
-    }
-
-    const shouldShowPresetQuestions =
-      showPresetQuestions && presetQuestions.length > 0
-
     return (
       <>
         {showPermissionModal && (
@@ -517,12 +525,19 @@ export const MessageInput = ({
               <span className="text-[11px] opacity-80">
                 {isUserSpeaking ? '💬' : '✨'}
               </span>
-              <span>{speakerName}</span>
+              <span>{novelSpeakerName}</span>
             </div>
           )}
 
-          {/* 上段: 会話メッセージテキスト */}
-          <div className="scroll-hidden relative mb-2.5 min-h-[2.8rem] max-h-[88px] overflow-y-auto px-1 pt-1 sm:min-h-[3.4rem] sm:max-h-[100px]">
+          {/* 上段: 会話メッセージテキスト（クリックでタイプライター全文表示にスキップ可能） */}
+          <div
+            data-testid="novel-text-area"
+            className={`scroll-hidden relative mb-2.5 min-h-[2.8rem] max-h-[88px] overflow-y-auto px-1 pt-1 sm:min-h-[3.4rem] sm:max-h-[100px] ${
+              isNovelTyping ? 'cursor-pointer select-none' : ''
+            }`}
+            onClick={isNovelTyping ? skipNovelTypewriter : undefined}
+            title={isNovelTyping ? t('ClickToSkip', 'クリックで全文表示') : undefined}
+          >
             {novelDisplayText ? (
               <p className="text-[15px] font-medium leading-[1.75] text-[var(--aurora-text-strong)] [text-shadow:0_1px_3px_rgba(0,0,0,0.6)] sm:text-[16px]">
                 {novelDisplayText}
@@ -556,6 +571,8 @@ export const MessageInput = ({
                   <span className="h-3 w-0.5 rounded-full bg-primary" />
                   <span className="h-2 w-0.5 rounded-full bg-primary" />
                 </div>
+              ) : isNovelTyping ? (
+                <span className="h-2 w-2 animate-ping rounded-full bg-primary opacity-75" />
               ) : (
                 <span className="animate-bounce select-none text-[10px] font-bold text-primary">
                   ▼

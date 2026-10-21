@@ -1,6 +1,8 @@
+import { useMemo } from 'react'
 import homeStore from '@/features/stores/home'
 import settingsStore from '@/features/stores/settings'
 import { EMOTIONS } from '@/features/messages/messages'
+import { useTypewriter } from '@/hooks/useTypewriter'
 
 const escapeRegExp = (value: string) =>
   value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
@@ -31,6 +33,43 @@ export const AssistantText = ({ message }: { message: string }) => {
 
   const showInputForm = settingsStore((s) => s.showInputForm)
 
+  // ノベルゲーム用の最新テキストと発話者情報の導出
+  const isNovel = assistantTextStyle === 'novel'
+  const lastMessage =
+    chatLog && chatLog.length > 0 ? chatLog[chatLog.length - 1] : null
+  const isUser = lastMessage?.role === 'user'
+  const speakerName = isUser ? userDisplayName : characterName
+
+  const rawNovelText = useMemo(() => {
+    if (!isNovel) return ''
+    if (lastMessage?.role === 'user') {
+      if (typeof lastMessage.content === 'string') return lastMessage.content
+      if (Array.isArray(lastMessage.content)) {
+        const textPart = lastMessage.content.find((c) => c.type === 'text')
+        return textPart ? textPart.text : ''
+      }
+      return ''
+    }
+    if (sanitizedAssistantMessage) return sanitizedAssistantMessage
+    if (lastMessage?.role === 'assistant' && typeof lastMessage.content === 'string') {
+      return lastMessage.content
+        .replace(emotionPattern, '')
+        .replace(/\[motion:[^\]]*\]/gi, '')
+    }
+    return ''
+  }, [isNovel, lastMessage, sanitizedAssistantMessage])
+
+  // アシスタント発話時のみタイプライター演出を有効化
+  const enableTypewriter = isNovel && !isUser && !chatProcessing
+  const {
+    displayedText: novelDisplayText,
+    isTyping: isNovelTyping,
+    skip: skipNovelTypewriter,
+  } = useTypewriter(rawNovelText, enableTypewriter, {
+    speed: 30,
+    punctuationWait: 100,
+  })
+
   // ノベルゲーム風UIの表示判定と内容
   // 入力フォームが有効な場合は、MessageInput側で一体型ノベルウィンドウを描画するため重複を避ける
   if (assistantTextStyle === 'novel') {
@@ -38,33 +77,7 @@ export const AssistantText = ({ message }: { message: string }) => {
       return null
     }
 
-    const lastMessage = chatLog.length > 0 ? chatLog[chatLog.length - 1] : null
-
-    // 最新メッセージがユーザーかアシスタントかを判定
-    let isUser = false
-    let speakerName = characterName
-    let displayText = sanitizedAssistantMessage
-
-    if (lastMessage?.role === 'user') {
-      isUser = true
-      speakerName = userDisplayName
-      if (typeof lastMessage.content === 'string') {
-        displayText = lastMessage.content
-      } else if (Array.isArray(lastMessage.content)) {
-        const textPart = lastMessage.content.find((c) => c.type === 'text')
-        displayText = textPart ? textPart.text : ''
-      }
-    } else if (lastMessage?.role === 'assistant') {
-      isUser = false
-      speakerName = characterName
-      if (!displayText && typeof lastMessage.content === 'string') {
-        displayText = lastMessage.content
-          .replace(emotionPattern, '')
-          .replace(/\[motion:[^\]]*\]/gi, '')
-      }
-    }
-
-    if (!displayText && !chatProcessing) {
+    if (!rawNovelText && !chatProcessing) {
       return null
     }
 
@@ -97,10 +110,16 @@ export const AssistantText = ({ message }: { message: string }) => {
           )}
 
           {/* メッセージ本文表示エリア */}
-          <div className="scroll-hidden min-h-[3.6rem] max-h-[140px] overflow-y-auto pt-1 sm:min-h-[4.4rem]">
-            {displayText ? (
+          <div
+            data-testid="novel-text-area"
+            className={`scroll-hidden min-h-[3.6rem] max-h-[140px] overflow-y-auto pt-1 sm:min-h-[4.4rem] ${
+              isNovelTyping ? 'cursor-pointer select-none' : ''
+            }`}
+            onClick={isNovelTyping ? skipNovelTypewriter : undefined}
+          >
+            {novelDisplayText ? (
               <p className="text-[15px] font-medium leading-[1.8] text-[var(--aurora-text-strong)] [text-shadow:0_1px_3px_rgba(0,0,0,0.6)] sm:text-[17px]">
-                {displayText}
+                {novelDisplayText}
               </p>
             ) : chatProcessing ? (
               <div className="flex items-center gap-2 text-sm text-[var(--aurora-text-muted)]">
@@ -128,6 +147,8 @@ export const AssistantText = ({ message }: { message: string }) => {
                 <span className="h-3 w-0.5 rounded-full bg-primary" />
                 <span className="h-2 w-0.5 rounded-full bg-primary" />
               </div>
+            ) : isNovelTyping ? (
+              <span className="h-2 w-2 animate-ping rounded-full bg-primary opacity-75" />
             ) : (
               <span className="animate-bounce select-none text-[11px] font-bold text-primary">
                 ▼

@@ -38,26 +38,36 @@ describe('AssistantText component', () => {
 
   describe('novel style (ノベルゲーム風UI)', () => {
     beforeEach(() => {
+      jest.useFakeTimers()
       settingsStore.setState({ assistantTextStyle: 'novel', showInputForm: false })
     })
 
-    it('renders character message with character nameplate when last message is assistant', () => {
+    afterEach(() => {
+      jest.useRealTimers()
+    })
+
+    it('types character message one by one and displays full text upon completion', () => {
       homeStore.setState({
         chatLog: [
-          { role: 'assistant', content: 'ようこそ市ヶ谷田町キャンパスへ！' },
+          { role: 'assistant', content: 'こんにちは' },
         ],
       })
 
-      render(<AssistantText message="ようこそ市ヶ谷田町キャンパスへ！" />)
+      const { act } = require('@testing-library/react')
+      render(<AssistantText message="こんにちは" />)
 
       expect(screen.getByText('イティエル')).toBeInTheDocument()
-      expect(
-        screen.getByText('ようこそ市ヶ谷田町キャンパスへ！')
-      ).toBeInTheDocument()
+
+      // タイマーを進めて全文字表示を完了させる
+      act(() => {
+        jest.advanceTimersByTime(200)
+      })
+
+      expect(screen.getByText('こんにちは')).toBeInTheDocument()
       expect(screen.getByText('▼')).toBeInTheDocument()
     })
 
-    it('renders user message with user nameplate when last message is from user', () => {
+    it('renders user message immediately without typewriter delay', () => {
       homeStore.setState({
         chatLog: [
           { role: 'assistant', content: '前回のメッセージ' },
@@ -81,6 +91,34 @@ describe('AssistantText component', () => {
       render(<AssistantText message="" />)
 
       expect(screen.getByText('イティエルが考え中')).toBeInTheDocument()
+    })
+
+    it('skips to full text immediately when text area is clicked', () => {
+      homeStore.setState({
+        chatLog: [
+          { role: 'assistant', content: '長いメッセージをスキップするテスト' },
+        ],
+      })
+
+      const { fireEvent, act } = require('@testing-library/react')
+      render(<AssistantText message="長いメッセージをスキップするテスト" />)
+
+      // まだタイピング中なので全文は出ていない
+      expect(
+        screen.queryByText('長いメッセージをスキップするテスト')
+      ).not.toBeInTheDocument()
+
+      // ダイアログをクリック
+      const textArea = screen.getByTestId('novel-text-area')
+      act(() => {
+        fireEvent.click(textArea)
+      })
+
+      // 全文が表示される
+      expect(
+        screen.getByText('長いメッセージをスキップするテスト')
+      ).toBeInTheDocument()
+      expect(screen.getByText('▼')).toBeInTheDocument()
     })
 
     it('returns null when showInputForm is true to prevent duplicate rendering with MessageInput', () => {
