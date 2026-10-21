@@ -22,7 +22,9 @@ function waitForServer(url, timeoutMs = 30000, intervalMs = 300) {
       })
       req.on('error', () => {
         if (Date.now() - startTime > timeoutMs) {
-          reject(new Error(`Server at ${url} did not respond within ${timeoutMs}ms`))
+          reject(
+            new Error(`Server at ${url} did not respond within ${timeoutMs}ms`)
+          )
         } else {
           setTimeout(check, intervalMs)
         }
