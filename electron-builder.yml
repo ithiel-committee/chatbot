@@ -1,0 +1,39 @@
+appId: com.ithiel.chatbot
+productName: iThiel-Chatbot
+directories:
+  output: dist-electron
+
+npmRebuild: false
+nodeGypRebuild: false
+buildDependenciesFromSource: false
+
+files:
+  - electron.mjs
+  - package.json
+  - '!**/node_modules/**/*'
+
+extraResources:
+  - from: .next/standalone
+    to: standalone
+    filter:
+      - '**/*'
+
+win:
+  target:
+    - target: portable
+      arch:
+        - x64
+    - target: nsis
+      arch:
+        - x64
+  artifactName: '${productName}-${version}-${target}.${ext}'
+
+nsis:
+  oneClick: false
+  allowToChangeInstallationDirectory: true
+  createDesktopShortcut: true
+  createStartMenuShortcut: true
+  shortcutName: iThiel Chatbot
+
+portable:
+  artifactName: '${productName}-Portable.${ext}'

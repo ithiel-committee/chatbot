@@ -4,6 +4,7 @@ const nextConfig = {
   assetPrefix: process.env.BASE_PATH || '',
   basePath: process.env.BASE_PATH || '',
   trailingSlash: true,
+  output: 'standalone',
   outputFileTracingRoot: __dirname,
   env: {
     NEXT_PUBLIC_BASE_PATH: process.env.BASE_PATH || '',
