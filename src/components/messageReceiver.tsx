@@ -8,6 +8,7 @@ import {
 import settingsStore from '@/features/stores/settings'
 import homeStore from '@/features/stores/home'
 import { Message } from '@/features/messages/messages'
+import { appendCurrentDateTimeToPrompt } from '@/features/chat/dateTimePrompt'
 import { useRestrictedMode } from '@/hooks/useRestrictedMode'
 import { SpeakQueue } from '@/features/messages/speakQueue'
 import type {
@@ -179,9 +180,14 @@ const MessageReceiver = () => {
             ]
               .map((m) => `${m.role}: ${m.content}`)
               .join('\n')
-            const systemPrompt = message.useCurrentSystemPrompt
+            const rawSystemPrompt = message.useCurrentSystemPrompt
               ? ss.systemPrompt
               : message.systemPrompt
+            const systemPrompt = appendCurrentDateTimeToPrompt(
+              rawSystemPrompt,
+              new Date(),
+              ss.selectLanguage
+            )
             const messages: Message[] = [
               {
                 role: 'system',

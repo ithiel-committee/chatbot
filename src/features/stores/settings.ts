@@ -223,6 +223,7 @@ interface General {
   selectLanguage: Language
   changeEnglishToJapanese: boolean
   includeTimestampInUserMessage: boolean
+  injectDateTimeToSystemPrompt: boolean
   showControlPanel: boolean
   showInputForm: boolean
   settingsToggleShortcut: string
@@ -547,6 +548,8 @@ const getInitialValuesFromEnv = (): SettingsState => ({
     process.env.NEXT_PUBLIC_CHANGE_ENGLISH_TO_JAPANESE === 'true',
   includeTimestampInUserMessage:
     process.env.NEXT_PUBLIC_INCLUDE_TIMESTAMP_IN_USER_MESSAGE === 'true',
+  injectDateTimeToSystemPrompt:
+    process.env.NEXT_PUBLIC_INJECT_DATETIME_TO_SYSTEM_PROMPT === 'true',
   showControlPanel: process.env.NEXT_PUBLIC_SHOW_CONTROL_PANEL !== 'false',
   showInputForm: process.env.NEXT_PUBLIC_SHOW_INPUT_FORM !== 'false',
   settingsToggleShortcut: normalizeKeyboardShortcut(
@@ -1191,6 +1194,7 @@ export const selectPersistedSettings = (state: SettingsState) => ({
   selectLanguage: state.selectLanguage,
   changeEnglishToJapanese: state.changeEnglishToJapanese,
   includeTimestampInUserMessage: state.includeTimestampInUserMessage,
+  injectDateTimeToSystemPrompt: state.injectDateTimeToSystemPrompt,
   settingsToggleShortcut: state.settingsToggleShortcut,
   voiceInputShortcut: state.voiceInputShortcut,
   externalLinkageMode: state.externalLinkageMode,

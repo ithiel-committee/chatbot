@@ -13,6 +13,7 @@ import RealtimeAPIToolsJson from './realtimeAPITools.json'
 import { AudioBufferManager } from '@/utils/audioBufferManager'
 import toastStore from '@/features/stores/toast'
 import { resetSessionId } from '@/utils/sessionId'
+import { appendCurrentDateTimeToPrompt } from '@/features/chat/dateTimePrompt'
 
 // Realtime APIのサーバーイベント（各typeごとに関連プロパティのみ使用するため緩やかな形にする）
 interface RealtimeServerEvent {
@@ -244,7 +245,11 @@ const useRealtimeAPI = ({ handleReceiveTextFromRt }: Params) => {
         session: {
           type: 'realtime',
           output_modalities: ['audio'],
-          instructions: ss.systemPrompt,
+          instructions: appendCurrentDateTimeToPrompt(
+            ss.systemPrompt,
+            new Date(),
+            ss.selectLanguage
+          ),
           audio: {
             input: {
               format: {

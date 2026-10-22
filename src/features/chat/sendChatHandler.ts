@@ -21,6 +21,7 @@ import {
 import { processAIResponse } from './speechPipeline/processAIResponse'
 import presentationStore from '@/features/stores/presentation'
 import { buildPresentationPromptContext } from '@/features/presentation/presentationPromptContext'
+import { appendCurrentDateTimeToPrompt } from './dateTimePrompt'
 
 /**
  * アシスタントとの会話を行う
@@ -253,6 +254,12 @@ export const handleSendChatFn =
       if (memoryContext) {
         systemPrompt = systemPrompt + '\n\n' + memoryContext
       }
+
+      systemPrompt = appendCurrentDateTimeToPrompt(
+        systemPrompt,
+        new Date(),
+        ss.selectLanguage
+      )
 
       const currentChatLog = homeStore.getState().chatLog
 
