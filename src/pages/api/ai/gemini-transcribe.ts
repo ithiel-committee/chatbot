@@ -73,10 +73,7 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
     }
 
     const apiKey =
-      googleKey ||
-      process.env.GEMINI_API_KEY ||
-      process.env.GOOGLE_API_KEY ||
-      process.env.NEXT_PUBLIC_GOOGLE_KEY
+      googleKey || process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY
 
     if (!apiKey) {
       return res.status(500).json({ error: 'Gemini API key is not configured' })

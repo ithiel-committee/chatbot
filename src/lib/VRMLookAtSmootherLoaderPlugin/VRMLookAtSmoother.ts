@@ -63,8 +63,19 @@ export class VRMLookAtSmoother extends VRMLookAt {
   public update(delta: number): void {
     if (this.target && this.autoUpdate) {
       // アニメーションの視線
+      const targetPos = this.target.getWorldPosition(_v3A)
+      if (
+        !Number.isFinite(targetPos.x) ||
+        !Number.isFinite(targetPos.y) ||
+        !Number.isFinite(targetPos.z)
+      ) {
+        return
+      }
+
       // `_yaw` と `_pitch` のアップデート
-      this.lookAt(this.target.getWorldPosition(_v3A))
+      this.lookAt(targetPos)
+      if (!Number.isFinite(this._yaw)) this._yaw = 0.0
+      if (!Number.isFinite(this._pitch)) this._pitch = 0.0
 
       // アニメーションによって指定されたyaw / pitch。この関数内で不変
       const yawAnimation = this._yaw
@@ -76,60 +87,70 @@ export class VRMLookAtSmoother extends VRMLookAt {
 
       // ユーザ向き
       if (this.userTarget) {
-        // `_yaw` と `_pitch` のアップデート
-        this.lookAt(this.userTarget.getWorldPosition(_v3A))
-
-        // 角度の制限。 `userLimitAngle` を超えていた場合はアニメーションで指定された方向を向く
+        const userTargetPos = this.userTarget.getWorldPosition(_v3A)
         if (
-          this.userLimitAngle < Math.abs(this._yaw) ||
-          this.userLimitAngle < Math.abs(this._pitch)
+          Number.isFinite(userTargetPos.x) &&
+          Number.isFinite(userTargetPos.y) &&
+          Number.isFinite(userTargetPos.z)
         ) {
-          this._yaw = yawAnimation
-          this._pitch = pitchAnimation
-        }
+          // `_yaw` と `_pitch` のアップデート
+          this.lookAt(userTargetPos)
+          if (!Number.isFinite(this._yaw)) this._yaw = 0.0
+          if (!Number.isFinite(this._pitch)) this._pitch = 0.0
 
-        // yawDamped / pitchDampedをスムージングする
-        const k = 1.0 - Math.exp(-this.smoothFactor * delta)
-        this._yawDamped += (this._yaw - this._yawDamped) * k
-        this._pitchDamped += (this._pitch - this._pitchDamped) * k
+          // 角度の制限。 `userLimitAngle` を超えていた場合はアニメーションで指定された方向を向く
+          if (
+            this.userLimitAngle < Math.abs(this._yaw) ||
+            this.userLimitAngle < Math.abs(this._pitch)
+          ) {
+            this._yaw = yawAnimation
+            this._pitch = pitchAnimation
+          }
 
-        // アニメーションとブレンディングする
-        // アニメーションが横とかを向いている場合はそっちを尊重する
-        const userRatio =
-          1.0 -
-          THREE.MathUtils.smoothstep(
-            Math.sqrt(
-              yawAnimation * yawAnimation + pitchAnimation * pitchAnimation
-            ),
-            30.0,
-            90.0
+          // yawDamped / pitchDampedをスムージングする
+          const safeDelta = Math.min(delta, 0.1)
+          const k = 1.0 - Math.exp(-this.smoothFactor * safeDelta)
+          this._yawDamped += (this._yaw - this._yawDamped) * k
+          this._pitchDamped += (this._pitch - this._pitchDamped) * k
+
+          // アニメーションとブレンディングする
+          // アニメーションが横とかを向いている場合はそっちを尊重する
+          const userRatio =
+            1.0 -
+            THREE.MathUtils.smoothstep(
+              Math.sqrt(
+                yawAnimation * yawAnimation + pitchAnimation * pitchAnimation
+              ),
+              30.0,
+              90.0
+            )
+
+          // yawFrame / pitchFrame に結果を代入
+          yawFrame = THREE.MathUtils.lerp(
+            yawAnimation,
+            0.6 * this._yawDamped,
+            userRatio
+          )
+          pitchFrame = THREE.MathUtils.lerp(
+            pitchAnimation,
+            0.6 * this._pitchDamped,
+            userRatio
           )
 
-        // yawFrame / pitchFrame に結果を代入
-        yawFrame = THREE.MathUtils.lerp(
-          yawAnimation,
-          0.6 * this._yawDamped,
-          userRatio
-        )
-        pitchFrame = THREE.MathUtils.lerp(
-          pitchAnimation,
-          0.6 * this._pitchDamped,
-          userRatio
-        )
+          // 頭も回す
+          _eulerA.set(
+            -this._pitchDamped * THREE.MathUtils.DEG2RAD,
+            this._yawDamped * THREE.MathUtils.DEG2RAD,
+            0.0,
+            VRMLookAt.EULER_ORDER
+          )
+          _quatA.setFromEuler(_eulerA)
 
-        // 頭も回す
-        _eulerA.set(
-          -this._pitchDamped * THREE.MathUtils.DEG2RAD,
-          this._yawDamped * THREE.MathUtils.DEG2RAD,
-          0.0,
-          VRMLookAt.EULER_ORDER
-        )
-        _quatA.setFromEuler(_eulerA)
-
-        const head = this.humanoid.getRawBoneNode('head')!
-        this._tempFirstPersonBoneQuat.copy(head.quaternion)
-        head.quaternion.slerp(_quatA, 0.4)
-        head.updateMatrixWorld()
+          const head = this.humanoid.getRawBoneNode('head')!
+          this._tempFirstPersonBoneQuat.copy(head.quaternion)
+          head.quaternion.slerp(_quatA, 0.4)
+          head.updateMatrixWorld()
+        }
       }
 
       if (this.enableSaccade) {
@@ -143,13 +164,16 @@ export class VRMLookAtSmoother extends VRMLookAt {
           this._saccadeTimer = 0.0
         }
 
-        this._saccadeTimer += delta
+        const safeDelta = Math.min(delta, 0.1)
+        this._saccadeTimer += safeDelta
 
         // サッケードの移動分を加算
         yawFrame += this._saccadeYaw
         pitchFrame += this._saccadePitch
+      }
 
-        // applierにわたす
+      // applierにわたす
+      if (Number.isFinite(yawFrame) && Number.isFinite(pitchFrame)) {
         this.applier.applyYawPitch(yawFrame, pitchFrame)
       }
 
