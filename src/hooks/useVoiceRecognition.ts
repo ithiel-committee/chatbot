@@ -5,6 +5,7 @@ import settingsStore from '@/features/stores/settings'
 import homeStore from '@/features/stores/home'
 import { SpeakQueue } from '@/features/messages/speakQueue'
 import { useBrowserSpeechRecognition } from './useBrowserSpeechRecognition'
+import { useGeminiRecognition } from './useGeminiRecognition'
 import { useWhisperRecognition } from './useWhisperRecognition'
 import { useRealtimeVoiceAPI } from './useRealtimeVoiceAPI'
 import { useLiveTranscription } from './useLiveTranscription'
@@ -16,13 +17,15 @@ import {
   matchesKeyboardShortcut,
 } from '@/utils/keyboardShortcut'
 
+import { isElectronEnvironment } from '@/utils/electron'
+
 type UseVoiceRecognitionProps = {
   onChatProcessStart: (text: string) => void
 }
 
 /**
  * 音声認識フックのメインインターフェース
- * 各モード（ブラウザ、Whisper、リアルタイムAPI）に応じて適切なフックを使用
+ * 各モード（ブラウザ、Gemini、Whisper、リアルタイムAPI）に応じて適切なフックを使用
  */
 export function useVoiceRecognition({
   onChatProcessStart,
@@ -37,8 +40,11 @@ export function useVoiceRecognition({
     settingsStore((s) => s.voiceInputShortcut) || DEFAULT_VOICE_INPUT_SHORTCUT
 
   // ----- 各モードのフックを使用 -----
-  // ブラウザ音声認識フック
+  // ブラウザ音声認識フック（Chrome等の標準Web Speech API）
   const browserSpeech = useBrowserSpeechRecognition(onChatProcessStart)
+
+  // Gemini音声認識フック（Google Gemini API）
+  const geminiSpeech = useGeminiRecognition(onChatProcessStart)
 
   // Whisper音声認識フック
   const whisperSpeech = useWhisperRecognition(onChatProcessStart)
@@ -50,13 +56,23 @@ export function useVoiceRecognition({
   const liveTranscription = useLiveTranscription(onChatProcessStart)
 
   // ----- 現在のモードに基づいて適切なフックを選択 -----
+  // 通常ブラウザ（Chrome等）ではこれまで通りWeb Speech APIを使用
+  // Electron環境ではWeb Speech APIが動作しないため、'browser'指定時は自動でGeminiに切り替え
+  const isElectron = isElectronEnvironment()
+  const effectiveMode =
+    speechRecognitionMode === 'browser' && isElectron
+      ? 'gemini'
+      : speechRecognitionMode
+
   const currentHook = realtimeAPIMode
     ? realtimeAPI
-    : speechRecognitionMode === 'whisper'
-      ? whisperSpeech
-      : speechRecognitionMode === 'live-transcription'
-        ? liveTranscription
-        : browserSpeech
+    : effectiveMode === 'gemini'
+      ? geminiSpeech
+      : effectiveMode === 'whisper'
+        ? whisperSpeech
+        : effectiveMode === 'live-transcription'
+          ? liveTranscription
+          : browserSpeech
 
   // ----- currentHookの関数参照をrefで保持（依存配列からcurrentHookを除去するため） -----
   const currentHookRef = useRef({

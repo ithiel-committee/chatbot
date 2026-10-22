@@ -79,6 +79,7 @@ const SpeechInput = () => {
               settingsStore.setState({
                 speechRecognitionMode: e.target.value as
                   | 'browser'
+                  | 'gemini'
                   | 'whisper'
                   | 'live-transcription',
               })
@@ -87,6 +88,7 @@ const SpeechInput = () => {
             data-testid="speech-recognition-mode-select"
           >
             <option value="browser">{t('BrowserSpeechRecognition')}</option>
+            <option value="gemini">{t('GeminiSpeechRecognition')}</option>
             <option value="whisper">{t('WhisperSpeechRecognition')}</option>
             <option value="live-transcription">
               {t('LiveTranscriptionSpeechRecognition')}

@@ -521,6 +521,18 @@ export function useBrowserSpeechRecognition(
         clearSilenceDetection()
         clearInitialSpeechCheckTimer()
         stopListening()
+
+        if (event.error === 'network') {
+          logger.warn(
+            'Speech recognition network error. Switching to Gemini mode.'
+          )
+          settingsStore.setState({ speechRecognitionMode: 'gemini' })
+          toastStore.getState().addToast({
+            message: t('Toasts.SpeechRecognitionNetworkFallback'),
+            type: 'info',
+            tag: 'speech-recognition-fallback-gemini',
+          })
+        }
       }
     }
 

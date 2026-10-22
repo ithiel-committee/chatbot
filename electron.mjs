@@ -1,4 +1,4 @@
-import { app, BrowserWindow, screen } from 'electron'
+import { app, BrowserWindow, screen, session } from 'electron'
 import path from 'path'
 import { fileURLToPath } from 'url'
 import { fork } from 'child_process'
@@ -176,7 +176,28 @@ app.on('window-all-closed', () => {
   }
 })
 
-app.on('ready', createWindow)
+app.whenReady().then(() => {
+  // マイク・メディアデバイスへのアクセス権限を自動許可（プロンプト抑止）
+  session.defaultSession.setPermissionRequestHandler(
+    (webContents, permission, callback) => {
+      if (permission === 'media') {
+        callback(true)
+        return
+      }
+      callback(false)
+    }
+  )
+
+  if (session.defaultSession.setPermissionCheckHandler) {
+    session.defaultSession.setPermissionCheckHandler(
+      (webContents, permission) => {
+        return permission === 'media'
+      }
+    )
+  }
+
+  createWindow()
+})
 
 app.on('activate', () => {
   if (mainWindow === null) {

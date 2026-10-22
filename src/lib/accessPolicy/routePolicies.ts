@@ -31,6 +31,23 @@ export const routePolicies = {
     restrictedBehavior: 'none',
     waf: { embedAllowed: true },
   },
+  '/api/ai/gemini-transcribe': {
+    path: '/api/ai/gemini-transcribe',
+    featureName: 'ai/gemini-transcribe',
+    methods: ['POST'],
+    resources: ['server-secret'],
+    secret: {
+      kind: 'pairs',
+      pairs: [
+        {
+          source: 'body',
+          key: 'googleKey',
+          envVars: ['GEMINI_API_KEY', 'GOOGLE_API_KEY'],
+        },
+      ],
+    },
+    restrictedBehavior: 'none',
+  },
   '/api/ai/realtime-client-secret': {
     path: '/api/ai/realtime-client-secret',
     featureName: 'ai/realtime-client-secret',

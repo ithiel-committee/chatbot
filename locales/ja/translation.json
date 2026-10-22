@@ -394,6 +394,7 @@
   "SpeechRecognitionMode": "音声認識モード",
   "SpeechRecognitionModeInfo": "音声入力に使用する認識方式を選択できます。\nOpenAIの「録音後」は録音を停止してからまとめて文字起こしし、「発話中」は話している途中から入力欄へ文字を表示します。どちらも停止後に確定した内容をAIへ送信します。AI回答や音声合成の設定は変更しません。",
   "BrowserSpeechRecognition": "ブラウザ標準",
+  "GeminiSpeechRecognition": "Google Gemini：録音後に文字起こし (デスクトップ推奨)",
   "WhisperSpeechRecognition": "OpenAI：録音後に文字起こし",
   "LiveTranscriptionSpeechRecognition": "OpenAI：発話中に文字起こし",
   "LiveTranscriptionInfo": "gpt-live-transcribeを使用して、発話中の文字起こしを入力欄へ逐次表示します。設定した無音時間が続くと自動送信し、0秒の場合はマイクボタンで停止すると送信します。",
@@ -470,6 +471,8 @@
     "CameraPermissionMessage": "カメラの使用を許可してください。",
     "PresetLoadFailed": "プリセットの読み込みに失敗しました",
     "SpeechRecognitionNotSupported": "このブラウザは音声認識に対応していません",
+    "SpeechRecognitionNetworkFallback": "ブラウザ音声認識に接続できないため、Gemini音声認識に切り替えました。もう一度マイクを押してください。",
+    "GeminiTranscriptionError": "Geminiによる音声認識でエラーが発生しました",
     "WebSocketReconnectFailed": "WebSocketの再接続に失敗しました"
   },
   "ContinuousMic": "常時マイク入力",
