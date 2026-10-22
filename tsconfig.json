@@ -38,6 +38,7 @@
     "scripts",
     "aituber-kit-docs",
     "aituber-kit-lp",
-    "promo-video"
+    "promo-video",
+    "dist-electron"
   ]
 }
