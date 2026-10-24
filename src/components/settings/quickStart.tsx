@@ -4,6 +4,7 @@ import i18n from 'i18next'
 import { ReactNode, useEffect, useState } from 'react'
 import { Listbox } from '@headlessui/react'
 import settingsStore from '@/features/stores/settings'
+import { GeminiTTSSettings } from './voice/GeminiTTSSettings'
 import menuStore from '@/features/stores/menu'
 import {
   AIService,
@@ -468,6 +469,8 @@ const QuickStart = () => {
             </LabeledField>
           </div>
         )
+      case 'gemini':
+        return <GeminiTTSSettings />
       case 'aivis_cloud_api':
         return (
           <div className={quickGridClassName}>
@@ -762,6 +765,7 @@ const QuickStart = () => {
             <option value="none">{t('UsingNoVoice')}</option>
             <option value="voicevox">{t('UsingVoiceVox')}</option>
             <option value="koeiromap">{t('UsingKoeiromap')}</option>
+            <option value="gemini">{t('UsingGeminiTTS')}</option>
             <option value="google">{t('UsingGoogleTTS')}</option>
             <option value="stylebertvits2">{t('UsingStyleBertVITS2')}</option>
             <option value="aivis_speech">{t('UsingAivisSpeech')}</option>

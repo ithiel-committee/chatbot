@@ -57,6 +57,12 @@ jest.mock('../../../utils/textProcessing', () => ({
   ),
 }))
 
+const mockSynthesizeVoiceGeminiApi = jest.fn()
+jest.mock('../../../features/messages/synthesizeVoiceGemini', () => ({
+  synthesizeVoiceGeminiApi: (...args: unknown[]) =>
+    mockSynthesizeVoiceGeminiApi(...args),
+}))
+
 const mockSynthesizeVoicevoxApi = jest.fn()
 jest.mock('../../../features/messages/synthesizeVoiceVoicevox', () => ({
   synthesizeVoiceVoicevoxApi: (...args: unknown[]) =>
@@ -107,6 +113,27 @@ describe('speakCharacter concurrency', () => {
       voicevoxIntonation: 1,
       voicevoxServerUrl: 'http://localhost:50021',
     })
+  })
+
+  it('routes Gemini audio through the normal playback queue with the current voice', async () => {
+    mockSettingsGetState.mockReturnValue({
+      selectVoice: 'gemini',
+      geminiTtsVoice: 'voice_replacement',
+      geminiTtsApiKey: 'key',
+      geminiTtsStyle: '',
+    })
+    const audio = new ArrayBuffer(46)
+    mockSynthesizeVoiceGeminiApi.mockResolvedValue(audio)
+    const talk = { message: 'イティエルです。', emotion: 'neutral' as const }
+    await speakCharacter('gemini-session', talk)
+    await flushPromises()
+    expect(mockSynthesizeVoiceGeminiApi).toHaveBeenCalledWith(
+      talk,
+      'key',
+      'voice_replacement',
+      ''
+    )
+    expect(mockAddTask).toHaveBeenCalled()
   })
 
   it('keeps playback order even when later synthesis finishes first', async () => {

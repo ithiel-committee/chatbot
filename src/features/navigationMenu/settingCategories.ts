@@ -270,6 +270,17 @@ export const getSettingCategories = (
           })),
         },
         {
+          id: 'geminiTtsVoice',
+          label: t('GeminiTTSVoice', '声ID / 音声名'),
+          type: 'text',
+          placeholder: 'voice_... / Kore',
+          getValue: () => settingsStore.getState().geminiTtsVoice,
+          setValue: (val) => settingsStore.setState({ geminiTtsVoice: val }),
+          disabled: () =>
+            isVoiceAdjustmentDisabled(settingsStore.getState()) ||
+            settingsStore.getState().selectVoice !== 'gemini',
+        },
+        {
           id: 'voicevoxSpeaker',
           label: t('VoicevoxSpeaker', 'VOICEVOX 話者ID'),
           type: 'text',

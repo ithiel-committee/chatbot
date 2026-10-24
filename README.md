@@ -25,7 +25,7 @@ AIを使うことで3Dキャラクターとリアルタイムに対話・相談�
 - マルチモデル対応: 3D(VRM)および 2D(Live2D / PNGTuber)モデルに対応し、感情・モーション制御とリップシンクを実現
 - マルチAIプロバイダー対応: OpenAI, Anthropic Claude, Google Gemini, Azure OpenAI, Groq, OpenRouter, LM Studio, Ollama, Dify, Custom API の最新LLMに対応
 - 最新モデル対応: Google Gemini 3.8 Flash / 3.7 Flash, OpenAI GPT-4o / GPT-4o-mini 等に対応
-- 音声合成(TTS)連携: VOICEVOX, AivisSpeech, Aivis Cloud API, Koeiromap, Google TTS, Style-Bert-VITS2, OpenAI TTS と連動
+- 音声合成(TTS)連携: VOICEVOX, AivisSpeech, Aivis Cloud API, Koeiromap, Google TTS, Gemini TTS, Style-Bert-VITS2, OpenAI TTS と連動
 - 高速な開発環境: Turbopack・動的インポート・起動時バックグラウンドウォームアップによる高速ビルド
 
 ## 仕組み
@@ -165,6 +165,13 @@ pnpm dev
 
 `.env.local` に各サービスの API キーを記述するか、設定画面の歯車アイコンから API キーを入力することで利用可能です。
 Google Gemini を利用する場合は `gemini-3.8-flash` が推奨モデルです。
+
+### Gemini Flash-Lite TTS
+
+設定画面の「音声設定」またはクイックスタートで **Gemini TTS** を選択できます。
+モデルは `gemini-3.8-flash-lite-tts`、仮の初期声IDは `voice_gkzvygsq8i5b` です。
+声IDは画面の「声ID / 音声名」を書き換えると次の合成から適用されます。
+詳しい導入・差し替え方法は [Gemini TTS設定ガイド](docs/gemini-tts.md) を参照してください。
 
 ## コマンド一覧
 

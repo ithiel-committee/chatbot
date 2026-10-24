@@ -76,6 +76,9 @@ const defaultVoiceState = {
   selectVoice: 'voicevox' as const,
   koeiroParam: { speakerX: 0, speakerY: 0 },
   googleTtsType: '',
+  geminiTtsApiKey: '',
+  geminiTtsVoice: 'voice_gkzvygsq8i5b',
+  geminiTtsStyle: '',
   voicevoxSpeaker: '46',
   voicevoxSpeed: 1.0,
   voicevoxPitch: 0.0,
@@ -140,6 +143,28 @@ describe('Voice Settings', () => {
       expect(screen.getByText('UsingAivisSpeech')).toBeTruthy()
       expect(screen.getByText('UsingOpenAITTS')).toBeTruthy()
     })
+  })
+
+  it('allows replacing the Gemini voice and clearing acting instructions', () => {
+    mockSettingsStore.mockImplementation((selector) =>
+      selector({
+        ...defaultVoiceState,
+        selectVoice: 'gemini',
+        geminiTtsStyle: '落ち着いて',
+      } as any)
+    )
+    render(<Voice />)
+    expect(screen.getByText('gemini-3.8-flash-lite-tts')).toBeTruthy()
+    fireEvent.change(screen.getByLabelText('GeminiTTSVoice'), {
+      target: { value: 'voice_replacement' },
+    })
+    expect(settingsStore.setState).toHaveBeenCalledWith({
+      geminiTtsVoice: 'voice_replacement',
+    })
+    fireEvent.change(screen.getByLabelText('GeminiTTSStyle'), {
+      target: { value: '' },
+    })
+    expect(settingsStore.setState).toHaveBeenCalledWith({ geminiTtsStyle: '' })
   })
 
   describe('realtime API mode', () => {

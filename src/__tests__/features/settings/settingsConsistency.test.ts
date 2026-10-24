@@ -79,6 +79,20 @@ describe('設定項目の従来設定・クイック設定間 整合性テスト
     })
   })
 
+  it('クイック設定からGeminiの声IDを差し替え、別の音声モードでは編集を無効化する', () => {
+    const item = getSettingCategories(mockT)
+      .find((category) => category.id === 'voice')
+      ?.items.find((item) => item.id === 'geminiTtsVoice')
+    expect(item).toBeDefined()
+    expect(item?.disabled?.()).toBe(true)
+    settingsStore.setState({ selectVoice: 'gemini' })
+    expect(item?.disabled?.()).toBe(false)
+    item?.setValue?.('voice_replacement')
+    expect(settingsStore.getState().geminiTtsVoice).toBe('voice_replacement')
+    settingsStore.setState({ audioMode: true })
+    expect(item?.disabled?.()).toBe(true)
+  })
+
   describe('3. 過去メッセージ件数 & 最大トークン数', () => {
     it('クイック設定のスライダーが適切な範囲に設定されていること', () => {
       const categories = getSettingCategories(mockT)

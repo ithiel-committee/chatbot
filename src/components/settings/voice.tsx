@@ -7,6 +7,7 @@ import {
   KoeiromapSettings,
   VoicevoxSettings,
   GoogleTTSSettings,
+  GeminiTTSSettings,
   StyleBertVITS2Settings,
   AivisSpeechSettings,
   AivisCloudApiSettings,
@@ -132,6 +133,8 @@ const Voice = () => {
                     voicevoxIntonation={voicevoxIntonation}
                   />
                 )
+              } else if (selectVoice === 'gemini') {
+                return <GeminiTTSSettings />
               } else if (selectVoice === 'google') {
                 return <GoogleTTSSettings googleTtsType={googleTtsType} />
               } else if (selectVoice === 'stylebertvits2') {

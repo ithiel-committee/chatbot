@@ -48,6 +48,7 @@ export const SENSITIVE_SETTINGS_KEYS = [
   'openaiKey',
   'anthropicKey',
   'googleKey',
+  'geminiTtsApiKey',
   'azureKey',
   'groqKey',
   'difyKey',

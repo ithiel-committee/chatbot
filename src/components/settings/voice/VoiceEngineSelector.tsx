@@ -32,6 +32,7 @@ export const VoiceEngineSelector = ({
           <option value="none">{t('UsingNoVoice')}</option>
           <option value="voicevox">{t('UsingVoiceVox')}</option>
           <option value="koeiromap">{t('UsingKoeiromap')}</option>
+          <option value="gemini">{t('UsingGeminiTTS')}</option>
           <option value="google">{t('UsingGoogleTTS')}</option>
           <option value="stylebertvits2">{t('UsingStyleBertVITS2')}</option>
           <option value="aivis_speech">{t('UsingAivisSpeech')}</option>

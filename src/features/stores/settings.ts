@@ -1,3 +1,4 @@
+import { DEFAULT_GEMINI_TTS_VOICE } from '@/features/constants/geminiTts'
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 import { exclusivityMiddleware } from './exclusionMiddleware'
@@ -60,6 +61,7 @@ interface APIKeys {
   openaiKey: string
   anthropicKey: string
   googleKey: string
+  geminiTtsApiKey: string
   azureKey: string
   groqKey: string
   difyKey: string
@@ -100,6 +102,8 @@ interface ModelProvider extends Live2DSettings {
   selectVoice: AIVoice
   koeiroParam: KoeiroParam
   googleTtsType: string
+  geminiTtsVoice: string
+  geminiTtsStyle: string
   voicevoxSpeaker: string
   voicevoxSpeed: number
   voicevoxPitch: number
@@ -329,6 +333,7 @@ const getInitialValuesFromEnv = (): SettingsState => ({
     '',
   anthropicKey: '',
   googleKey: '',
+  geminiTtsApiKey: '',
   azureKey:
     process.env.NEXT_PUBLIC_AZURE_API_KEY ||
     process.env.NEXT_PUBLIC_AZURE_KEY ||
@@ -355,6 +360,9 @@ const getInitialValuesFromEnv = (): SettingsState => ({
   selectVoice: (process.env.NEXT_PUBLIC_SELECT_VOICE as AIVoice) || 'voicevox',
   koeiroParam: DEFAULT_PARAM,
   googleTtsType: process.env.NEXT_PUBLIC_GOOGLE_TTS_TYPE || '',
+  geminiTtsVoice:
+    process.env.NEXT_PUBLIC_GEMINI_TTS_VOICE || DEFAULT_GEMINI_TTS_VOICE,
+  geminiTtsStyle: process.env.NEXT_PUBLIC_GEMINI_TTS_STYLE || '',
   voicevoxSpeaker: process.env.NEXT_PUBLIC_VOICEVOX_SPEAKER || '46',
   voicevoxSpeed:
     parseFloat(process.env.NEXT_PUBLIC_VOICEVOX_SPEED || '1.0') || 1.0,
@@ -1108,6 +1116,7 @@ export const selectPersistedSettings = (state: SettingsState) => ({
   openaiKey: state.openaiKey,
   anthropicKey: state.anthropicKey,
   googleKey: state.googleKey,
+  geminiTtsApiKey: state.geminiTtsApiKey,
   azureKey: state.azureKey,
   groqKey: state.groqKey,
   difyKey: state.difyKey,
@@ -1123,6 +1132,8 @@ export const selectPersistedSettings = (state: SettingsState) => ({
   selectVoice: state.selectVoice,
   koeiroParam: state.koeiroParam,
   googleTtsType: state.googleTtsType,
+  geminiTtsVoice: state.geminiTtsVoice,
+  geminiTtsStyle: state.geminiTtsStyle,
   voicevoxSpeaker: state.voicevoxSpeaker,
   voicevoxSpeed: state.voicevoxSpeed,
   voicevoxPitch: state.voicevoxPitch,

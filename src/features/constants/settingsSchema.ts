@@ -61,6 +61,7 @@ export const SETTINGS_SCHEMA = {
     { label: 'AivisSpeech', value: 'aivis_speech' },
     { label: 'Aivis Cloud API', value: 'aivis_cloud_api' },
     { label: 'Google TTS', value: 'google' },
+    { label: 'Gemini TTS', value: 'gemini' },
     { label: 'OpenAI TTS', value: 'openai' },
     { label: 'Style-Bert-VITS2', value: 'stylebertvits2' },
     { label: 'Koeiromap', value: 'koeiromap' },
