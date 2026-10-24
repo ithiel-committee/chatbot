@@ -13,11 +13,16 @@ NEXT_PUBLIC_SELECT_VOICE="gemini"
 NEXT_PUBLIC_GEMINI_TTS_VOICE="voice_gkzvygsq8i5b"
 NEXT_PUBLIC_GEMINI_TTS_STYLE=""
 NEXT_PUBLIC_ALWAYS_OVERRIDE_WITH_ENV_VARIABLES="false"
+# localhostでサーバーのキーを使う場合（公開環境にはそのまま使わない）
+AITUBERKIT_SERVER_SECRET_ACCESS_MODE="unprotected"
 ```
 
-3. 設定画面の「音声設定」で「Gemini TTS」を選択し、テスト音声を再生します。既存のブラウザ設定が残っている場合は、画面でエンジンを切り替えてください。
+3. ローカル試用では `HOSTNAME=127.0.0.1 PORT=5190 pnpm dev` で localhost のみにバインドして起動し、`http://127.0.0.1:5190/` を開きます。
+4. 詳細設定の「合成音声設定」で「Gemini TTS」を選択し、画面下部の「ボイステスト」に文章を入力して「再生する」を押します。既存のブラウザ設定が残っている場合は、画面でエンジンを切り替えてください。APIキーを環境変数で設定する場合、画面のキー欄は空にしておきます。
 
-API キーはサーバー専用です。`NEXT_PUBLIC_*` にキーを設定しないでください。専用キーが空の場合は `GEMINI_API_KEY`、次に `GOOGLE_API_KEY` を使用します。画面で Gemini TTS API キーを入力した場合は、そのキーが優先され、既存設定と同様にブラウザに保存されます。通常の設定バックアップではこのキーを除外します。
+環境変数に設定する API キーはサーバー専用です。`NEXT_PUBLIC_*` にキーを設定しないでください。専用キーが空の場合は `GEMINI_API_KEY`、次に `GOOGLE_API_KEY` を使用します。画面で Gemini TTS API キーを入力した場合は、そのキーが優先され、既存設定と同様にブラウザに保存されます。通常の設定バックアップではこのキーを除外します。
+
+キー設定後に403になる場合は、サーバーのキー利用が既定の `disabled` で拒否されていないか確認してください。localhost以外へ公開する場合は `unprotected` のまま使用せず、既存の保護設定を使用します。
 
 サーバーのキーには、他の TTS と同じ `AITUBERKIT_SERVER_SECRET_ACCESS_MODE` の制限が適用されます。公開環境の保護設定は [アクセスポリシー設計](access-policy-design.md) に従ってください。クライアント持ち込みキーを使用する場合も、リクエストの入力検証は行います。
 
