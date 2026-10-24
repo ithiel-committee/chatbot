@@ -20,7 +20,7 @@ export const GeminiTTSSettings = () => {
         id="gemini-tts-key"
         type="password"
         autoComplete="off"
-        className={`${settingsControlClass.long} mt-2`}
+        className={`${settingsControlClass.long} mt-2 max-w-full`}
         value={apiKey}
         onChange={(e) =>
           settingsStore.setState({ geminiTtsApiKey: e.target.value })
