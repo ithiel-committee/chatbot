@@ -199,7 +199,7 @@
   "GeminiTTSAPIKey": "Gemini TTS APIキー（任意）",
   "GeminiTTSAPIKeyHelp": "空欄ならサーバーのGEMINI_TTS_API_KEY → GEMINI_API_KEY → GOOGLE_API_KEYを使用します。入力したキーはこのブラウザに保存されます。",
   "GeminiTTSVoice": "声ID / 音声名",
-  "GeminiTTSVoiceHelp": "別のvoice_...やKoreなどの標準音声名に変更できます。カスタム音声は、声を保存したGoogleプロジェクトのAPIキーを使用してください。",
+  "GeminiTTSVoiceHelp": "別のvoice_...やKoreなどの標準音声名に変更できます。空欄では仮の初期声IDを使用します。カスタム音声は、声を保存したGoogleプロジェクトのAPIキーを使用してください。",
   "GeminiTTSPace": "話速（目安）",
   "GeminiTTSPaceHelp": "生成時の話し方を調整します。正確な倍率指定ではありません。標準では話速の指示を追加しません。演技指示に別の話速を書くと指示が競合する場合があります。",
   "GeminiTTSPace_slow": "ゆっくり",

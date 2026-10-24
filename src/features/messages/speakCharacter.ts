@@ -522,7 +522,7 @@ export const testVoice = async (voiceType: AIVoice, customText?: string) => {
     aivis_cloud_api: 'Aivis Cloud APIを使用します',
     koeiromap: 'コエイロマップを使用します',
     google: 'Google Text-to-Speechを使用します',
-    gemini: 'こんにちは、イティエルです。Gemini TTSを使用します。',
+    gemini: 'Gemini TTSを使用します。',
     stylebertvits2: 'StyleBertVITS2を使用します',
     openai: 'OpenAI TTSを使用します',
   }

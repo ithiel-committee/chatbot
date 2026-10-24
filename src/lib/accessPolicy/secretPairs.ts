@@ -58,7 +58,11 @@ export function evaluateSecretPairs(
       )
       if (gateValue) return false
     }
-    const clientValue = extractClientValue(req, pair.source, pair.key)
+    const rawClientValue = extractClientValue(req, pair.source, pair.key)
+    const clientValue =
+      pair.trimClientValue && typeof rawClientValue === 'string'
+        ? rawClientValue.trim()
+        : rawClientValue
     return (
       !clientValue && pair.envVars.some((name) => Boolean(process.env[name]))
     )

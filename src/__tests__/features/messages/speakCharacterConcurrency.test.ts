@@ -1,6 +1,7 @@
 const mockSettingsGetState = jest.fn()
 jest.mock('../../../features/stores/settings', () => ({
   getState: (...args: unknown[]) => mockSettingsGetState(...args),
+  setState: jest.fn(),
 }))
 
 jest.mock('../../../features/stores/home', () => ({
@@ -77,10 +78,16 @@ jest.mock('../../../features/messages/synthesizeVoiceOpenAI', () => ({
 }))
 
 jest.mock('../../../features/messages/characterRenderer', () => ({
-  getCharacterRenderer: () => ({ speakPcm16Stream: jest.fn() }),
+  getCharacterRenderer: () => ({
+    speakPcm16Stream: jest.fn(),
+    speak: jest.fn(),
+  }),
 }))
 
-import { speakCharacter } from '../../../features/messages/speakCharacter'
+import {
+  speakCharacter,
+  testVoice,
+} from '../../../features/messages/speakCharacter'
 
 function createDeferred<T>() {
   let resolve!: (value: T) => void
@@ -136,6 +143,25 @@ describe('speakCharacter concurrency', () => {
       'fast'
     )
     expect(mockAddTask).toHaveBeenCalled()
+  })
+
+  it('uses an engine-only default voice test message shared across projects', async () => {
+    mockSettingsGetState.mockReturnValue({
+      selectVoice: 'gemini',
+      geminiTtsApiKey: 'key',
+      geminiTtsVoice: 'Kore',
+      geminiTtsStyle: '',
+      geminiTtsPace: 'default',
+    })
+    mockSynthesizeVoiceGeminiApi.mockResolvedValue(new ArrayBuffer(46))
+    await testVoice('gemini')
+    expect(mockSynthesizeVoiceGeminiApi).toHaveBeenCalledWith(
+      { message: 'Gemini TTSを使用します。', emotion: 'neutral' },
+      'key',
+      'Kore',
+      '',
+      'default'
+    )
   })
 
   it('keeps playback order even when later synthesis finishes first', async () => {

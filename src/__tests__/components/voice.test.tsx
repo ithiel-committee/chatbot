@@ -175,6 +175,37 @@ describe('Voice Settings', () => {
     expect(settingsStore.setState).toHaveBeenCalledWith({ geminiTtsStyle: '' })
   })
 
+  it('keeps labels and descriptions unique when two Gemini settings instances mount together', () => {
+    mockSettingsStore.mockImplementation((selector) =>
+      selector({ ...defaultVoiceState, selectVoice: 'gemini' } as any)
+    )
+    const { container } = render(
+      <>
+        <Voice />
+        <Voice />
+      </>
+    )
+    const ids = Array.from(container.querySelectorAll('[id]')).map(
+      (element) => element.id
+    )
+    expect(new Set(ids).size).toBe(ids.length)
+    for (const label of [
+      'GeminiTTSAPIKey',
+      'GeminiTTSVoice',
+      'GeminiTTSPace',
+      'GeminiTTSStyle',
+    ]) {
+      const fields = screen.getAllByLabelText(label)
+      expect(fields).toHaveLength(2)
+      const descriptions = fields.map((field) =>
+        document.getElementById(field.getAttribute('aria-describedby') || '')
+      )
+      expect(descriptions[0]).toHaveTextContent(`${label}Help`)
+      expect(descriptions[1]).toHaveTextContent(`${label}Help`)
+      expect(descriptions[0]).not.toBe(descriptions[1])
+    }
+  })
+
   describe('realtime API mode', () => {
     it('should show message when realtimeAPIMode is enabled', () => {
       mockSettingsStore.mockImplementation((selector) => {

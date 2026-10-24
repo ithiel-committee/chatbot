@@ -337,6 +337,7 @@ export const routePolicies = {
         {
           source: 'body',
           key: 'apiKey',
+          trimClientValue: true,
           envVars: ['GEMINI_TTS_API_KEY', 'GEMINI_API_KEY', 'GOOGLE_API_KEY'],
         },
       ],

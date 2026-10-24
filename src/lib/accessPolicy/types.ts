@@ -43,6 +43,8 @@ export type SecretPair = {
   source: 'body' | 'query'
   key: string
   envVars: string[]
+  /** 空白だけのクライアント値を未指定として判定する。ルート側も同じ正規化を行うこと。 */
+  trimClientValue?: boolean
   onlyIfAbsent?: { source: 'body' | 'query'; key: string }
 }
 

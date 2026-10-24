@@ -1,3 +1,4 @@
+import { useId } from 'react'
 import { useTranslation } from 'react-i18next'
 import settingsStore from '@/features/stores/settings'
 import {
@@ -9,6 +10,7 @@ import { settingsControlClass } from '@/components/settings/formStyles'
 
 export const GeminiTTSSettings = () => {
   const { t } = useTranslation()
+  const id = useId()
   const apiKey = settingsStore((s) => s.geminiTtsApiKey)
   const voice = settingsStore((s) => s.geminiTtsVoice)
   const style = settingsStore((s) => s.geminiTtsStyle)
@@ -18,52 +20,55 @@ export const GeminiTTSSettings = () => {
     <>
       <p className="my-2 text-sm whitespace-pre-wrap">{t('GeminiTTSInfo')}</p>
       <p className="my-2 text-sm">{GEMINI_TTS_MODEL}</p>
-      <label className="block mt-4 font-bold" htmlFor="gemini-tts-key">
+      <label className="block mt-4 font-bold" htmlFor={`${id}-gemini-tts-key`}>
         {t('GeminiTTSAPIKey')}
       </label>
       <input
-        id="gemini-tts-key"
+        id={`${id}-gemini-tts-key`}
         type="password"
         autoComplete="off"
-        className={`${settingsControlClass.long} mt-2 max-w-full`}
+        className={`${settingsControlClass.long} mt-2`}
         value={apiKey}
         onChange={(e) =>
           settingsStore.setState({ geminiTtsApiKey: e.target.value })
         }
-        aria-describedby="gemini-tts-key-help"
+        aria-describedby={`${id}-gemini-tts-key-help`}
       />
-      <p id="gemini-tts-key-help" className="mt-2 text-sm">
+      <p id={`${id}-gemini-tts-key-help`} className="mt-2 text-sm">
         {t('GeminiTTSAPIKeyHelp')}
       </p>
-      <label className="block mt-4 font-bold" htmlFor="gemini-tts-voice">
+      <label
+        className="block mt-4 font-bold"
+        htmlFor={`${id}-gemini-tts-voice`}
+      >
         {t('GeminiTTSVoice')}
       </label>
       <input
-        id="gemini-tts-voice"
+        id={`${id}-gemini-tts-voice`}
         type="text"
         className={`${settingsControlClass.medium} mt-2`}
         value={voice}
         onChange={(e) =>
           settingsStore.setState({ geminiTtsVoice: e.target.value })
         }
-        aria-describedby="gemini-tts-voice-help"
+        aria-describedby={`${id}-gemini-tts-voice-help`}
       />
-      <p id="gemini-tts-voice-help" className="mt-2 text-sm">
+      <p id={`${id}-gemini-tts-voice-help`} className="mt-2 text-sm">
         {t('GeminiTTSVoiceHelp')}
       </p>
-      <label className="block mt-4 font-bold" htmlFor="gemini-tts-pace">
+      <label className="block mt-4 font-bold" htmlFor={`${id}-gemini-tts-pace`}>
         {t('GeminiTTSPace')}
       </label>
       <select
-        id="gemini-tts-pace"
-        className={`${settingsControlClass.medium} mt-2 max-w-full`}
+        id={`${id}-gemini-tts-pace`}
+        className={`${settingsControlClass.medium} mt-2`}
         value={pace}
         onChange={(e) =>
           settingsStore.setState({
             geminiTtsPace: e.target.value as GeminiTtsPace,
           })
         }
-        aria-describedby="gemini-tts-pace-help"
+        aria-describedby={`${id}-gemini-tts-pace-help`}
       >
         {GEMINI_TTS_PACES.map((pace) => (
           <option key={pace} value={pace}>
@@ -71,23 +76,26 @@ export const GeminiTTSSettings = () => {
           </option>
         ))}
       </select>
-      <p id="gemini-tts-pace-help" className="mt-2 text-sm">
+      <p id={`${id}-gemini-tts-pace-help`} className="mt-2 text-sm">
         {t('GeminiTTSPaceHelp')}
       </p>
-      <label className="block mt-4 font-bold" htmlFor="gemini-tts-style">
+      <label
+        className="block mt-4 font-bold"
+        htmlFor={`${id}-gemini-tts-style`}
+      >
         {t('GeminiTTSStyle')}
       </label>
       <textarea
-        id="gemini-tts-style"
+        id={`${id}-gemini-tts-style`}
         rows={3}
         className={`${settingsControlClass.full} mt-2`}
         value={style}
         onChange={(e) =>
           settingsStore.setState({ geminiTtsStyle: e.target.value })
         }
-        aria-describedby="gemini-tts-style-help"
+        aria-describedby={`${id}-gemini-tts-style-help`}
       />
-      <p id="gemini-tts-style-help" className="mt-2 text-sm">
+      <p id={`${id}-gemini-tts-style-help`} className="mt-2 text-sm">
         {t('GeminiTTSStyleHelp')}
       </p>
     </>

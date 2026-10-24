@@ -67,3 +67,38 @@ it('forwards a selected pace without mixing it into the transcript', async () =>
     pace: 'fast',
   })
 })
+
+it.each(['', '   ', '\n\t'])(
+  'falls back to the provisional voice for an empty stored voice: %j',
+  async (voice) => {
+    global.fetch = jest.fn().mockResolvedValue({
+      ok: true,
+      arrayBuffer: async () => new ArrayBuffer(46),
+    })
+    await synthesizeVoiceGeminiApi(
+      { message: 'こんにちは。', emotion: 'neutral' },
+      'key',
+      voice,
+      ''
+    )
+    expect(
+      JSON.parse((global.fetch as jest.Mock).mock.calls[0][1].body).voice
+    ).toBe('voice_gkzvygsq8i5b')
+  }
+)
+
+it('trims a nonempty stored voice before sending it', async () => {
+  global.fetch = jest.fn().mockResolvedValue({
+    ok: true,
+    arrayBuffer: async () => new ArrayBuffer(46),
+  })
+  await synthesizeVoiceGeminiApi(
+    { message: 'こんにちは。', emotion: 'neutral' },
+    'key',
+    '  Kore \n',
+    ''
+  )
+  expect(
+    JSON.parse((global.fetch as jest.Mock).mock.calls[0][1].body).voice
+  ).toBe('Kore')
+})

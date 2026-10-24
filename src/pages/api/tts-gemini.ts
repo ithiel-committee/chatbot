@@ -1,4 +1,5 @@
 import { z } from 'zod'
+import { logger } from '@/lib/logger'
 import {
   GEMINI_TTS_MODEL,
   GEMINI_TTS_PACES,
@@ -12,8 +13,7 @@ const requestSchema = z.object({
   voice: z.string().trim().min(1).max(200),
   style: z.string().trim().max(4000).optional().default(''),
   pace: z.enum(GEMINI_TTS_PACES).optional().default('default'),
-  // A nonempty invalid key must never silently fall back to a server secret.
-  apiKey: z.string().max(512).optional(),
+  apiKey: z.string().trim().max(512).optional(),
 })
 
 const interactionSchema = z.object({
@@ -49,10 +49,10 @@ export default withAccessPolicy(
       .join(', ')
     const key =
       apiKey ||
-      process.env.GEMINI_TTS_API_KEY ||
-      process.env.GEMINI_API_KEY ||
-      process.env.GOOGLE_API_KEY
-    if (!key || !key.trim()) {
+      process.env.GEMINI_TTS_API_KEY?.trim() ||
+      process.env.GEMINI_API_KEY?.trim() ||
+      process.env.GOOGLE_API_KEY?.trim()
+    if (!key) {
       return res
         .status(400)
         .json({ error: 'Gemini APIキーを設定してください。' })
@@ -116,15 +116,24 @@ export default withAccessPolicy(
         ? interaction.data.steps
             .filter((step) => step.type === 'model_output')
             .flatMap((step) => step.content || [])
-            .filter((content) => content.type === 'audio' && content.data)
-            .pop()?.data
-        : undefined
-      if (!audio) {
+            .filter((content) => content.type === 'audio')
+        : []
+      if (audio.length > 1) {
+        logger.error('[Gemini TTS] Multiple audio blocks are not supported', {
+          blockCount: audio.length,
+        })
+        return res.status(502).json({
+          error:
+            'Gemini TTSから複数の音声ブロックが返りました。文章を短くして再試行してください。',
+        })
+      }
+      const data = audio[0]?.data
+      if (!data) {
         return res
           .status(502)
           .json({ error: 'Gemini TTSから音声が返りませんでした。' })
       }
-      const wav = Buffer.from(audio, 'base64')
+      const wav = Buffer.from(data, 'base64')
       // Gemini 3.8 returns a WAV container, not headerless PCM.
       if (
         wav.length <= 44 ||

@@ -1,5 +1,6 @@
 /** @jest-environment node */
 import handler from '@/pages/api/tts-gemini'
+import { logger } from '@/lib/logger'
 import {
   createMockReq,
   createMockRes,
@@ -51,6 +52,7 @@ describe('/api/tts-gemini', () => {
   })
   afterEach(() => {
     process.env = originalEnv
+    jest.restoreAllMocks()
     global.fetch = originalFetch
     jest.useRealTimers()
   })
@@ -166,6 +168,42 @@ describe('/api/tts-gemini', () => {
     ).toEqual(['tts-key', 'client-key'])
   })
 
+  it('trims a client key before sending it upstream without using a server secret', async () => {
+    process.env.GEMINI_TTS_API_KEY = 'server-secret'
+    mockServerSecretGuard('disabled')
+    expect(
+      (await request({ ...body, apiKey: '  client-key \n\t' }))._status
+    ).toBe(200)
+    expect(
+      (global.fetch as jest.Mock).mock.calls[0][1].headers['x-goog-api-key']
+    ).toBe('client-key')
+  })
+
+  it('falls back from a whitespace-only client key and skips blank server keys', async () => {
+    process.env.GEMINI_TTS_API_KEY = '  \n '
+    process.env.GEMINI_API_KEY = '  gemini-key \n '
+    process.env.GOOGLE_API_KEY = 'google-key'
+    expect((await request({ ...body, apiKey: '  \n\t' }))._status).toBe(200)
+    expect(
+      (global.fetch as jest.Mock).mock.calls[0][1].headers['x-goog-api-key']
+    ).toBe('gemini-key')
+  })
+
+  it.each(['GEMINI_TTS_API_KEY', 'GEMINI_API_KEY', 'GOOGLE_API_KEY'])(
+    'does not bypass the server-secret guard with a whitespace-only client key (%s)',
+    async (name) => {
+      process.env[name] = 'server-secret'
+      mockServerSecretGuard('disabled')
+      expect((await request({ ...body, apiKey: '  \n\t' }))._status).toBe(403)
+      expect(global.fetch).not.toHaveBeenCalled()
+    }
+  )
+
+  it('rejects a whitespace-only key when no server key is available', async () => {
+    expect((await request({ ...body, apiKey: '  \n\t' }))._status).toBe(400)
+    expect(global.fetch).not.toHaveBeenCalled()
+  })
+
   it('rejects a missing key', async () => {
     expect((await request({ ...body, apiKey: '' }))._status).toBe(400)
     expect(global.fetch).not.toHaveBeenCalled()
@@ -180,7 +218,6 @@ describe('/api/tts-gemini', () => {
     { style: 'a'.repeat(4001) },
 
     { apiKey: {} },
-    { apiKey: '   ' },
   ])(
     'rejects invalid input without using server credentials: %j',
     async (invalid) => {
@@ -231,22 +268,53 @@ describe('/api/tts-gemini', () => {
     expect((await request())._status).toBe(502)
   })
 
-  it('uses the last model audio block, ignoring user audio', async () => {
+  it('ignores user audio and returns the single model audio block', async () => {
     ;(global.fetch as jest.Mock).mockResolvedValue(
       new Response(
         JSON.stringify({
           steps: [
             { type: 'user_input', content: [{ type: 'audio', data: 'bad' }] },
-            {
-              type: 'model_output',
-              content: [{ type: 'audio', data: 'bad' }, audioContent],
-            },
+            { type: 'model_output', content: [audioContent] },
           ],
         })
       )
     )
-    expect((await request())._body).toEqual(wav)
+    const res = await request()
+    expect(res._status).toBe(200)
+    expect(res._body).toEqual(wav)
   })
+
+  it.each([
+    [{ type: 'model_output', content: [audioContent, audioContent] }],
+    [
+      { type: 'model_output', content: [audioContent] },
+      { type: 'model_output', content: [audioContent] },
+    ],
+    [
+      {
+        type: 'model_output',
+        content: [audioContent, { type: 'audio', data: '' }],
+      },
+    ],
+  ])(
+    'rejects multiple model audio blocks instead of silently returning a partial recording: %j',
+    async (...steps) => {
+      const log = jest.spyOn(logger, 'error').mockImplementation(() => {})
+      ;(global.fetch as jest.Mock).mockResolvedValue(
+        new Response(JSON.stringify({ steps }))
+      )
+      const res = await request()
+      expect(res._status).toBe(502)
+      expect(res._body).toBeNull()
+      expect(res._json).toEqual({
+        error: expect.stringContaining('複数の音声ブロック'),
+      })
+      expect(log).toHaveBeenCalledWith(
+        '[Gemini TTS] Multiple audio blocks are not supported',
+        { blockCount: 2 }
+      )
+    }
+  )
 
   it('times out a stalled upstream request', async () => {
     jest.useFakeTimers()
