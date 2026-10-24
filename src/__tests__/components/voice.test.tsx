@@ -79,6 +79,7 @@ const defaultVoiceState = {
   geminiTtsApiKey: '',
   geminiTtsVoice: 'voice_gkzvygsq8i5b',
   geminiTtsStyle: '',
+  geminiTtsPace: 'default',
   voicevoxSpeaker: '46',
   voicevoxSpeed: 1.0,
   voicevoxPitch: 0.0,
@@ -155,6 +156,13 @@ describe('Voice Settings', () => {
     )
     render(<Voice />)
     expect(screen.getByText('gemini-3.8-flash-lite-tts')).toBeTruthy()
+    expect(screen.getByLabelText('GeminiTTSPace')).toHaveValue('default')
+    fireEvent.change(screen.getByLabelText('GeminiTTSPace'), {
+      target: { value: 'fast' },
+    })
+    expect(settingsStore.setState).toHaveBeenCalledWith({
+      geminiTtsPace: 'fast',
+    })
     fireEvent.change(screen.getByLabelText('GeminiTTSVoice'), {
       target: { value: 'voice_replacement' },
     })

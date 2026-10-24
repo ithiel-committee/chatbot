@@ -1,3 +1,4 @@
+import { GeminiTtsPace } from '@/features/constants/geminiTts'
 import { Talk } from './messages'
 import { synthesizeVoiceApi } from './synthesizeVoiceApi'
 
@@ -5,11 +6,12 @@ export function synthesizeVoiceGeminiApi(
   talk: Talk,
   apiKey: string,
   voice: string,
-  style: string
+  style: string,
+  pace: GeminiTtsPace = 'default'
 ): Promise<ArrayBuffer> {
   return synthesizeVoiceApi(
     '/api/tts-gemini',
-    { message: talk.message, apiKey, voice, style },
+    { message: talk.message, apiKey, voice, style, pace },
     'Gemini TTS',
     {
       buildErrorMessage: async (res) => {

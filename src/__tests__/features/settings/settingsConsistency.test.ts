@@ -89,8 +89,15 @@ describe('設定項目の従来設定・クイック設定間 整合性テスト
     expect(item?.disabled?.()).toBe(false)
     item?.setValue?.('voice_replacement')
     expect(settingsStore.getState().geminiTtsVoice).toBe('voice_replacement')
+    const paceItem = getSettingCategories(mockT)
+      .find((category) => category.id === 'voice')
+      ?.items.find((item) => item.id === 'geminiTtsPace')
+    expect(paceItem?.disabled?.()).toBe(false)
+    paceItem?.setValue?.('slightly-fast')
+    expect(settingsStore.getState().geminiTtsPace).toBe('slightly-fast')
     settingsStore.setState({ audioMode: true })
     expect(item?.disabled?.()).toBe(true)
+    expect(paceItem?.disabled?.()).toBe(true)
   })
 
   describe('3. 過去メッセージ件数 & 最大トークン数', () => {

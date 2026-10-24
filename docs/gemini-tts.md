@@ -12,6 +12,7 @@ GEMINI_TTS_API_KEY="your-api-key"
 NEXT_PUBLIC_SELECT_VOICE="gemini"
 NEXT_PUBLIC_GEMINI_TTS_VOICE="voice_gkzvygsq8i5b"
 NEXT_PUBLIC_GEMINI_TTS_STYLE=""
+NEXT_PUBLIC_GEMINI_TTS_PACE="default"
 NEXT_PUBLIC_ALWAYS_OVERRIDE_WITH_ENV_VARIABLES="false"
 # localhostでサーバーのキーを使う場合（公開環境にはそのまま使わない）
 AITUBERKIT_SERVER_SECRET_ACCESS_MODE="unprotected"
@@ -37,7 +38,23 @@ AITUBERKIT_SERVER_SECRET_ACCESS_MODE="unprotected"
 
 ## 演技指示と読み上げ
 
-演技指示は任意です。空欄や空白だけなら `speech_metadata` 自体を送らず、本文と声だけを指定します。入力した場合は本文とは別の `speech_metadata.style` へ渡し、表情タグからの演技指示や話速・音高を自動追加しません。
+演技指示は任意です。演技指示が空欄や空白だけで、話速も「標準（指定なし）」なら `speech_metadata` 自体を送らず、本文と声だけを指定します。演技指示を入力した場合は本文とは別の `speech_metadata.style` へ渡します。表情タグからの演技指示や音高の指示は自動追加しません。
+
+### 話速（目安）
+
+公式ドキュメントの [Pacing and pauses](https://ai.google.dev/gemini-api/docs/speech-generation#pacing-and-pauses) に従い、発話全体のペースは `speech_metadata.style` の短い自然言語指示で指定します。本アプリは次の5段階を指示に対応付けています。
+
+| 画面の選択肢     | 設定値          | 追加する指示               |
+| ---------------- | --------------- | -------------------------- |
+| ゆっくり         | `slow`          | `speaking slowly`          |
+| ややゆっくり     | `slightly-slow` | `speaking slightly slowly` |
+| 標準（指定なし） | `default`       | 追加なし                   |
+| やや速い         | `slightly-fast` | `speaking slightly faster` |
+| 速い             | `fast`          | `speaking rapidly`         |
+
+通常の簡易設定、詳細設定、クイックスタートから変更できます。配布時の初期値は `NEXT_PUBLIC_GEMINI_TTS_PACE` で指定します。未設定・不正な環境変数は `default` になり、追加前に保存された設定にも標準が適用されます。
+
+これは生成時の話し方の目安であり、0.8倍・1.2倍などの正確な倍率ではありません。再生速度やWAVのサンプルレートは変更しません。演技指示が空でも話速を変更した場合は話速の指示だけを送ります。両方を指定した場合は、例として `落ち着いて, speaking rapidly` のように1つの style にまとめます。競合を避けるため、演技指示に別の話速は書かず、この選択欄で調整してください。
 
 生成結果の WAV を既存の発話キューとキャラクター再生へ渡します。複数の合成が並行しても再生順序は既存キューで維持します。合成済みの区間・再生待ちの区間は声を変更しても作り直しません。初回の読点を短く区切る最適化は追加せず、既存の標準文分割を使用します。
 
@@ -45,12 +62,12 @@ AITUBERKIT_SERVER_SECRET_ACCESS_MODE="unprotected"
 
 ## API と確認方法
 
-`POST /api/tts-gemini` は `{ message, voice, style?, apiKey? }` を受け取り、成功時に `audio/wav` を返します。サーバーが固定の Gemini Interactions REST API へ接続します。SDK や依存パッケージの追加・更新はありません。キー・本文・上流エラー本文をログへ出しません。
+`POST /api/tts-gemini` は `{ message, voice, style?, pace?, apiKey? }` を受け取り、成功時に `audio/wav` を返します。サーバーが固定の Gemini Interactions REST API へ接続します。SDK や依存パッケージの追加・更新はありません。キー・本文・上流エラー本文をログへ出しません。
 
 - [公式の音声生成ガイド](https://ai.google.dev/gemini-api/docs/speech-generation)
 - [Voice Design](https://ai.google.dev/gemini-api/docs/voice-design)
 
-開発時は以下で API 契約、空の演技指示、声の変更・永続化、キーの保護、エラー処理、発話キューへの接続を確認できます。
+開発時は以下で API 契約、空の演技指示、話速と演技指示の合成、声・話速の変更と永続化、キーの保護、エラー処理、発話キューへの接続を確認できます。
 
 ```sh
 pnpm test --runInBand tts-gemini synthesizeVoiceGemini settingsGeminiTts components/voice.test speakCharacterConcurrency apiRouteStaticChecks

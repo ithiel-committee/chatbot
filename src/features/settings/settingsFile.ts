@@ -1,5 +1,6 @@
 import { z } from 'zod'
 
+import { GEMINI_TTS_PACES } from '@/features/constants/geminiTts'
 import { AI_SERVICES } from '@/features/constants/settings'
 import settingsStore, {
   CURRENT_SETTINGS_VERSION,
@@ -142,6 +143,7 @@ const matchesTopLevelType = (
 
 const constrainedSettingSchemas = new Map<keyof PersistedSettings, z.ZodType>([
   ['selectAIService', z.enum(AI_SERVICES)],
+  ['geminiTtsPace', z.enum(GEMINI_TTS_PACES)],
   ['modelType', z.enum(['vrm', 'live2d', 'pngtuber'])],
   ['temperature', z.number().min(0).max(2)],
   ['maxPastMessages', z.number().int().min(1).max(9999)],

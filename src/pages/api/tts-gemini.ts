@@ -1,5 +1,9 @@
 import { z } from 'zod'
-import { GEMINI_TTS_MODEL } from '@/features/constants/geminiTts'
+import {
+  GEMINI_TTS_MODEL,
+  GEMINI_TTS_PACES,
+  GEMINI_TTS_PACE_STYLES,
+} from '@/features/constants/geminiTts'
 import { routePolicies } from '@/lib/accessPolicy/routePolicies'
 import { withAccessPolicy } from '@/lib/accessPolicy/withAccessPolicy'
 
@@ -7,6 +11,7 @@ const requestSchema = z.object({
   message: z.string().trim().min(1).max(5000),
   voice: z.string().trim().min(1).max(200),
   style: z.string().trim().max(4000).optional().default(''),
+  pace: z.enum(GEMINI_TTS_PACES).optional().default('default'),
   // A nonempty invalid key must never silently fall back to a server secret.
   apiKey: z.string().max(512).optional(),
 })
@@ -38,7 +43,10 @@ export default withAccessPolicy(
           '読み上げ本文・声ID・演技指示・APIキーの形式を確認してください。',
       })
     }
-    const { message, voice, style, apiKey } = parsed.data
+    const { message, voice, style: actingStyle, pace, apiKey } = parsed.data
+    const style = [actingStyle, GEMINI_TTS_PACE_STYLES[pace]]
+      .filter(Boolean)
+      .join(', ')
     const key =
       apiKey ||
       process.env.GEMINI_TTS_API_KEY ||

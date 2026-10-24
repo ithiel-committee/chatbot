@@ -97,6 +97,51 @@ describe('/api/tts-gemini', () => {
     })
   })
 
+  it.each([
+    ['slow', 'speaking slowly'],
+    ['slightly-slow', 'speaking slightly slowly'],
+    ['default', ''],
+    ['slightly-fast', 'speaking slightly faster'],
+    ['fast', 'speaking rapidly'],
+  ])(
+    'sends %s as a short style hint without altering text or audio format',
+    async (pace, hint) => {
+      await request({ ...body, pace, style: '' })
+      const sent = JSON.parse((global.fetch as jest.Mock).mock.calls[0][1].body)
+      const content = sent.input[0].content[0]
+      expect(content.text).toBe(body.message)
+      if (hint)
+        expect(content.annotations).toEqual([
+          { type: 'speech_metadata', style: hint },
+        ])
+      else expect(content).not.toHaveProperty('annotations')
+      expect(sent.generation_config).toEqual({
+        speech_config: [{ voice: body.voice }],
+      })
+      expect(sent.response_format).toEqual({
+        type: 'audio',
+        mime_type: 'audio/wav',
+        sample_rate: 24000,
+      })
+    }
+  )
+
+  it('combines optional acting instructions with the selected pace in one annotation', async () => {
+    await request({ ...body, pace: 'fast', style: '  落ち着いて  ' })
+    const sent = JSON.parse((global.fetch as jest.Mock).mock.calls[0][1].body)
+    expect(sent.input[0].content[0].annotations).toEqual([
+      { type: 'speech_metadata', style: '落ち着いて, speaking rapidly' },
+    ])
+  })
+
+  it.each(['1.2', 1.2, null, {}, 'unknown'])(
+    'rejects an unsupported pace before calling Gemini: %j',
+    async (pace) => {
+      expect((await request({ ...body, pace }))._status).toBe(400)
+      expect(global.fetch).not.toHaveBeenCalled()
+    }
+  )
+
   it.each(['GEMINI_TTS_API_KEY', 'GEMINI_API_KEY', 'GOOGLE_API_KEY'])(
     'guards server credentials from %s',
     async (name) => {

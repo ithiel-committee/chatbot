@@ -27,6 +27,7 @@ it('forwards the selected voice and empty instructions and returns audio bytes',
       apiKey: 'key',
       voice: 'voice_new',
       style: '',
+      pace: 'default',
     }),
   })
 })
@@ -44,4 +45,25 @@ it('surfaces the route error for the existing TTS notification', async () => {
       ''
     )
   ).rejects.toThrow('声IDを確認してください。')
+})
+
+it('forwards a selected pace without mixing it into the transcript', async () => {
+  global.fetch = jest.fn().mockResolvedValue({
+    ok: true,
+    arrayBuffer: async () => new ArrayBuffer(46),
+  })
+  await synthesizeVoiceGeminiApi(
+    { message: 'イティエルです。', emotion: 'neutral' },
+    'key',
+    'voice_new',
+    '',
+    'fast'
+  )
+  expect(
+    JSON.parse((global.fetch as jest.Mock).mock.calls[0][1].body)
+  ).toMatchObject({
+    message: 'イティエルです。',
+    style: '',
+    pace: 'fast',
+  })
 })

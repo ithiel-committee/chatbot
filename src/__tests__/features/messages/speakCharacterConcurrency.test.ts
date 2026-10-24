@@ -121,6 +121,7 @@ describe('speakCharacter concurrency', () => {
       geminiTtsVoice: 'voice_replacement',
       geminiTtsApiKey: 'key',
       geminiTtsStyle: '',
+      geminiTtsPace: 'fast',
     })
     const audio = new ArrayBuffer(46)
     mockSynthesizeVoiceGeminiApi.mockResolvedValue(audio)
@@ -131,7 +132,8 @@ describe('speakCharacter concurrency', () => {
       talk,
       'key',
       'voice_replacement',
-      ''
+      '',
+      'fast'
     )
     expect(mockAddTask).toHaveBeenCalled()
   })

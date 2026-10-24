@@ -1,3 +1,4 @@
+import { GEMINI_TTS_PACES, GeminiTtsPace } from '@/features/constants/geminiTts'
 import { MenuCategory } from '@/types/navigationMenu'
 import settingsStore, { ChatLogMode } from '@/features/stores/settings'
 import menuStore from '@/features/stores/menu'
@@ -276,6 +277,21 @@ export const getSettingCategories = (
           placeholder: 'voice_... / Kore',
           getValue: () => settingsStore.getState().geminiTtsVoice,
           setValue: (val) => settingsStore.setState({ geminiTtsVoice: val }),
+          disabled: () =>
+            isVoiceAdjustmentDisabled(settingsStore.getState()) ||
+            settingsStore.getState().selectVoice !== 'gemini',
+        },
+        {
+          id: 'geminiTtsPace',
+          label: t('GeminiTTSPace', '話速（目安）'),
+          type: 'select',
+          getValue: () => settingsStore.getState().geminiTtsPace,
+          setValue: (val) =>
+            settingsStore.setState({ geminiTtsPace: val as GeminiTtsPace }),
+          options: GEMINI_TTS_PACES.map((pace) => ({
+            label: t(`GeminiTTSPace_${pace}`),
+            value: pace,
+          })),
           disabled: () =>
             isVoiceAdjustmentDisabled(settingsStore.getState()) ||
             settingsStore.getState().selectVoice !== 'gemini',

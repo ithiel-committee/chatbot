@@ -1,4 +1,8 @@
-import { DEFAULT_GEMINI_TTS_VOICE } from '@/features/constants/geminiTts'
+import {
+  DEFAULT_GEMINI_TTS_VOICE,
+  GEMINI_TTS_PACES,
+  GeminiTtsPace,
+} from '@/features/constants/geminiTts'
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 import { exclusivityMiddleware } from './exclusionMiddleware'
@@ -104,6 +108,7 @@ interface ModelProvider extends Live2DSettings {
   googleTtsType: string
   geminiTtsVoice: string
   geminiTtsStyle: string
+  geminiTtsPace: GeminiTtsPace
   voicevoxSpeaker: string
   voicevoxSpeed: number
   voicevoxPitch: number
@@ -363,6 +368,10 @@ const getInitialValuesFromEnv = (): SettingsState => ({
   geminiTtsVoice:
     process.env.NEXT_PUBLIC_GEMINI_TTS_VOICE || DEFAULT_GEMINI_TTS_VOICE,
   geminiTtsStyle: process.env.NEXT_PUBLIC_GEMINI_TTS_STYLE || '',
+  geminiTtsPace:
+    GEMINI_TTS_PACES.find(
+      (pace) => pace === process.env.NEXT_PUBLIC_GEMINI_TTS_PACE
+    ) || 'default',
   voicevoxSpeaker: process.env.NEXT_PUBLIC_VOICEVOX_SPEAKER || '46',
   voicevoxSpeed:
     parseFloat(process.env.NEXT_PUBLIC_VOICEVOX_SPEED || '1.0') || 1.0,
@@ -1134,6 +1143,7 @@ export const selectPersistedSettings = (state: SettingsState) => ({
   googleTtsType: state.googleTtsType,
   geminiTtsVoice: state.geminiTtsVoice,
   geminiTtsStyle: state.geminiTtsStyle,
+  geminiTtsPace: state.geminiTtsPace,
   voicevoxSpeaker: state.voicevoxSpeaker,
   voicevoxSpeed: state.voicevoxSpeed,
   voicevoxPitch: state.voicevoxPitch,

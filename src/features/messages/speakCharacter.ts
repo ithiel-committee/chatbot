@@ -144,7 +144,8 @@ async function synthesizeVoice(
           talk,
           ss.geminiTtsApiKey,
           ss.geminiTtsVoice,
-          ss.geminiTtsStyle
+          ss.geminiTtsStyle,
+          ss.geminiTtsPace
         )
       case 'google':
         return await synthesizeVoiceGoogleApi(
