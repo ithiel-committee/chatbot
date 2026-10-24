@@ -463,6 +463,9 @@ export const MessageInput = ({
   )
 
   const handleMicClick = (event: React.MouseEvent<HTMLButtonElement>) => {
+    if (isSpeaking || chatProcessing) {
+      onClickStopButton(event)
+    }
     onClickMicButton(event)
   }
 
@@ -712,9 +715,7 @@ export const MessageInput = ({
                 isProcessingIcon={
                   continuousMicListeningMode ? '24/Microphone' : '24/PauseAlt'
                 }
-                disabled={
-                  continuousMicListeningMode || chatProcessing || isSpeaking
-                }
+                disabled={continuousMicListeningMode}
                 onClick={handleMicClick}
                 className={`!h-9 !min-h-9 !w-9 !min-w-9 !rounded-full !p-1.5 ring-0 transition-colors duration-200 focus:outline-none ${
                   isMicRecording && !continuousMicListeningMode
@@ -982,9 +983,7 @@ export const MessageInput = ({
               isProcessingIcon={
                 continuousMicListeningMode ? '24/Microphone' : '24/PauseAlt'
               }
-              disabled={
-                continuousMicListeningMode || chatProcessing || isSpeaking
-              }
+              disabled={continuousMicListeningMode}
               onClick={handleMicClick}
               className={`!h-10 !min-h-10 !w-10 !min-w-10 !rounded-full !p-2 sm:!h-[46px] sm:!min-h-[46px] sm:!w-[46px] sm:!min-w-[46px] ring-0 transition-colors duration-200 focus:outline-none focus-visible:outline-none focus-visible:ring-0 ${
                 isMicRecording && !continuousMicListeningMode

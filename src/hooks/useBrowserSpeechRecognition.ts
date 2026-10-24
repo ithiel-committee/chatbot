@@ -344,6 +344,7 @@ export function useBrowserSpeechRecognition(
       startListening()
       // AIの発話を停止
       homeStore.setState({ isSpeaking: false })
+      SpeakQueue.stopAll()
     }
   }, [startListening, stopListening])
 
