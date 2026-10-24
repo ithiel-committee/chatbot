@@ -39,21 +39,48 @@ export function useVoiceRecognition({
   const voiceInputShortcut =
     settingsStore((s) => s.voiceInputShortcut) || DEFAULT_VOICE_INPUT_SHORTCUT
 
+  // ----- 二重送信防止ガード -----
+  const lastSentMessageRef = useRef<{ text: string; timestamp: number }>({
+    text: '',
+    timestamp: 0,
+  })
+
+  const safeOnChatProcessStart = useCallback(
+    (text: string) => {
+      const trimmed = text.trim()
+      if (!trimmed) return
+
+      const now = Date.now()
+      // 直近1500ms以内に同一テキストが送信された場合は二重送信として抑止
+      if (
+        lastSentMessageRef.current.text === trimmed &&
+        now - lastSentMessageRef.current.timestamp < 1500
+      ) {
+        logger.warn('⚠️ 重複する音声認識送信を抑止しました:', trimmed)
+        return
+      }
+
+      lastSentMessageRef.current = { text: trimmed, timestamp: now }
+      onChatProcessStart(trimmed)
+    },
+    [onChatProcessStart]
+  )
+
   // ----- 各モードのフックを使用 -----
   // ブラウザ音声認識フック（Chrome等の標準Web Speech API）
-  const browserSpeech = useBrowserSpeechRecognition(onChatProcessStart)
+  const browserSpeech = useBrowserSpeechRecognition(safeOnChatProcessStart)
 
   // Gemini音声認識フック（Google Gemini API）
-  const geminiSpeech = useGeminiRecognition(onChatProcessStart)
+  const geminiSpeech = useGeminiRecognition(safeOnChatProcessStart)
 
   // Whisper音声認識フック
-  const whisperSpeech = useWhisperRecognition(onChatProcessStart)
+  const whisperSpeech = useWhisperRecognition(safeOnChatProcessStart)
 
   // リアルタイムAPI処理フック
-  const realtimeAPI = useRealtimeVoiceAPI(onChatProcessStart)
+  const realtimeAPI = useRealtimeVoiceAPI(safeOnChatProcessStart)
 
   // OpenAIライブ文字起こしフック
-  const liveTranscription = useLiveTranscription(onChatProcessStart)
+  const liveTranscription = useLiveTranscription(safeOnChatProcessStart)
 
   // ----- 現在のモードに基づいて適切なフックを選択 -----
   // 通常ブラウザ（Chrome等）ではこれまで通りWeb Speech APIを使用
@@ -345,7 +372,7 @@ export function useVoiceRecognition({
             target: { value: '' },
           } as React.ChangeEvent<HTMLTextAreaElement>)
           // 処理を開始
-          onChatProcessStart(message)
+          safeOnChatProcessStart(message)
         }
       }
     }
@@ -359,7 +386,7 @@ export function useVoiceRecognition({
       activeVoiceShortcutRef.current = null
       shortcutStartPromiseRef.current = null
     }
-  }, [handleStopSpeaking, onChatProcessStart])
+  }, [handleStopSpeaking, safeOnChatProcessStart])
 
   // 現在のモードに基づいて適切なフックのAPIを返す
   return {

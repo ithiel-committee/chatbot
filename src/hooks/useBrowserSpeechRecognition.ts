@@ -128,25 +128,8 @@ export function useBrowserSpeechRecognition(
       logger.error('Error stopping recognition:', error)
     }
 
-    // キーボードトリガーの場合の処理
-    const trimmedTranscriptRef = transcriptRef.current.trim()
-    if (isKeyboardTriggered.current) {
-      const pressDuration = Date.now() - (keyPressStartTime.current || 0)
-      // 押してから1秒以上 かつ 文字が存在する場合のみ送信
-      // 無音検出による自動送信が既に行われていない場合のみ送信する
-      if (pressDuration >= 1000 && trimmedTranscriptRef && !isSpeechEnded()) {
-        onChatProcessStart(trimmedTranscriptRef)
-        setUserMessage('')
-      }
-      isKeyboardTriggered.current = false
-    }
-  }, [
-    clearSilenceDetection,
-    clearInitialSpeechCheckTimer,
-    recognition,
-    isSpeechEnded,
-    onChatProcessStart,
-  ])
+    isKeyboardTriggered.current = false
+  }, [clearSilenceDetection, clearInitialSpeechCheckTimer, recognition])
 
   // ----- マイク権限確認 -----
   const checkMicrophonePermission = useCallback(async (): Promise<boolean> => {
@@ -339,8 +322,6 @@ export function useBrowserSpeechRecognition(
     if (isListeningRef.current) {
       stopListening()
     } else {
-      keyPressStartTime.current = Date.now()
-      isKeyboardTriggered.current = true
       startListening()
       // AIの発話を停止
       homeStore.setState({ isSpeaking: false })

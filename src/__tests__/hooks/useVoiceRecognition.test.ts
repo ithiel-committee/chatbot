@@ -1175,4 +1175,61 @@ describe('useVoiceRecognition', () => {
       expect(mockBrowserSpeech.startListening).toHaveBeenCalled()
     })
   })
+
+  describe('二重送信防止ガード (Duplicate Send Guard)', () => {
+    it('短時間内に同一テキストが複数回呼ばれてもonChatProcessStartは1回のみ実行されること', async () => {
+      const mockOnChatProcessStart = jest.fn()
+      const { useBrowserSpeechRecognition } = jest.requireMock(
+        '@/hooks/useBrowserSpeechRecognition'
+      )
+      useBrowserSpeechRecognition.mockClear()
+
+      renderHook(() =>
+        useVoiceRecognition({ onChatProcessStart: mockOnChatProcessStart })
+      )
+
+      const safeCallback = useBrowserSpeechRecognition.mock.calls[0][0]
+      expect(typeof safeCallback).toBe('function')
+
+      // 1回目の送信
+      act(() => {
+        safeCallback('こんにちは')
+      })
+      expect(mockOnChatProcessStart).toHaveBeenCalledTimes(1)
+      expect(mockOnChatProcessStart).toHaveBeenCalledWith('こんにちは')
+
+      // 24ms後の重複送信（同一テキスト）
+      act(() => {
+        safeCallback('こんにちは')
+      })
+      // ガードされて2回目は呼ばれない
+      expect(mockOnChatProcessStart).toHaveBeenCalledTimes(1)
+    })
+
+    it('異なるメッセージであれば連続送信できること', async () => {
+      const mockOnChatProcessStart = jest.fn()
+      const { useBrowserSpeechRecognition } = jest.requireMock(
+        '@/hooks/useBrowserSpeechRecognition'
+      )
+      useBrowserSpeechRecognition.mockClear()
+
+      renderHook(() =>
+        useVoiceRecognition({ onChatProcessStart: mockOnChatProcessStart })
+      )
+
+      const safeCallback = useBrowserSpeechRecognition.mock.calls[0][0]
+
+      act(() => {
+        safeCallback('メッセージ1')
+      })
+      expect(mockOnChatProcessStart).toHaveBeenCalledTimes(1)
+      expect(mockOnChatProcessStart).toHaveBeenCalledWith('メッセージ1')
+
+      act(() => {
+        safeCallback('メッセージ2')
+      })
+      expect(mockOnChatProcessStart).toHaveBeenCalledTimes(2)
+      expect(mockOnChatProcessStart).toHaveBeenCalledWith('メッセージ2')
+    })
+  })
 })
