@@ -4,7 +4,6 @@ import { GoogleGenerativeAI } from '@google/generative-ai'
 import { withAccessPolicy } from '@/lib/accessPolicy/withAccessPolicy'
 import { routePolicies } from '@/lib/accessPolicy/routePolicies'
 
-const BODY_SIZE_LIMIT = '25mb'
 const DEFAULT_MIME_TYPE = 'audio/webm'
 
 // 音声文字起こしに最適な推奨モデル（高速・低コスト・マルチモーダル対応）
@@ -20,7 +19,8 @@ const PROMPT_EN =
 export const config = {
   api: {
     bodyParser: {
-      sizeLimit: BODY_SIZE_LIMIT,
+      // Next.js statically analyzes route config; the value must be a literal.
+      sizeLimit: '25mb',
     },
   },
 }

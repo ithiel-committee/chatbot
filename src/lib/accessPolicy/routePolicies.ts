@@ -326,6 +326,23 @@ export const routePolicies = {
     },
     restrictedBehavior: 'none',
   },
+  '/api/tts-gemini': {
+    path: '/api/tts-gemini',
+    featureName: 'tts-gemini',
+    methods: ['POST'],
+    resources: ['server-secret'],
+    secret: {
+      kind: 'pairs',
+      pairs: [
+        {
+          source: 'body',
+          key: 'apiKey',
+          envVars: ['GEMINI_TTS_API_KEY', 'GEMINI_API_KEY', 'GOOGLE_API_KEY'],
+        },
+      ],
+    },
+    restrictedBehavior: 'none',
+  },
   '/api/tts-google': {
     path: '/api/tts-google',
     featureName: 'tts-google',

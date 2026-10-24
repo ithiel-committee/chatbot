@@ -1,6 +1,7 @@
 export { VoiceEngineSelector } from './VoiceEngineSelector'
 export { KoeiromapSettings } from './KoeiromapSettings'
 export { VoicevoxSettings } from './VoicevoxSettings'
+export { GeminiTTSSettings } from './GeminiTTSSettings'
 export { GoogleTTSSettings } from './GoogleTTSSettings'
 export { StyleBertVITS2Settings } from './StyleBertVITS2Settings'
 export { AivisSpeechSettings } from './AivisSpeechSettings'

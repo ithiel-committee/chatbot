@@ -83,6 +83,7 @@ export type AIVoice =
   | 'none'
   | 'koeiromap'
   | 'google'
+  | 'gemini'
   | 'voicevox'
   | 'stylebertvits2'
   | 'aivis_speech'
