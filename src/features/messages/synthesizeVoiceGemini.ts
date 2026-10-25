@@ -25,9 +25,12 @@ export function synthesizeVoiceGeminiApi(
     {
       buildErrorMessage: async (res) => {
         const data = await res.json().catch(() => null)
-        return typeof data?.error === 'string'
-          ? data.error
-          : `Gemini TTS: HTTP ${res.status}`
+        if (typeof data?.error === 'string') {
+          return typeof data?.details === 'string'
+            ? `${data.error} (${data.details})`
+            : data.error
+        }
+        return `Gemini TTS: HTTP ${res.status}`
       },
     }
   )

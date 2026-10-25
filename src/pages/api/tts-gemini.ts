@@ -100,7 +100,37 @@ export default withAccessPolicy(
         }
       )
       if (!response.ok) {
-        // Do not return/log upstream bodies: they can contain text or credentials.
+        const errorText = await response.text().catch(() => '')
+        let googleError: {
+          code?: number
+          message?: string
+          status?: string
+          details?: unknown[]
+        } | null = null
+
+        try {
+          const parsed = JSON.parse(errorText)
+          if (parsed && typeof parsed === 'object' && parsed.error) {
+            googleError = parsed.error
+          }
+        } catch {
+          // not valid JSON
+        }
+
+        const retryAfter = response.headers.get('retry-after')
+
+        logger.error(
+          `[Gemini TTS] ❌ 上流APIエラー: HTTP ${response.status} ${response.statusText}`,
+          {
+            status: response.status,
+            statusText: response.statusText,
+            retryAfter: retryAfter ?? undefined,
+            errorMessage: googleError?.message ?? errorText.slice(0, 500),
+            errorStatus: googleError?.status,
+            details: googleError?.details,
+          }
+        )
+
         const status = response.status === 429 ? 429 : 502
         const error =
           response.status === 429
@@ -108,7 +138,12 @@ export default withAccessPolicy(
             : response.status === 401 || response.status === 403
               ? 'Gemini APIキーと、声を保存したプロジェクトへのアクセス権を確認してください。'
               : 'Gemini TTSの生成に失敗しました。声IDとAPIの利用状況を確認してください。'
-        return res.status(status).json({ error })
+
+        return res.status(status).json({
+          error,
+          details: googleError?.message ?? undefined,
+          retryAfter: retryAfter ?? undefined,
+        })
       }
 
       const interaction = interactionSchema.safeParse(await response.json())
