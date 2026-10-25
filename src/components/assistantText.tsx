@@ -100,7 +100,7 @@ export const AssistantText = ({ message }: { message: string }) => {
               className={`absolute -top-3.5 left-6 flex items-center rounded-full px-3.5 py-0.5 text-xs font-semibold tracking-wider shadow-sm sm:left-8 ${
                 isUser
                   ? 'border border-white/15 bg-slate-900/70 text-slate-200 backdrop-blur-md'
-                  : 'border border-white/25 bg-primary/80 text-white shadow-[0_2px_8px_var(--color-primary-disabled)] backdrop-blur-md'
+                  : 'border border-white/25 bg-primary bg-[color-mix(in_srgb,var(--color-primary)_85%,transparent)] text-white shadow-[0_2px_8px_var(--color-primary-disabled)] backdrop-blur-md'
               }`}
             >
               <span>{speakerName}</span>
