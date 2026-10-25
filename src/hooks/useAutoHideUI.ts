@@ -35,10 +35,6 @@ export const useAutoHideUI = (
 
   const [isIdle, setIsIdle] = useState(false)
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
-  const isIdleRef = useRef(false)
-
-  // 最新の isIdle 状態を参照するための ref 更新
-  isIdleRef.current = isIdle
 
   const clearTimer = useCallback(() => {
     if (timerRef.current) {
@@ -59,10 +55,8 @@ export const useAutoHideUI = (
 
   // ユーザーアクティビティ検知時のハンドラー
   const handleActivity = useCallback(() => {
-    // すでにアイドル状態なら即座に復帰
-    if (isIdleRef.current) {
-      setIsIdle(false)
-    }
+    // アイドル状態なら復帰（すでにfalseならReactが自動スキップ）
+    setIsIdle(false)
     // タイマーをリセットして再スタート
     startTimer()
   }, [startTimer])
