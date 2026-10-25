@@ -5,6 +5,7 @@ import { wait } from '@/utils/wait'
 import { Talk } from './messages'
 import { synthesizeStyleBertVITS2Api } from './synthesizeStyleBertVITS2'
 import { synthesizeVoiceKoeiromapApi } from './synthesizeVoiceKoeiromap'
+import { synthesizeVoiceGeminiApi } from './synthesizeVoiceGemini'
 import { synthesizeVoiceGoogleApi } from './synthesizeVoiceGoogle'
 import { synthesizeVoiceVoicevoxApi } from './synthesizeVoiceVoicevox'
 import { synthesizeVoiceAivisSpeechApi } from './synthesizeVoiceAivisSpeech'
@@ -137,6 +138,14 @@ async function synthesizeVoice(
           ss.voicevoxPitch,
           ss.voicevoxIntonation,
           ss.voicevoxServerUrl
+        )
+      case 'gemini':
+        return await synthesizeVoiceGeminiApi(
+          talk,
+          ss.geminiTtsApiKey,
+          ss.geminiTtsVoice,
+          ss.geminiTtsStyle,
+          ss.geminiTtsPace
         )
       case 'google':
         return await synthesizeVoiceGoogleApi(
@@ -513,6 +522,7 @@ export const testVoice = async (voiceType: AIVoice, customText?: string) => {
     aivis_cloud_api: 'Aivis Cloud APIを使用します',
     koeiromap: 'コエイロマップを使用します',
     google: 'Google Text-to-Speechを使用します',
+    gemini: 'Gemini TTSを使用します。',
     stylebertvits2: 'StyleBertVITS2を使用します',
     openai: 'OpenAI TTSを使用します',
   }

@@ -5,8 +5,8 @@ export const settingsFieldWidth = {
   numeric: 'w-full sm:w-24',
   numericWide: 'w-full sm:w-32',
   compact: 'w-full sm:w-col-span-2',
-  medium: 'w-full sm:w-col-span-4',
-  long: 'w-full sm:w-col-span-7',
+  medium: 'w-full sm:w-col-span-4 max-w-full',
+  long: 'w-full sm:w-col-span-7 max-w-full',
   full: 'w-full',
 } as const
 

@@ -76,6 +76,10 @@ const defaultVoiceState = {
   selectVoice: 'voicevox' as const,
   koeiroParam: { speakerX: 0, speakerY: 0 },
   googleTtsType: '',
+  geminiTtsApiKey: '',
+  geminiTtsVoice: 'voice_gkzvygsq8i5b',
+  geminiTtsStyle: '',
+  geminiTtsPace: 'default',
   voicevoxSpeaker: '46',
   voicevoxSpeed: 1.0,
   voicevoxPitch: 0.0,
@@ -140,6 +144,66 @@ describe('Voice Settings', () => {
       expect(screen.getByText('UsingAivisSpeech')).toBeTruthy()
       expect(screen.getByText('UsingOpenAITTS')).toBeTruthy()
     })
+  })
+
+  it('allows replacing the Gemini voice and clearing acting instructions', () => {
+    mockSettingsStore.mockImplementation((selector) =>
+      selector({
+        ...defaultVoiceState,
+        selectVoice: 'gemini',
+        geminiTtsStyle: '落ち着いて',
+      } as any)
+    )
+    render(<Voice />)
+    expect(screen.getByText('gemini-3.8-flash-lite-tts')).toBeTruthy()
+    expect(screen.getByLabelText('GeminiTTSPace')).toHaveValue('default')
+    fireEvent.change(screen.getByLabelText('GeminiTTSPace'), {
+      target: { value: 'fast' },
+    })
+    expect(settingsStore.setState).toHaveBeenCalledWith({
+      geminiTtsPace: 'fast',
+    })
+    fireEvent.change(screen.getByLabelText('GeminiTTSVoice'), {
+      target: { value: 'voice_replacement' },
+    })
+    expect(settingsStore.setState).toHaveBeenCalledWith({
+      geminiTtsVoice: 'voice_replacement',
+    })
+    fireEvent.change(screen.getByLabelText('GeminiTTSStyle'), {
+      target: { value: '' },
+    })
+    expect(settingsStore.setState).toHaveBeenCalledWith({ geminiTtsStyle: '' })
+  })
+
+  it('keeps labels and descriptions unique when two Gemini settings instances mount together', () => {
+    mockSettingsStore.mockImplementation((selector) =>
+      selector({ ...defaultVoiceState, selectVoice: 'gemini' } as any)
+    )
+    const { container } = render(
+      <>
+        <Voice />
+        <Voice />
+      </>
+    )
+    const ids = Array.from(container.querySelectorAll('[id]')).map(
+      (element) => element.id
+    )
+    expect(new Set(ids).size).toBe(ids.length)
+    for (const label of [
+      'GeminiTTSAPIKey',
+      'GeminiTTSVoice',
+      'GeminiTTSPace',
+      'GeminiTTSStyle',
+    ]) {
+      const fields = screen.getAllByLabelText(label)
+      expect(fields).toHaveLength(2)
+      const descriptions = fields.map((field) =>
+        document.getElementById(field.getAttribute('aria-describedby') || '')
+      )
+      expect(descriptions[0]).toHaveTextContent(`${label}Help`)
+      expect(descriptions[1]).toHaveTextContent(`${label}Help`)
+      expect(descriptions[0]).not.toBe(descriptions[1])
+    }
   })
 
   describe('realtime API mode', () => {

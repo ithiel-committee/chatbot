@@ -39,6 +39,25 @@ describe('evaluateSecretPairs', () => {
     ).toBe(false)
   })
 
+  it('treats whitespace as absent only for pairs opting into trimClientValue', () => {
+    process.env.TEST_KEY = 'server-value'
+    const pair: SecretPair = {
+      source: 'body',
+      key: 'apiKey',
+      envVars: ['TEST_KEY'],
+    }
+    const req = mockReq({ apiKey: ' \n\t' })
+    expect(evaluateSecretPairs(req, [pair])).toBe(false)
+    expect(evaluateSecretPairs(req, [{ ...pair, trimClientValue: true }])).toBe(
+      true
+    )
+    expect(
+      evaluateSecretPairs(mockReq({ apiKey: ' client-key ' }), [
+        { ...pair, trimClientValue: true },
+      ])
+    ).toBe(false)
+  })
+
   it('onlyIfAbsent: skips the pair when the gate field is provided by the client', () => {
     process.env.TEST_KEY = 'server-value'
     const pairs: SecretPair[] = [

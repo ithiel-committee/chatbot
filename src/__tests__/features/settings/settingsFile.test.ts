@@ -319,6 +319,7 @@ describe('settings file export and import', () => {
 
   it.each([
     ['selectAIService', 'not-a-service'],
+    ['geminiTtsPace', '1.2'],
     ['modelType', 'unknown'],
     ['temperature', -0.01],
     ['temperature', 2.01],
