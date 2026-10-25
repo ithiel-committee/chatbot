@@ -27,6 +27,7 @@ import { isMultiModalAvailable } from '@/features/constants/aiModels'
 import { AIService } from '@/features/constants/settings'
 import { getLatestAssistantMessage } from '@/utils/assistantMessageUtils'
 import { useKioskMode } from '@/hooks/useKioskMode'
+import { useAutoHideUI } from '@/hooks/useAutoHideUI'
 import {
   DEFAULT_SETTINGS_TOGGLE_SHORTCUT,
   hasCommandModifier,
@@ -89,6 +90,13 @@ export const Menu = () => {
 
   const [showSimpleSettings, setShowSimpleSettings] = useState(false)
   const [showAdvancedSettings, setShowAdvancedSettings] = useState(false)
+  const [showToolMenu, setShowToolMenu] = useState(false)
+
+  // Auto-hide UI when mouse cursor is inactive (except when menu/settings are open)
+  const isAnyMenuOpen = Boolean(
+    showToolMenu || showSimpleSettings || showAdvancedSettings
+  )
+  const { isIdle: isUiIdle } = useAutoHideUI({ disabled: isAnyMenuOpen })
 
   // Auto close when access to settings is deprived in kiosk mode
   useEffect(() => {
@@ -104,7 +112,6 @@ export const Menu = () => {
     ASSISTANT: 'assistant',
     CHAT_LOG: 'chat-log',
   } as const satisfies Record<string, ChatLogMode>
-  const [showToolMenu, setShowToolMenu] = useState(false)
   const [showPermissionModal, setShowPermissionModal] = useState(false)
 
   // state for long tap
@@ -756,7 +763,11 @@ export const Menu = () => {
         </div>
       )}
 
-      <div className="absolute z-30 m-3 sm:m-6">
+      <div
+        className={`absolute z-30 m-3 sm:m-6 autohide-ui-target transition-opacity duration-500 ${
+          isUiIdle ? 'opacity-0 pointer-events-none' : 'opacity-100'
+        }`}
+      >
         {effectiveShowControlPanel && (
           <div className="relative mb-10" style={{ width: 'max-content' }}>
             <div className="aurora-glass-dock grid grid-flow-col gap-0.5 rounded-[18px] p-1.5">

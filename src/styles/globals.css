@@ -673,4 +673,20 @@ body {
   .hide-mouse-cursor * {
     cursor: none !important;
   }
+
+  /* UI AutoHide（マウス非アクティブ時のツールボタン・Next.jsインジケーターフェードアウト） */
+  .autohide-ui-target,
+  nextjs-portal,
+  [data-nextjs-dev-tools-button],
+  #next-dev-tools {
+    transition: opacity 0.5s ease;
+  }
+
+  body.ui-autohide-idle .autohide-ui-target,
+  body.ui-autohide-idle nextjs-portal,
+  body.ui-autohide-idle [data-nextjs-dev-tools-button],
+  body.ui-autohide-idle #next-dev-tools {
+    opacity: 0 !important;
+    pointer-events: none !important;
+  }
 }
