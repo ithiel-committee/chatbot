@@ -67,8 +67,15 @@ export const processAIResponse = async (
   logger.log('[Chat] 🌊 応答ストリームの処理を開始します')
 
   const timeoutMs = getVoiceWaitTimeoutMs()
-  const isVoiceActive = settingsStore.getState().selectVoice !== 'none'
+  const selectVoice = settingsStore.getState().selectVoice
+  const isVoiceActive = Boolean(selectVoice && selectVoice !== 'none')
   const isGated = isVoiceActive && timeoutMs > 0
+
+  if (!isGated) {
+    logger.log(
+      `[VoiceGate] ℹ️ 音声待機ゲート無効: selectVoice=${selectVoice}, timeout=${timeoutMs}ms`
+    )
+  }
 
   const writer = new MessageLogWriter(undefined, {
     gated: isGated,
@@ -76,7 +83,7 @@ export const processAIResponse = async (
   })
   const dispatcher = createSpeechDispatcher(sessionId, {
     onFirstPlaybackStart: () => {
-      writer.releaseGate()
+      writer.releaseGate('playback_started')
     },
   })
 
@@ -103,9 +110,19 @@ export const processAIResponse = async (
     }
   )
 
-  if (failed || !dispatcher.anyDispatched) {
+  if (failed) {
     thinkingPose.reset()
-    writer.releaseGate()
+    writer.releaseGate('stream_error')
+  } else if (!dispatcher.anyDispatched) {
+    thinkingPose.reset()
+    writer.releaseGate('no_speech')
+  } else if (dispatcher.disabled) {
+    thinkingPose.reset()
+    writer.releaseGate('manual')
+  } else if (writer.gated) {
+    // LLMのテキスト受信は完了したが、音声再生がまだ始まっていない場合、
+    // 音声再生開始コールバックまたはタイムアウトまで待機する
+    await writer.waitForGate()
   }
   homeStore.setState({ chatProcessing: false })
   markConversationLatency(sessionId, 'response_complete')

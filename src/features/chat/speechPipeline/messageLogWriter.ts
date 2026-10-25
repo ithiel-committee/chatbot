@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger'
 import homeStore from '@/features/stores/home'
 import { Message } from '@/features/messages/messages'
 import { generateMessageId } from '@/utils/messageUtils'
@@ -9,6 +10,14 @@ export type UpsertMessageFn = (message: Message) => void
 
 const defaultUpsert: UpsertMessageFn = (message) =>
   homeStore.getState().upsertMessage(message)
+
+export type GateReleaseReason =
+  | 'playback_started'
+  | 'timeout'
+  | 'code_block'
+  | 'stream_error'
+  | 'no_speech'
+  | 'manual'
 
 export type MessageLogWriterOptions = {
   /** 音声待機ゲートを有効にするか（trueの場合、releaseGateが呼ばれるかタイムアウトまでupsertを保留） */
@@ -34,31 +43,82 @@ export class MessageLogWriter {
   private thinking = ''
   private isGated: boolean
   private gateTimer: NodeJS.Timeout | null = null
+  private gateStartTime: number
+  private gatePromise: Promise<void> | null = null
+  private gateResolve: (() => void) | null = null
+  private hasLoggedBuffering = false
 
   constructor(
     private upsert: UpsertMessageFn = defaultUpsert,
     options: MessageLogWriterOptions = {}
   ) {
     this.isGated = Boolean(options.gated)
+    this.gateStartTime = Date.now()
     const timeoutMs = options.gateTimeoutMs ?? DEFAULT_VOICE_WAIT_TIMEOUT_MS
-    if (this.isGated && timeoutMs > 0) {
-      this.gateTimer = setTimeout(() => {
-        this.releaseGate()
-      }, timeoutMs)
+
+    if (this.isGated) {
+      this.gatePromise = new Promise((resolve) => {
+        this.gateResolve = resolve
+      })
+
+      if (timeoutMs > 0) {
+        this.gateTimer = setTimeout(() => {
+          this.releaseGate('timeout')
+        }, timeoutMs)
+      }
+
+      logger.log(
+        `[VoiceGate] 🚪 音声待機ゲート有効化: timeout=${timeoutMs}ms (音声再生開始またはタイムアウトまでテキスト表示を保留します)`
+      )
     }
+  }
+
+  get gated(): boolean {
+    return this.isGated
+  }
+
+  /**
+   * ゲートが開放されるまで待機する（ストリーム完了後も音声再生開始を待つ用）
+   */
+  async waitForGate(): Promise<void> {
+    if (!this.isGated || !this.gatePromise) return
+    logger.log('[VoiceGate] ⏳ LLMテキスト受信完了。音声再生開始を待機中...')
+    await this.gatePromise
   }
 
   /**
    * 音声待機ゲートを開放し、保留されていたテキストを直ちにchatLogへ反映する。
    * 音声再生開始時・タイムアウト時・ストリーム終端・エラー時に呼ばれる。
    */
-  releaseGate(): void {
+  releaseGate(reason: GateReleaseReason = 'manual'): void {
     if (!this.isGated) return
     this.isGated = false
+
     if (this.gateTimer) {
       clearTimeout(this.gateTimer)
       this.gateTimer = null
     }
+
+    const elapsedMs = Date.now() - this.gateStartTime
+    const reasonTextMap: Record<GateReleaseReason, string> = {
+      playback_started: '音声再生開始',
+      timeout: 'タイムアウト上限',
+      code_block: 'コードブロック受信',
+      stream_error: 'ストリームエラー',
+      no_speech: '発話セグメントなし',
+      manual: '手動開放',
+    }
+
+    const trigger = reasonTextMap[reason] ?? reason
+    logger.log(
+      `[VoiceGate] 🔓 ゲート開放 (トリガー: ${trigger}, 待機時間: ${elapsedMs}ms): テキストをチャットログに反映します`
+    )
+
+    if (this.gateResolve) {
+      this.gateResolve()
+      this.gateResolve = null
+    }
+
     // ゲート開放時、これまでに保留されていたコンテンツがあれば直ちにupsert
     if (this.content && this.currentMessageId) {
       this.upsert({
@@ -91,7 +151,15 @@ export class MessageLogWriter {
     this.content += text
 
     // ゲートが閉まっている間は upsert を保留（バッファへの蓄積のみ行う）
-    if (this.isGated) return
+    if (this.isGated) {
+      if (!this.hasLoggedBuffering) {
+        this.hasLoggedBuffering = true
+        logger.log(
+          `[VoiceGate] ⏳ テキスト保留中: "${text.slice(0, 30)}${text.length > 30 ? '...' : ''}" (音声再生開始を待機中)`
+        )
+      }
+      return
+    }
 
     this.upsert({
       id: this.currentMessageId,
@@ -103,7 +171,7 @@ export class MessageLogWriter {
 
   appendCodeBlock(content: string) {
     // コードブロック到着時はゲートを開放
-    this.releaseGate()
+    this.releaseGate('code_block')
     if (content.trim()) {
       this.upsert({ role: 'code', content })
     }
@@ -114,7 +182,9 @@ export class MessageLogWriter {
 
   /** 終端処理。記憶保存に使う最終メッセージ内容（トリム済み）を返す */
   finalize(): string {
-    this.releaseGate()
+    if (this.isGated) {
+      this.releaseGate('manual')
+    }
     const trimmed = this.content.trim()
     if (trimmed) {
       this.upsert({

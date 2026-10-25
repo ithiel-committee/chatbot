@@ -138,6 +138,39 @@ describe('processAIResponse 音声待機ゲート連携', () => {
     await processPromise
   })
 
+  it('短い応答でLLMストリームが先に完了しても、音声再生開始まで待機してからテキストを表示する', async () => {
+    const { stream, pushChunk, closeStream } = createControllableStream()
+    ;(getAIChatResponseStream as jest.Mock).mockResolvedValue(stream)
+
+    const processPromise = processAIResponse([
+      { role: 'user', content: 'テスト' },
+    ])
+
+    // 短いテキストをプッシュして直ちにストリーム終了
+    await pushChunk('短い返答です。')
+    await closeStream()
+
+    // ストリームは終わったが、音声再生がまだ始まっていないため、upsertは呼ばれていない
+    expect(upsertMessageMock).not.toHaveBeenCalled()
+
+    // speakCharacter の onPlaybackStart を取得
+    const calls = (speakCharacter as jest.Mock).mock.calls
+    const onPlaybackStart = calls[0][5]
+    expect(typeof onPlaybackStart).toBe('function')
+
+    // 音声再生開始
+    onPlaybackStart()
+
+    // processPromise が完了し、テキストが画面に反映される
+    const result = await processPromise
+    expect(result).toBe('短い返答です。')
+    expect(upsertMessageMock).toHaveBeenCalled()
+    expect(upsertMessageMock.mock.calls[0][0]).toMatchObject({
+      role: 'assistant',
+      content: '短い返答です。',
+    })
+  })
+
   it('音声が来ない場合でも5秒タイムアウトでゲートが開放されてテキストが表示される', async () => {
     const { stream, pushChunk, closeStream } = createControllableStream()
     ;(getAIChatResponseStream as jest.Mock).mockResolvedValue(stream)
