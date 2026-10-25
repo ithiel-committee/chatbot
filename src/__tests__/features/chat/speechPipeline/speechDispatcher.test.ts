@@ -67,6 +67,29 @@ describe('speechDispatcher', () => {
     )
   })
 
+  it('初回再生開始時にonFirstPlaybackStartが一度だけ発火する', () => {
+    const onFirstPlaybackStart = jest.fn()
+    const d = createSpeechDispatcher('session-1', { onFirstPlaybackStart })
+
+    d.dispatch(speech('一文目。'))
+    d.dispatch(speech('二文目。'))
+
+    // speakCharacter の第6引数（onPlaybackStart）を取得
+    const calls = (speakCharacter as jest.Mock).mock.calls
+    expect(calls).toHaveLength(2)
+
+    const onPlaybackStart1 = calls[0][5]
+    const onPlaybackStart2 = calls[1][5]
+
+    // 1文目の再生開始
+    onPlaybackStart1()
+    expect(onFirstPlaybackStart).toHaveBeenCalledTimes(1)
+
+    // 2文目の再生開始（すでに1文目で発火済みなので呼ばれない）
+    onPlaybackStart2()
+    expect(onFirstPlaybackStart).toHaveBeenCalledTimes(1)
+  })
+
   it('記号・空白のみは依頼しない（ただし無効化はされない）', () => {
     const d = createSpeechDispatcher('session-1')
     expect(d.dispatch(speech('、、、'))).toBe(false)

@@ -87,6 +87,87 @@ describe('MessageLogWriter（ストリーミング表示）', () => {
     expect(writer.finalize()).toBe('')
     expect(upsert).not.toHaveBeenCalled()
   })
+
+  describe('音声待機ゲート（gated）', () => {
+    beforeEach(() => {
+      jest.useFakeTimers()
+    })
+
+    afterEach(() => {
+      jest.useRealTimers()
+    })
+
+    it('ゲート有効時はreleaseGateが呼ばれるまで表示upsertを保留する', () => {
+      const upsert = jest.fn()
+      const writer = new MessageLogWriter(upsert, { gated: true })
+
+      writer.appendDisplay('保留テキスト1')
+      writer.appendDisplay('保留テキスト2')
+
+      expect(upsert).not.toHaveBeenCalled()
+
+      // 音声再生開始などを模してゲートを開放
+      writer.releaseGate()
+
+      expect(upsert).toHaveBeenCalledTimes(1)
+      const call = upsert.mock.calls[0][0] as Message
+      expect(call.content).toBe('保留テキスト1保留テキスト2')
+
+      // 開放後の追加は即時upsertされる
+      writer.appendDisplay('追加テキスト')
+      expect(upsert).toHaveBeenCalledTimes(2)
+      expect(upsert.mock.calls[1][0].content).toBe(
+        '保留テキスト1保留テキスト2追加テキスト'
+      )
+    })
+
+    it('タイムアウト（例: 5秒）が経過すると自動的にゲートが開放される', () => {
+      const upsert = jest.fn()
+      const writer = new MessageLogWriter(upsert, {
+        gated: true,
+        gateTimeoutMs: 5000,
+      })
+
+      writer.appendDisplay('タイムアウト待ちテキスト')
+      expect(upsert).not.toHaveBeenCalled()
+
+      // 4.9秒経過ではまだ保留
+      jest.advanceTimersByTime(4900)
+      expect(upsert).not.toHaveBeenCalled()
+
+      // 5秒到達でゲートが自動開放されてupsertされる
+      jest.advanceTimersByTime(100)
+      expect(upsert).toHaveBeenCalledTimes(1)
+      expect(upsert.mock.calls[0][0].content).toBe('タイムアウト待ちテキスト')
+    })
+
+    it('コードブロック到着時にゲートが開放される', () => {
+      const upsert = jest.fn()
+      const writer = new MessageLogWriter(upsert, { gated: true })
+
+      writer.appendDisplay('コード前の文。')
+      expect(upsert).not.toHaveBeenCalled()
+
+      writer.appendCodeBlock('const x = 1')
+      // 前半テキストとコードブロックの両方がupsertされる
+      const calls = upsert.mock.calls.map((c) => c[0] as Message)
+      expect(calls.some((c) => c.content === 'コード前の文。')).toBe(true)
+      expect(calls.some((c) => c.role === 'code')).toBe(true)
+    })
+
+    it('finalize呼び出し時に未開放のゲートが自動開放される', () => {
+      const upsert = jest.fn()
+      const writer = new MessageLogWriter(upsert, { gated: true })
+
+      writer.appendDisplay('短いテキスト')
+      expect(upsert).not.toHaveBeenCalled()
+
+      const result = writer.finalize()
+      expect(result).toBe('短いテキスト')
+      expect(upsert).toHaveBeenCalled()
+      expect(upsert.mock.calls.at(-1)?.[0].content).toBe('短いテキスト')
+    })
+  })
 })
 
 describe('NormalizedMessageLogWriter（speakMessageHandler表示）', () => {

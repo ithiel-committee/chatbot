@@ -30,6 +30,8 @@ export type SpeechDispatcher = {
 export type SpeechDispatcherOptions = {
   displayMessages?: string[]
   displayMessageFallback?: string
+  /** 最初の音声セグメントが再生開始したときに一度だけ呼ばれるコールバック（表示待機ゲート開放用） */
+  onFirstPlaybackStart?: () => void
 }
 
 /**
@@ -50,9 +52,17 @@ export const createSpeechDispatcher = (
   let capturedToken: number | null = null
   let disabled = false
   let anyDispatched = false
+  let hasTriggeredFirstPlayback = false
   // スライド字幕はこの応答の発話中文リストで全置換する（旧refベース実装の踏襲）
   const slideMessages: string[] = []
   let displayMessageIndex = 0
+
+  const handlePlaybackStart = () => {
+    if (!hasTriggeredFirstPlayback) {
+      hasTriggeredFirstPlayback = true
+      options.onFirstPlaybackStart?.()
+    }
+  }
 
   const dispatch = (event: SpeechEvent): boolean => {
     if (disabled) return false
@@ -83,7 +93,13 @@ export const createSpeechDispatcher = (
       options.displayMessages?.[displayMessageIndex] ??
       options.displayMessageFallback
     displayMessageIndex += 1
-    speakOne(sessionId, event, slideMessages, displayMessage)
+    speakOne(
+      sessionId,
+      event,
+      slideMessages,
+      displayMessage,
+      handlePlaybackStart
+    )
     anyDispatched = true
     return true
   }
@@ -105,7 +121,8 @@ const speakOne = (
   sessionId: string,
   event: SpeechEvent,
   slideMessages: string[],
-  displayMessage: string | undefined
+  displayMessage: string | undefined,
+  onPlaybackStartCallback?: () => void
 ) => {
   const hs = homeStore.getState()
   const emotion = event.emotionTag.includes('[')
@@ -123,6 +140,7 @@ const speakOne = (
   }
   const onPlaybackStart = () => {
     playbackStarted = true
+    onPlaybackStartCallback?.()
     slideMessages.push(displayMessage ?? event.text)
     homeStore.setState({ slideMessages: [...slideMessages] })
   }

@@ -6,6 +6,7 @@ import { saveMessageToMemory } from '@/features/memory/memoryStoreSync'
 import homeStore from '@/features/stores/home'
 import settingsStore from '@/features/stores/settings'
 import { generateMessageId } from '@/utils/messageUtils'
+import { getVoiceWaitTimeoutMs } from './constants'
 import { getFirstSpeechCommaMinChars, SpeechSegmenter } from './speechSegmenter'
 import { MessageLogWriter } from './messageLogWriter'
 import { createSpeechDispatcher } from './speechDispatcher'
@@ -65,8 +66,19 @@ export const processAIResponse = async (
 
   logger.log('[Chat] 🌊 応答ストリームの処理を開始します')
 
-  const writer = new MessageLogWriter()
-  const dispatcher = createSpeechDispatcher(sessionId)
+  const timeoutMs = getVoiceWaitTimeoutMs()
+  const isVoiceActive = settingsStore.getState().selectVoice !== 'none'
+  const isGated = isVoiceActive && timeoutMs > 0
+
+  const writer = new MessageLogWriter(undefined, {
+    gated: isGated,
+    gateTimeoutMs: timeoutMs,
+  })
+  const dispatcher = createSpeechDispatcher(sessionId, {
+    onFirstPlaybackStart: () => {
+      writer.releaseGate()
+    },
+  })
 
   const { failed } = await consumeStream(
     stream.getReader(),
@@ -93,6 +105,7 @@ export const processAIResponse = async (
 
   if (failed || !dispatcher.anyDispatched) {
     thinkingPose.reset()
+    writer.releaseGate()
   }
   homeStore.setState({ chatProcessing: false })
   markConversationLatency(sessionId, 'response_complete')
