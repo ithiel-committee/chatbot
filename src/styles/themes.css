@@ -62,7 +62,7 @@ textarea {
 
 /* Default テーマ（デフォルト） */
 :root {
-  --font-family: inherit;
+  --font-family: sans-serif;
   --color-primary: #f5800b;
   --color-primary-hover: #c26904;
   --color-primary-press: #9e5501;

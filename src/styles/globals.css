@@ -49,40 +49,40 @@ body {
   /* Aurora ガラスUIトークン（テーマ非依存のすりガラス演出） */
   .aurora-glass-bubble {
     background: rgba(17, 19, 28, 0.58);
-    backdrop-filter: blur(20px) saturate(1.5);
     -webkit-backdrop-filter: blur(20px) saturate(1.5);
+    backdrop-filter: blur(20px) saturate(1.5);
     border: 1px solid rgba(255, 255, 255, 0.18);
     box-shadow: 0 8px 28px rgba(31, 38, 60, 0.14);
   }
 
   .aurora-glass-panel {
     background: rgba(17, 19, 28, 0.5);
-    backdrop-filter: blur(22px) saturate(1.5);
     -webkit-backdrop-filter: blur(22px) saturate(1.5);
+    backdrop-filter: blur(22px) saturate(1.5);
     border: 1px solid rgba(255, 255, 255, 0.14);
     box-shadow: 0 12px 40px rgba(31, 38, 60, 0.16);
   }
 
   .aurora-glass-capsule {
     background: rgba(17, 19, 28, 0.58);
-    backdrop-filter: blur(24px) saturate(1.7);
     -webkit-backdrop-filter: blur(24px) saturate(1.7);
+    backdrop-filter: blur(24px) saturate(1.7);
     border: 1px solid rgba(255, 255, 255, 0.18);
     box-shadow: 0 12px 40px rgba(31, 38, 60, 0.2);
   }
 
   .aurora-glass-dock {
     background: rgba(17, 19, 28, 0.5);
-    backdrop-filter: blur(20px) saturate(1.6);
     -webkit-backdrop-filter: blur(20px) saturate(1.6);
+    backdrop-filter: blur(20px) saturate(1.6);
     border: 1px solid rgba(255, 255, 255, 0.14);
     box-shadow: 0 8px 32px rgba(31, 38, 60, 0.16);
   }
 
   .aurora-glass-popover {
     background: rgba(17, 19, 28, 0.5);
-    backdrop-filter: blur(20px) saturate(1.6);
     -webkit-backdrop-filter: blur(20px) saturate(1.6);
+    backdrop-filter: blur(20px) saturate(1.6);
     border: 1px solid rgba(255, 255, 255, 0.14);
     box-shadow: 0 8px 32px rgba(31, 38, 60, 0.16);
   }
@@ -134,8 +134,8 @@ body {
 
   .theme-settings-backdrop {
     background-color: var(--settings-backdrop-bg);
-    backdrop-filter: blur(4px);
     -webkit-backdrop-filter: blur(4px);
+    backdrop-filter: blur(4px);
   }
 
   .theme-settings-shell {
