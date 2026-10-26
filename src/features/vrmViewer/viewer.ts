@@ -5,6 +5,7 @@ import { buildUrl } from '@/utils/buildUrl'
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js'
 import settingsStore from '@/features/stores/settings'
 import { reportViewerError } from '@/components/common/ErrorBoundary'
+import { IdleMotionController } from './idleMotionController'
 
 /**
  * three.jsを使った3Dビューワー
@@ -24,6 +25,7 @@ export class Viewer {
   private _directionalLight?: THREE.DirectionalLight
   private _ambientLight?: THREE.AmbientLight
   private _loadVrmRequestId = 0
+  private _idleMotion?: IdleMotionController
 
   constructor() {
     this.isReady = false
@@ -63,6 +65,19 @@ export class Viewer {
     // gltf and vrm
     const model = new Model(this._camera || new THREE.Object3D())
     this.model = model
+
+    this._idleMotion?.dispose()
+    this._idleMotion = new IdleMotionController(model)
+
+    model.onSpeechStart = () => {
+    this._idleMotion?.notifyActivity()
+    }
+
+    model.onSpeechEnd = () => {
+    this._idleMotion?.notifyActivity()
+    }
+
+    
     return model
       .loadVRM(url)
       .then(async () => {
@@ -86,6 +101,10 @@ export class Viewer {
           model.vrm.scene.visible = true
         }
 
+        if (this.model === model && model.vrm) {
+        this._idleMotion?.start()
+        }
+
         // HACK: アニメーションの原点がずれているので再生後にカメラ位置を調整する
         requestAnimationFrame(() => {
           this.resetCamera()
@@ -103,6 +122,8 @@ export class Viewer {
   }
 
   public unloadVRM(): void {
+    this._idleMotion?.dispose()
+    this._idleMotion = undefined
     if (this.model?.vrm) {
       this._scene.remove(this.model.vrm.scene)
       this.model?.unLoadVrm()
@@ -148,26 +169,6 @@ export class Viewer {
     window.addEventListener('resize', () => {
       this.resize()
     })
-
-    const handleVisibilityOrFocus = () => {
-      if (typeof document !== 'undefined' && !document.hidden) {
-        // バックグラウンド復帰時にclockの累積時間を破棄
-        this._clock.start()
-        this._clock.getDelta()
-
-        // リサイズを再評価して正常なaspect比を復帰
-        this.resize()
-
-        // スプリングボーンなどの揺れものを初期姿勢に安全にリセット
-        this.model?.vrm?.springBoneManager?.reset()
-      }
-    }
-
-    if (typeof document !== 'undefined') {
-      document.addEventListener('visibilitychange', handleVisibilityOrFocus)
-    }
-    window.addEventListener('focus', handleVisibilityOrFocus)
-
     this.isReady = true
     this.update()
 
@@ -184,17 +185,14 @@ export class Viewer {
     const parentElement = this._renderer.domElement.parentElement
     if (!parentElement) return
 
-    const width = parentElement.clientWidth
-    const height = parentElement.clientHeight
-
-    // ウィンドウ最小化や非表示時に width/height が 0 になる場合の NaN 防止
-    if (width <= 0 || height <= 0) return
-
     this._renderer.setPixelRatio(window.devicePixelRatio)
-    this._renderer.setSize(width, height)
+    this._renderer.setSize(
+      parentElement.clientWidth,
+      parentElement.clientHeight
+    )
 
     if (!this._camera) return
-    this._camera.aspect = width / height
+    this._camera.aspect = parentElement.clientWidth / parentElement.clientHeight
     this._camera.updateProjectionMatrix()
   }
 
@@ -225,17 +223,7 @@ export class Viewer {
 
   public update = () => {
     requestAnimationFrame(this.update)
-
-    // バックグラウンド非アクティブ時は更新・レンダリングをスキップ（CPU/GPU節約および視線暴走防止）
-    if (typeof document !== 'undefined' && document.hidden) {
-      return
-    }
-
-    // 最小化・タブ切り替えからの復帰時に delta が巨大化（数秒〜数十秒）するのを防ぐため、
-    // 最大 0.1秒（10FPS相当）に安全にクランプ
-    const rawDelta = this._clock.getDelta()
-    const delta = Math.min(rawDelta, 0.1)
-
+    const delta = this._clock.getDelta()
     // update vrm components
     if (this.model) {
       this.model.update(delta)
