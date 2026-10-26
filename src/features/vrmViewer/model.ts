@@ -26,6 +26,9 @@ export class Model {
   public currentAction?: THREE.AnimationAction
   public poseYRotationOffset: number = 0
   public poseManager: PoseManager
+  public activeSpeechCount = 0
+  public onSpeechStart?: () => void
+  public onSpeechEnd?: () => void
 
   private _lookAtTargetParent: THREE.Object3D
   private _lipSync?: LipSync
@@ -90,64 +93,86 @@ export class Model {
     isNeedDecode: boolean = true,
     observer?: PlaybackObserver
   ) {
-    this.emoteController?.playEmotion(talk.emotion)
+    this.activeSpeechCount++
+    this.onSpeechStart?.()
 
-    if (talk.motion) {
-      const poseConfig = settingsStore
-        .getState()
-        .poseConfigs.find((p) => p.id === talk.motion)
-      if (poseConfig) {
-        void this.poseManager
-          .applyPose(this, talk.motion, poseConfig)
-          .catch((e) => logger.error('Failed to apply pose:', e))
+    try {
+      this.emoteController?.playEmotion(talk.emotion)
+
+      if (talk.motion) {
+        const poseConfig = settingsStore
+          .getState()
+          .poseConfigs.find((p) => p.id === talk.motion)
+
+        if (poseConfig) {
+          void this.poseManager
+            .applyPose(this, talk.motion, poseConfig)
+            .catch((e) => logger.error('Failed to apply pose:', e))
+        }
+      } else if (this.poseManager.isActive) {
+        this.poseManager.resetToIdle(this)
       }
-    } else if (this.poseManager.isActive) {
-      // モーション指定なしの発話ではアクティブなポーズをリセット
-      this.poseManager.resetToIdle(this)
-    }
 
-    await new Promise((resolve) => {
-      this._lipSync?.playFromArrayBuffer(
-        buffer,
-        () => {
-          resolve(true)
-        },
-        isNeedDecode,
-        24000,
-        observer?.onPlaybackStart
-      )
-    })
+      await new Promise((resolve) => {
+        this._lipSync?.playFromArrayBuffer(
+          buffer,
+          () => resolve(true),
+          isNeedDecode,
+          24000,
+          observer?.onPlaybackStart
+        )
+      })
+    } finally {
+      this.activeSpeechCount--
+      this.onSpeechEnd?.()
+    }
   }
 
   /** ヘッダーなしPCM16を到着したチャンクから順に再生する。 */
+
   public async speakPcm16Stream(
     stream: ReadableStream<Uint8Array>,
     talk: Talk,
     sampleRate: number,
     observer?: PlaybackObserver
   ) {
-    this.emoteController?.playEmotion(talk.emotion)
+    // AIの発話開始を通知
+    this.activeSpeechCount++
+    this.onSpeechStart?.()
 
-    if (talk.motion) {
-      const poseConfig = settingsStore
-        .getState()
-        .poseConfigs.find((p) => p.id === talk.motion)
-      if (poseConfig) {
-        void this.poseManager
-          .applyPose(this, talk.motion, poseConfig)
-          .catch((e) => logger.error('Failed to apply pose:', e))
+    try {
+      // 感情表現を再生
+      this.emoteController?.playEmotion(talk.emotion)
+
+      // 会話中のモーション処理（元の機能を維持）
+      if (talk.motion) {
+        const poseConfig = settingsStore
+          .getState()
+          .poseConfigs.find((p) => p.id === talk.motion)
+
+        if (poseConfig) {
+          void this.poseManager
+            .applyPose(this, talk.motion, poseConfig)
+            .catch((e) => logger.error('Failed to apply pose:', e))
+        }
+      } else if (this.poseManager.isActive) {
+        this.poseManager.resetToIdle(this)
       }
-    } else if (this.poseManager.isActive) {
-      this.poseManager.resetToIdle(this)
-    }
 
-    await this._lipSync?.playPcm16Stream(
-      stream,
-      undefined,
-      sampleRate,
-      observer?.onPlaybackStart
-    )
+      // 音声を再生
+      await this._lipSync?.playPcm16Stream(
+        stream,
+        undefined,
+        sampleRate,
+        observer?.onPlaybackStart
+      )
+    } finally {
+      // 音声再生終了後に発話状態を解除
+      this.activeSpeechCount--
+      this.onSpeechEnd?.()
+    }
   }
+
 
   /**
    * 現在の音声再生を停止

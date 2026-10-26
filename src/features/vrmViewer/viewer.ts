@@ -5,6 +5,7 @@ import { buildUrl } from '@/utils/buildUrl'
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js'
 import settingsStore from '@/features/stores/settings'
 import { reportViewerError } from '@/components/common/ErrorBoundary'
+import { IdleMotionController } from './idleMotionController'
 
 /**
  * three.jsを使った3Dビューワー
@@ -24,6 +25,7 @@ export class Viewer {
   private _directionalLight?: THREE.DirectionalLight
   private _ambientLight?: THREE.AmbientLight
   private _loadVrmRequestId = 0
+  private _idleMotion?: IdleMotionController
 
   constructor() {
     this.isReady = false
@@ -63,6 +65,19 @@ export class Viewer {
     // gltf and vrm
     const model = new Model(this._camera || new THREE.Object3D())
     this.model = model
+
+    this._idleMotion?.dispose()
+    this._idleMotion = new IdleMotionController(model)
+
+    model.onSpeechStart = () => {
+    this._idleMotion?.notifyActivity()
+    }
+
+    model.onSpeechEnd = () => {
+    this._idleMotion?.notifyActivity()
+    }
+
+    
     return model
       .loadVRM(url)
       .then(async () => {
@@ -86,6 +101,10 @@ export class Viewer {
           model.vrm.scene.visible = true
         }
 
+        if (this.model === model && model.vrm) {
+        this._idleMotion?.start()
+        }
+
         // HACK: アニメーションの原点がずれているので再生後にカメラ位置を調整する
         requestAnimationFrame(() => {
           this.resetCamera()
@@ -103,6 +122,8 @@ export class Viewer {
   }
 
   public unloadVRM(): void {
+    this._idleMotion?.dispose()
+    this._idleMotion = undefined
     if (this.model?.vrm) {
       this._scene.remove(this.model.vrm.scene)
       this.model?.unLoadVrm()

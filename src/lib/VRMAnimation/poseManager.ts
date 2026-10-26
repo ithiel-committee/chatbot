@@ -142,6 +142,7 @@ export class PoseManager {
   }
 
   resetToIdle(model: Model): void {
+    ++this.applyRequestId
     if (!model.mixer) return
 
     model.poseYRotationOffset = 0
