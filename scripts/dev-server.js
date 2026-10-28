@@ -28,8 +28,9 @@ const run = async () => {
 
   const isWindows = process.platform === 'win32'
   const nextCmd = isWindows ? 'pnpm.cmd' : 'pnpm'
+  const fullCmd = [nextCmd, ...nextArgs].join(' ')
 
-  const child = spawn(nextCmd, nextArgs, {
+  const child = spawn(fullCmd, {
     stdio: 'inherit',
     shell: true,
     env: { ...process.env },
