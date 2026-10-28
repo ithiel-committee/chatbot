@@ -70,14 +70,13 @@ export class Viewer {
     this._idleMotion = new IdleMotionController(model)
 
     model.onSpeechStart = () => {
-    this._idleMotion?.notifyActivity()
+      this._idleMotion?.notifyActivity()
     }
 
     model.onSpeechEnd = () => {
-    this._idleMotion?.notifyActivity()
+      this._idleMotion?.notifyActivity()
     }
 
-    
     return model
       .loadVRM(url)
       .then(async () => {
@@ -102,7 +101,7 @@ export class Viewer {
         }
 
         if (this.model === model && model.vrm) {
-        this._idleMotion?.start()
+          this._idleMotion?.start()
         }
 
         // HACK: アニメーションの原点がずれているので再生後にカメラ位置を調整する

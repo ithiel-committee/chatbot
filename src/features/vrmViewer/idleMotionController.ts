@@ -1,4 +1,3 @@
-
 import type { Model } from './model'
 import settingsStore from '@/features/stores/settings'
 import { logger } from '@/lib/logger'
@@ -9,14 +8,7 @@ const MAX_INTERVAL_MS = 35_000
 const MOTION_DURATION_MS = 5_000
 
 // ランダム再生したいポーズ
-const IDLE_POSES = [
-  'wave',
-  'clap',
-  'bow',
-  'shrug',
-  'shy',
-  'think',
-]
+const IDLE_POSES = ['wave', 'clap', 'bow', 'shrug', 'shy', 'think']
 
 export class IdleMotionController {
   private model: Model
@@ -73,19 +65,14 @@ export class IdleMotionController {
     if (this.disposed || !this.model.vrm) return
 
     // 発話中や他のモーション実行中は割り込まない
-    if (
-      this.model.activeSpeechCount > 0 ||
-      this.model.poseManager.isActive
-    ) {
+    if (this.model.activeSpeechCount > 0 || this.model.poseManager.isActive) {
       this.schedule(3_000)
       return
     }
 
     const poses = settingsStore.getState().poseConfigs
     const candidates = poses.filter(
-      (pose) =>
-        IDLE_POSES.includes(pose.id) &&
-        pose.id !== this.lastPose
+      (pose) => IDLE_POSES.includes(pose.id) && pose.id !== this.lastPose
     )
 
     const available =
@@ -105,11 +92,7 @@ export class IdleMotionController {
     this.active = true
 
     try {
-      await this.model.poseManager.applyPose(
-        this.model,
-        pose.id,
-        pose
-      )
+      await this.model.poseManager.applyPose(this.model, pose.id, pose)
 
       if (this.disposed || generation !== this.generation) return
 
@@ -120,8 +103,7 @@ export class IdleMotionController {
         this.model.poseManager.resetToIdle(this.model)
 
         const delay =
-          MIN_INTERVAL_MS +
-          Math.random() * (MAX_INTERVAL_MS - MIN_INTERVAL_MS)
+          MIN_INTERVAL_MS + Math.random() * (MAX_INTERVAL_MS - MIN_INTERVAL_MS)
 
         this.schedule(delay)
       }, MOTION_DURATION_MS)
