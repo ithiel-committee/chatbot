@@ -164,6 +164,8 @@ async function startStandaloneServer(port) {
     }
   }
 
+  const chatLogsDir = path.join(baseDir, 'logs')
+  logInfo(`Chat logs directory: ${chatLogsDir}`)
   logInfo(`Starting Next.js server on port ${port}...`)
 
   serverProcess = fork(serverPath, [], {
@@ -174,6 +176,7 @@ async function startStandaloneServer(port) {
       PORT: port.toString(),
       HOSTNAME: '127.0.0.1',
       NODE_ENV: 'production',
+      CHAT_LOGS_DIR: chatLogsDir,
     },
     stdio: 'inherit',
   })

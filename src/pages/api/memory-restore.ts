@@ -36,7 +36,8 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
       return res.status(400).json({ message: 'Invalid filename' })
     }
 
-    const logsDir = path.join(process.cwd(), 'logs')
+    const logsDir =
+      process.env.CHAT_LOGS_DIR || path.join(process.cwd(), 'logs')
     const filePath = path.join(logsDir, filename)
 
     // ファイルの存在確認

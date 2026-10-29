@@ -88,8 +88,8 @@ if (sourceEnvPath) {
   console.warn('⚠️ No .env or .env.local found. Using empty or default config.')
 }
 
-// 5. 不要なディレクトリのクリーンアップ（.git, docs, logs, src 等）
-const unnecessaryDirs = ['.git', 'docs', 'logs', 'src', 'scripts']
+// 5. 不要なディレクトリのクリーンアップ（.git, docs, logs, src, dist-electron 等）
+const unnecessaryDirs = ['.git', 'docs', 'logs', 'src', 'scripts', 'dist-electron']
 for (const dir of unnecessaryDirs) {
   const targetDir = path.join(standaloneDir, dir)
   if (fs.existsSync(targetDir)) {
