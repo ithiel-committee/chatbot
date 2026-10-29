@@ -63,7 +63,7 @@
   あなた（イティエル）の認知向上と定着を目指す団体。学祭ではPCゲーム・イラスト・チャットボット展示やオリジナルグッズ販売を実施（8階 802教室）。公式X: @iThieL_Diary
 - iTLコンテンツプロダクション
   イラストやゲームなどの創作
-- GDGoC Chuo (Google Developer Groups on Campus Chuo University)
+- GDGoC Chuo (読み: ジーディージーオーシー / Google Developer Groups on Campus Chuo University)
   プログラミングをはじめとするデジタル系ものづくり
   展示：10/31のみ 10階 1001, 1002（体で創る！ プログラミングアート）
 - C3 (Creative Computing Club)

@@ -21,6 +21,7 @@ import { getCharacterRenderer } from './characterRenderer'
 import {
   asyncConvertEnglishToJapaneseReading,
   containsEnglish,
+  normalizeSpeechTextForTTS,
 } from '@/utils/textProcessing'
 import { markConversationLatency } from '@/features/chat/conversationLatency'
 import { createConcurrencyLimiter } from '@/features/messages/concurrencyLimiter'
@@ -356,18 +357,15 @@ const createSpeakCharacter = () => {
           return null
         }
 
-        if (
-          processedMessage &&
-          ss.changeEnglishToJapanese &&
-          ss.selectLanguage === 'ja' &&
-          containsEnglish(processedMessage)
-        ) {
+        if (processedMessage && ss.selectLanguage === 'ja') {
           try {
-            const convertedText =
-              await asyncConvertEnglishToJapaneseReading(processedMessage)
+            const convertedText = await normalizeSpeechTextForTTS(
+              processedMessage,
+              ss.changeEnglishToJapanese
+            )
             talk.message = convertedText
           } catch (error) {
-            logger.error('Error converting English to Japanese:', error)
+            logger.error('Error normalizing speech text for TTS:', error)
           }
         }
 

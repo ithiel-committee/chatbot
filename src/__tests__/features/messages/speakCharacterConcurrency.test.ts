@@ -56,6 +56,7 @@ jest.mock('../../../utils/textProcessing', () => ({
   asyncConvertEnglishToJapaneseReading: jest.fn((text: string) =>
     Promise.resolve(text)
   ),
+  normalizeSpeechTextForTTS: jest.fn((text: string) => Promise.resolve(text)),
 }))
 
 const mockSynthesizeVoiceGeminiApi = jest.fn()
