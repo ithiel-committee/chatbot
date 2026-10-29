@@ -209,6 +209,21 @@ async function synthesizeVoice(
   }
 }
 
+export function isWavBuffer(buffer: ArrayBuffer): boolean {
+  if (buffer.byteLength < 12) return false
+  const bytes = new Uint8Array(buffer, 0, 12)
+  return (
+    bytes[0] === 0x52 && // R
+    bytes[1] === 0x49 && // I
+    bytes[2] === 0x46 && // F
+    bytes[3] === 0x46 && // F
+    bytes[8] === 0x57 && // W
+    bytes[9] === 0x41 && // A
+    bytes[10] === 0x56 && // V
+    bytes[11] === 0x45 // E
+  )
+}
+
 const createSpeakCharacter = () => {
   const acquireSynthesisSlot = createConcurrencyLimiter(
     MAX_CONCURRENT_SYNTHESIS
@@ -357,71 +372,76 @@ const createSpeakCharacter = () => {
           return null
         }
 
-        if (processedMessage && ss.selectLanguage === 'ja') {
-          try {
-            const convertedText = await normalizeSpeechTextForTTS(
-              processedMessage,
-              ss.changeEnglishToJapanese
-            )
-            talk.message = convertedText
-          } catch (error) {
-            logger.error('Error normalizing speech text for TTS:', error)
-          }
-        }
-
         let audio: SynthesizedSpeech | null
-        if (talk.message == '' && talk.buffer) {
+
+        // talk.buffer が既に提供されている場合は、TTSによる音声合成を行わずに渡されたバッファを使用
+        if (talk.buffer) {
+          const needsDecode = isWavBuffer(talk.buffer)
           audio = {
             kind: 'buffer',
             audioBuffer: talk.buffer,
-            isNeedDecode: false,
-          }
-          isNeedDecode = false
-        } else if (talk.message !== '') {
-          if (ss.selectVoice === 'none') {
-            logger.log(
-              `[TTS] 🔇 音声なしモード: テキストのみ表示します ("${talk.message.slice(0, 30)}${talk.message.length > 30 ? '...' : ''}")`
-            )
-            markConversationLatency(sessionId, 'tts_ready')
-            audio = null
-          } else {
-            markConversationLatency(sessionId, 'tts_request_started')
-            const ttsStartTime = Date.now()
-            logger.log(
-              `[TTS] 🔊 音声合成開始: engine=${ss.selectVoice}, text="${talk.message.slice(0, 30)}${talk.message.length > 30 ? '...' : ''}"`
-            )
-            if (
-              ss.selectVoice === 'openai' &&
-              getCharacterRenderer()?.speakPcm16Stream
-            ) {
-              const streamed = await synthesizeVoiceOpenAIStreamApi(
-                talk,
-                ss.openaiKey,
-                ss.openaiTTSVoice,
-                ss.openaiTTSModel,
-                ss.openaiTTSSpeed,
-                () => markConversationLatency(sessionId, 'first_audio_chunk')
-              )
-              audio = {
-                kind: 'pcm16-stream',
-                audioStream: streamed.stream,
-                sampleRate: streamed.sampleRate,
-              }
-            } else {
-              const buffer = await synthesizeVoice(talk, ss.selectVoice)
-              audio = buffer
-                ? { kind: 'buffer', audioBuffer: buffer, isNeedDecode }
-                : null
-            }
-            const ttsElapsed = Date.now() - ttsStartTime
-            logger.log(
-              `[TTS] ✨ 音声合成完了: engine=${ss.selectVoice} (所要時間: ${ttsElapsed}ms)`
-            )
-            markConversationLatency(sessionId, 'tts_ready')
+            isNeedDecode: needsDecode,
           }
         } else {
-          audio = null
+          if (processedMessage && ss.selectLanguage === 'ja') {
+            try {
+              const convertedText = await normalizeSpeechTextForTTS(
+                processedMessage,
+                ss.changeEnglishToJapanese
+              )
+              talk.message = convertedText
+            } catch (error) {
+              logger.error('Error normalizing speech text for TTS:', error)
+            }
+          }
+
+          if (talk.message !== '') {
+            if (ss.selectVoice === 'none') {
+              logger.log(
+                `[TTS] 🔇 音声なしモード: テキストのみ表示します ("${talk.message.slice(0, 30)}${talk.message.length > 30 ? '...' : ''}")`
+              )
+              markConversationLatency(sessionId, 'tts_ready')
+              audio = null
+            } else {
+              markConversationLatency(sessionId, 'tts_request_started')
+              const ttsStartTime = Date.now()
+              logger.log(
+                `[TTS] 🔊 音声合成開始: engine=${ss.selectVoice}, text="${talk.message.slice(0, 30)}${talk.message.length > 30 ? '...' : ''}"`
+              )
+              if (
+                ss.selectVoice === 'openai' &&
+                getCharacterRenderer()?.speakPcm16Stream
+              ) {
+                const streamed = await synthesizeVoiceOpenAIStreamApi(
+                  talk,
+                  ss.openaiKey,
+                  ss.openaiTTSVoice,
+                  ss.openaiTTSModel,
+                  ss.openaiTTSSpeed,
+                  () => markConversationLatency(sessionId, 'first_audio_chunk')
+                )
+                audio = {
+                  kind: 'pcm16-stream',
+                  audioStream: streamed.stream,
+                  sampleRate: streamed.sampleRate,
+                }
+              } else {
+                const buffer = await synthesizeVoice(talk, ss.selectVoice)
+                audio = buffer
+                  ? { kind: 'buffer', audioBuffer: buffer, isNeedDecode }
+                  : null
+              }
+              const ttsElapsed = Date.now() - ttsStartTime
+              logger.log(
+                `[TTS] ✨ 音声合成完了: engine=${ss.selectVoice} (所要時間: ${ttsElapsed}ms)`
+              )
+              markConversationLatency(sessionId, 'tts_ready')
+            }
+          } else {
+            audio = null
+          }
         }
+
         return {
           sessionId,
           audio,

@@ -35,6 +35,10 @@ const PNGTuberViewer = dynamic(() => import('@/components/pngTuberViewer'), {
 const PresenceManager = dynamic(() => import('@/components/presenceManager'), {
   ssr: false,
 })
+const StartupGreetingManager = dynamic(
+  () => import('@/components/startupGreetingManager'),
+  { ssr: false }
+)
 const GameCommentaryManager = dynamic(
   () => import('@/components/gameCommentaryManager'),
   { ssr: false }
@@ -165,6 +169,7 @@ const Home = () => {
       <MemoryServiceInitializer />
       <ImageOverlay />
       <PresenceManager />
+      <StartupGreetingManager />
       <div className="absolute top-4 left-4 z-30">
         <IdleManager />
         <GameCommentaryManager />
