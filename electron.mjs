@@ -130,7 +130,10 @@ async function startStandaloneServer(port) {
   if (!fs.existsSync(serverPath)) {
     const err = `Next.js standalone server not found at: ${serverPath}`
     logError(err)
-    dialog.showErrorBox('iThiel Chatbot 起動エラー', `${err}\nアプリを終了します。`)
+    dialog.showErrorBox(
+      'iThiel Chatbot 起動エラー',
+      `${err}\nアプリを終了します。`
+    )
     return false
   }
 
@@ -152,7 +155,9 @@ async function startStandaloneServer(port) {
       const keys = Object.keys(parsed)
       logInfo(
         `Loaded ${keys.length} vars from: ${candidate} (${keys
-          .map((k) => (k.includes('KEY') || k.includes('SECRET') ? `${k}=***` : k))
+          .map((k) =>
+            k.includes('KEY') || k.includes('SECRET') ? `${k}=***` : k
+          )
           .join(', ')})`
       )
       loadedEnv = { ...loadedEnv, ...parsed }
@@ -225,7 +230,10 @@ async function createWindow() {
     try {
       await waitForServer('http://localhost:3000', 30000)
     } catch {
-      dialog.showErrorBox('開発サーバー未起動', 'http://localhost:3000 が起動していません。')
+      dialog.showErrorBox(
+        '開発サーバー未起動',
+        'http://localhost:3000 が起動していません。'
+      )
       app.quit()
       return
     }
@@ -242,14 +250,19 @@ async function createWindow() {
 
   logInfo(`Loading URL: ${targetUrl}`)
 
-  mainWindow.webContents.on('did-fail-load', (event, errorCode, errorDescription, validatedURL) => {
-    logError(`Failed to load URL ${validatedURL}: ${errorCode} ${errorDescription}`)
-    dialog.showErrorBox(
-      '画面読み込みエラー',
-      `画面の読み込みに失敗しました (${errorDescription})。\nURL: ${validatedURL}`
-    )
-    mainWindow.show()
-  })
+  mainWindow.webContents.on(
+    'did-fail-load',
+    (event, errorCode, errorDescription, validatedURL) => {
+      logError(
+        `Failed to load URL ${validatedURL}: ${errorCode} ${errorDescription}`
+      )
+      dialog.showErrorBox(
+        '画面読み込みエラー',
+        `画面の読み込みに失敗しました (${errorDescription})。\nURL: ${validatedURL}`
+      )
+      mainWindow.show()
+    }
+  )
 
   mainWindow.loadURL(targetUrl)
 

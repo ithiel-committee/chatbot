@@ -8,7 +8,6 @@ nodeGypRebuild: false
 buildDependenciesFromSource: false
 afterPack: scripts/after-pack.cjs
 
-
 files:
   - electron.mjs
   - package.json
@@ -17,7 +16,6 @@ files:
 extraResources:
   - from: .next/standalone
     to: standalone
-
 
 win:
   target:
