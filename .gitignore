@@ -58,6 +58,7 @@ public/scripts/live2dcubismcore.min.js
 /public/vrm/*
 !/public/vrm/ithiel.vrm
 !/public/vrm/ithiel_old.vrm
+!/public/vrm/ithiel_old_old.vrm
 !/public/vrm/AvatarSample_A.vrm
 !/public/vrm/AvatarSample_B.vrm
 !/public/vrm/AvatarSample_C.vrm
