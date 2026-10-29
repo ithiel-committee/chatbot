@@ -92,3 +92,74 @@ Google Cloud Console 側で以下の安全装置をかけておきます。
 - **音声が出ない**:
   - Windows の既定のオーディオ出力デバイス（スピーカー / モニター）が正しく選択されているか確認する。
   - 音声合成（VOICEVOX / AivisSpeech 等）を使用する場合は、該当の音声エンジンがバックグラウンドで起動しているか確認する（クラウド音声の場合は不要）。
+
+---
+
+## 6. 万が一のフォールバック (exeが動かない場合のソース実行手順)
+
+セキュリティソフト等の干渉により、現地PCでポータブル exe がどうしても起動しない場合に備えた、ソースコードからの直接起動手順です。
+
+### 事前準備 (USBメモリに入れておく推奨バックアップ)
+
+会場のWi-Fiは低速・不安定なことが多いため、**巨大なパッケージのダウンロードを現地で行わない構成** が最も安全です。
+
+```text
+USBメモリ/
+├── 1_Node_Installer/
+│     └── node-v22-x64.msi        # Node.js 公式LTSインストーラー (オフライン用)
+├── 2_Chatbot_Source/             # プロジェクト一式 (事前に pnpm install 済みの node_modules 込み)
+│     ├── .env                    # 展示用APIキー
+│     ├── package.json
+│     ├── node_modules/           # 事前に手元でインストールしたものをそのまま同梱
+│     └── ...
+└── 3_Portable_EXE/
+      ├── iThiel-Chatbot-Portable.exe
+      └── .env
+```
+
+### パターンA: USBから丸ごとコピーして動かす場合 (最速・ネット不要)
+
+1. **Node.js のインストール**:
+   - USB内の `node-v22-x64.msi` を実行し、標準設定のままインストールを完了する。
+2. **フォルダの配置**:
+   - `2_Chatbot_Source` フォルダを現地PCのデスクトップ等へコピーする。
+3. **PowerShell の起動**:
+   - コピーしたフォルダを開き、エクスプローラーのアドレスバーに `powershell` と入力して Enter を押す。
+4. **開発サーバー起動**:
+   ```powershell
+   npm run dev
+   ```
+   (または `node scripts/dev-server.js`)
+5. **ブラウザで利用**:
+   - ブラウザで `http://localhost:3000` を開く。`F11` キーで全画面表示に切り替え可能。
+
+### パターンB: 現地PCで真水から clone して動かす場合 (完全手動フロー)
+
+USBにソース一式を事前同梱しておらず、GitHub から新しく落とす場合の手順です。
+
+1. **Node.js & Git のインストール**:
+   - 公式サイトから [Node.js (LTS)](https://nodejs.org/) および [Git for Windows](https://git-scm.com/) をダウンロードしてインストールする。
+2. **PowerShell のスクリプト実行制限を一時解除**:
+   - PowerShell を開き、スクリプト実行ポリシーをセッション限定で許可する:
+     ```powershell
+     Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
+     ```
+3. **リポジトリのクローン**:
+   ```powershell
+   git clone https://github.com/ithiel-committee/chatbot.git
+   cd chatbot
+   ```
+4. **.env の配置**:
+   - クローンした `chatbot` フォルダの直下に、USBメモリの `.env` を貼り付ける。
+5. **pnpm の有効化と依存関係インストール**:
+   ```powershell
+   corepack enable
+   pnpm install
+   ```
+6. **開発サーバーの起動**:
+   ```powershell
+   pnpm dev
+   ```
+7. **動作確認**:
+   - `http://localhost:3000` にアクセスし、会話ができるか確認する。
+
