@@ -23,7 +23,13 @@ export class IdleMotionController {
     this.model = model
   }
 
+  private isEnabled(): boolean {
+    return process.env.NEXT_PUBLIC_IDLE_MOTION_ENABLED !== 'false'
+  }
+
   public start() {
+    if (!this.isEnabled()) return
+
     this.disposed = false
 
     window.addEventListener('pointerdown', this.onActivity)
@@ -40,7 +46,7 @@ export class IdleMotionController {
   }
 
   public notifyActivity = () => {
-    if (this.disposed) return
+    if (this.disposed || !this.isEnabled()) return
 
     this.generation++
     this.clearTimers()

@@ -100,7 +100,11 @@ export class Viewer {
           model.vrm.scene.visible = true
         }
 
-        if (this.model === model && model.vrm) {
+        if (
+          this.model === model &&
+          model.vrm &&
+          process.env.NEXT_PUBLIC_IDLE_MOTION_ENABLED !== 'false'
+        ) {
           this._idleMotion?.start()
         }
 
