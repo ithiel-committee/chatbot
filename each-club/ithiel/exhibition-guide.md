@@ -26,12 +26,21 @@ USBメモリ内に下記のようなフォルダを作成して持ち込みま�
 
 ```text
 USBメモリ/
-  └── iThiel-Chatbot/
-        ├── iThiel-Chatbot-Portable.exe   # ポータブル実行ファイル本体
-        └── .env                          # 展示専用のAPIキー等を記述した設定ファイル
+  └── iThiel-Chatbot/                    # 解凍済みフォルダ (win-unpacked を丸ごとコピー)
+        ├── iThiel-Chatbot.exe           # ★実行ファイル本体 (解凍不要・3〜5秒で即起動！)
+        ├── .env                         # 展示専用のAPIキー等を記述した設定ファイル
+        ├── logs/                        # 会話ログフォルダ (起動・会話時に自動生成・永続保存)
+        │     └── log_YYYY-MM-DDTHH-mm-ss.json
+        ├── resources/                   # Next.js / Electron 実行用リソース
+        └── ... (各種 dll / pak ファイル)
 ```
 
+> **【重要】起動速度についての注意**:
+> 単一の `iThiel-Chatbot-Portable.exe` は起動するたびに Windows の一時フォルダへ巨大な内部ファイル（1GB以上）を自己解凍するため、起動に数分〜10分近くかかります。
+> 展示現場では、事前に解凍された上記フォルダ一式を持ち込み、中の **`iThiel-Chatbot.exe`** を起動してください。自己解凍待ちがなく **3〜5秒で即座にアプリが立ち上がります**。
+>
 > **Note**: アプリ (`electron.mjs`) は、exe と同じフォルダに `.env` が存在する場合、それを最優先で自動ロードする仕様になっています。そのため、相手のPCで設定画面を開いてキーを入力する手間はありません。
+> また、来場者との会話ログは exe と同じ階層の `logs/` フォルダへ自動保存されます。アプリ終了後も USBメモリ内にログが保持されるため、展示終了後の会話分析に活用できます。
 
 #### 同梱する `.env` の記述例
 
@@ -92,3 +101,73 @@ Google Cloud Console 側で以下の安全装置をかけておきます。
 - **音声が出ない**:
   - Windows の既定のオーディオ出力デバイス（スピーカー / モニター）が正しく選択されているか確認する。
   - 音声合成（VOICEVOX / AivisSpeech 等）を使用する場合は、該当の音声エンジンがバックグラウンドで起動しているか確認する（クラウド音声の場合は不要）。
+
+---
+
+## 6. 万が一のフォールバック (exeが動かない場合のソース実行手順)
+
+セキュリティソフト等の干渉により、現地PCでポータブル exe がどうしても起動しない場合に備えた、ソースコードからの直接起動手順です。
+
+### 事前準備 (USBメモリに入れておく推奨バックアップ)
+
+会場のWi-Fiは低速・不安定なことが多いため、**巨大なパッケージのダウンロードを現地で行わない構成** が最も安全です。
+
+```text
+USBメモリ/
+├── 1_Node_Installer/
+│     └── node-v22-x64.msi        # Node.js 公式LTSインストーラー (オフライン用)
+├── 2_Chatbot_Source/             # プロジェクト一式 (事前に pnpm install 済みの node_modules 込み)
+│     ├── .env                    # 展示用APIキー
+│     ├── package.json
+│     ├── node_modules/           # 事前に手元でインストールしたものをそのまま同梱
+│     └── ...
+└── 3_Portable_EXE/
+      ├── iThiel-Chatbot-Portable.exe
+      └── .env
+```
+
+### パターンA: USBから丸ごとコピーして動かす場合 (最速・ネット不要)
+
+1. **Node.js のインストール**:
+   - USB内の `node-v22-x64.msi` を実行し、標準設定のままインストールを完了する。
+2. **フォルダの配置**:
+   - `2_Chatbot_Source` フォルダを現地PCのデスクトップ等へコピーする。
+3. **PowerShell の起動**:
+   - コピーしたフォルダを開き、エクスプローラーのアドレスバーに `powershell` と入力して Enter を押す。
+4. **開発サーバー起動**:
+   ```powershell
+   npm run dev
+   ```
+   (または `node scripts/dev-server.js`)
+5. **ブラウザで利用**:
+   - ブラウザで `http://localhost:3000` を開く。`F11` キーで全画面表示に切り替え可能。
+
+### パターンB: 現地PCで真水から clone して動かす場合 (完全手動フロー)
+
+USBにソース一式を事前同梱しておらず、GitHub から新しく落とす場合の手順です。
+
+1. **Node.js & Git のインストール**:
+   - 公式サイトから [Node.js (LTS)](https://nodejs.org/) および [Git for Windows](https://git-scm.com/) をダウンロードしてインストールする。
+2. **PowerShell のスクリプト実行制限を一時解除**:
+   - PowerShell を開き、スクリプト実行ポリシーをセッション限定で許可する:
+     ```powershell
+     Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
+     ```
+3. **リポジトリのクローン**:
+   ```powershell
+   git clone https://github.com/ithiel-committee/chatbot.git
+   cd chatbot
+   ```
+4. **.env の配置**:
+   - クローンした `chatbot` フォルダの直下に、USBメモリの `.env` を貼り付ける。
+5. **pnpm の有効化と依存関係インストール**:
+   ```powershell
+   corepack enable
+   pnpm install
+   ```
+6. **開発サーバーの起動**:
+   ```powershell
+   pnpm dev
+   ```
+7. **動作確認**:
+   - `http://localhost:3000` にアクセスし、会話ができるか確認する。

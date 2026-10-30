@@ -1,4 +1,4 @@
-import { app, BrowserWindow, screen, session } from 'electron'
+import { app, BrowserWindow, screen, session, dialog } from 'electron'
 import path from 'path'
 import { fileURLToPath } from 'url'
 import { fork } from 'child_process'
@@ -12,8 +12,33 @@ const isDev = process.env.NODE_ENV === 'development' || !app.isPackaged
 let mainWindow = null
 let serverProcess = null
 
+// ログファイルへの記録関数（パッケージ版のデバッグ用）
+function logToFile(msg) {
+  try {
+    const logDir = app.getPath('userData')
+    if (!fs.existsSync(logDir)) {
+      fs.mkdirSync(logDir, { recursive: true })
+    }
+    const logPath = path.join(logDir, 'electron-app.log')
+    const timestamp = new Date().toISOString()
+    fs.appendFileSync(logPath, `[${timestamp}] ${msg}\n`)
+  } catch {
+    // ログ書き込み失敗は無視
+  }
+}
+
+function logInfo(msg) {
+  console.log(msg)
+  logToFile(`INFO: ${msg}`)
+}
+
+function logError(msg) {
+  console.error(msg)
+  logToFile(`ERROR: ${msg}`)
+}
+
 // サーバー起動待機（標準httpポーリング）
-function waitForServer(url, timeoutMs = 30000, intervalMs = 300) {
+function waitForServer(url, timeoutMs = 45000, intervalMs = 400) {
   const startTime = Date.now()
   return new Promise((resolve, reject) => {
     const check = () => {
@@ -53,6 +78,46 @@ function getFreePort(preferredPort = 3000) {
   })
 }
 
+// .env ファイルのパーサー関数
+function parseEnvFile(filePath) {
+  if (!fs.existsSync(filePath)) return {}
+  try {
+    const content = fs.readFileSync(filePath, 'utf-8')
+    const result = {}
+    for (const rawLine of content.split('\n')) {
+      const line = rawLine.trim()
+      if (!line || line.startsWith('#')) continue
+      const eqIdx = line.indexOf('=')
+      if (eqIdx === -1) continue
+      const key = line.slice(0, eqIdx).trim()
+      let val = line.slice(eqIdx + 1).trim()
+      if (
+        (val.startsWith('"') && val.endsWith('"')) ||
+        (val.startsWith("'") && val.endsWith("'"))
+      ) {
+        val = val.slice(1, -1)
+      }
+      val = val.replace(/\\n/g, '\n').replace(/\\r/g, '\r')
+      result[key] = val
+    }
+    return result
+  } catch (err) {
+    logError(`Failed to parse env file at ${filePath}: ${err.message}`)
+    return {}
+  }
+}
+
+// 実行ファイルのベースディレクトリを取得（Portable版対応）
+function getAppBaseDir() {
+  if (process.env.PORTABLE_EXECUTABLE_DIR) {
+    return process.env.PORTABLE_EXECUTABLE_DIR
+  }
+  if (app.isPackaged) {
+    return path.dirname(process.execPath)
+  }
+  return __dirname
+}
+
 // Next.js standalone サーバーの起動
 async function startStandaloneServer(port) {
   const standaloneDir = app.isPackaged
@@ -60,48 +125,79 @@ async function startStandaloneServer(port) {
     : path.join(__dirname, '.next', 'standalone')
 
   const serverPath = path.join(standaloneDir, 'server.js')
+  logInfo(`Checking standalone server at: ${serverPath}`)
 
   if (!fs.existsSync(serverPath)) {
-    console.error(`Next.js standalone server not found at: ${serverPath}`)
+    const err = `Next.js standalone server not found at: ${serverPath}`
+    logError(err)
+    dialog.showErrorBox(
+      'iThiel Chatbot 起動エラー',
+      `${err}\nアプリを終了します。`
+    )
     return false
   }
 
-  // 実行ファイルと同階層の .env を優先ロード（ユーザーが後からキー変更できるように）
-  const externalEnvPath = app.isPackaged
-    ? path.join(path.dirname(process.execPath), '.env')
-    : path.join(__dirname, '.env')
+  // 1. 同梱 .env をロード
+  // 2. 外部 .env / .env.local を優先ロード（ユーザーが配置したキーで上書き）
+  const baseDir = getAppBaseDir()
+  logInfo(`App base directory for external config: ${baseDir}`)
 
-  const internalEnvPath = path.join(standaloneDir, '.env')
-  const envFilePath = fs.existsSync(externalEnvPath)
-    ? externalEnvPath
-    : internalEnvPath
+  const envCandidates = [
+    path.join(standaloneDir, '.env'),
+    path.join(baseDir, '.env'),
+    path.join(baseDir, '.env.local'),
+  ]
 
-  console.log(`Starting Next.js server on port ${port}...`)
+  let loadedEnv = {}
+  for (const candidate of envCandidates) {
+    if (fs.existsSync(candidate)) {
+      const parsed = parseEnvFile(candidate)
+      const keys = Object.keys(parsed)
+      logInfo(
+        `Loaded ${keys.length} vars from: ${candidate} (${keys
+          .map((k) =>
+            k.includes('KEY') || k.includes('SECRET') ? `${k}=***` : k
+          )
+          .join(', ')})`
+      )
+      loadedEnv = { ...loadedEnv, ...parsed }
+    }
+  }
+
+  const chatLogsDir = path.join(baseDir, 'logs')
+  logInfo(`Chat logs directory: ${chatLogsDir}`)
+  logInfo(`Starting Next.js server on port ${port}...`)
 
   serverProcess = fork(serverPath, [], {
     cwd: standaloneDir,
     env: {
       ...process.env,
+      ...loadedEnv,
       PORT: port.toString(),
       HOSTNAME: '127.0.0.1',
       NODE_ENV: 'production',
-      DOTENV_CONFIG_PATH: envFilePath,
+      CHAT_LOGS_DIR: chatLogsDir,
     },
     stdio: 'inherit',
   })
 
   serverProcess.on('exit', (code, signal) => {
-    console.log(`Next.js server exited with code ${code}, signal ${signal}`)
+    logInfo(`Next.js server exited with code ${code}, signal ${signal}`)
     serverProcess = null
   })
 
   // サーバーの起動を待機
   try {
-    await waitForServer(`http://127.0.0.1:${port}`, 30000, 300)
-    console.log(`Next.js server is ready at http://127.0.0.1:${port}`)
+    await waitForServer(`http://127.0.0.1:${port}`, 45000, 400)
+    logInfo(`Next.js server is ready at http://127.0.0.1:${port}`)
     return true
   } catch (err) {
-    console.error('Timeout waiting for Next.js server to start:', err)
+    const msg = `Timeout waiting for Next.js server to start: ${err.message}`
+    logError(msg)
+    dialog.showErrorBox(
+      'iThiel Chatbot 起動タイムアウト',
+      `内蔵サーバーの起動が制限時間内に完了しませんでした。\nPCの負荷状況を確認の上、再起動をお試しください。\nログ: ${path.join(app.getPath('userData'), 'electron-app.log')}`
+    )
     return false
   }
 }
@@ -134,24 +230,56 @@ async function createWindow() {
   let targetUrl = 'http://localhost:3000'
 
   if (isDev) {
-    await waitForServer('http://localhost:3000', 30000)
+    try {
+      await waitForServer('http://localhost:3000', 30000)
+    } catch {
+      dialog.showErrorBox(
+        '開発サーバー未起動',
+        'http://localhost:3000 が起動していません。'
+      )
+      app.quit()
+      return
+    }
   } else {
     const port = await getFreePort(3000)
     targetUrl = `http://127.0.0.1:${port}`
     const serverStarted = await startStandaloneServer(port)
     if (!serverStarted) {
-      console.error('Failed to start internal server.')
+      logError('Failed to start internal server. Quitting application.')
+      app.quit()
+      return
     }
   }
 
+  logInfo(`Loading URL: ${targetUrl}`)
+
+  mainWindow.webContents.on(
+    'did-fail-load',
+    (event, errorCode, errorDescription, validatedURL) => {
+      logError(
+        `Failed to load URL ${validatedURL}: ${errorCode} ${errorDescription}`
+      )
+      dialog.showErrorBox(
+        '画面読み込みエラー',
+        `画面の読み込みに失敗しました (${errorDescription})。\nURL: ${validatedURL}`
+      )
+      mainWindow.show()
+    }
+  )
+
   mainWindow.loadURL(targetUrl)
 
-  mainWindow.once('ready-to-show', () => {
-    mainWindow.show()
-    if (isDev) {
-      mainWindow.webContents.openDevTools()
+  const showWindow = () => {
+    if (mainWindow && !mainWindow.isVisible()) {
+      mainWindow.show()
+      if (isDev) {
+        mainWindow.webContents.openDevTools()
+      }
     }
-  })
+  }
+
+  mainWindow.once('ready-to-show', showWindow)
+  mainWindow.webContents.once('did-finish-load', showWindow)
 
   mainWindow.on('closed', () => {
     mainWindow = null

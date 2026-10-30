@@ -45,11 +45,12 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
       })
     }
 
-    const logsDir = path.join(process.cwd(), 'logs')
+    const logsDir =
+      process.env.CHAT_LOGS_DIR || path.join(process.cwd(), 'logs')
 
     // logsディレクトリが存在しない場合は作成
     if (!fs.existsSync(logsDir)) {
-      fs.mkdirSync(logsDir)
+      fs.mkdirSync(logsDir, { recursive: true })
     }
 
     // ファイル名の決定: isNewFile → targetFileName → 最新ファイル → 新規作成

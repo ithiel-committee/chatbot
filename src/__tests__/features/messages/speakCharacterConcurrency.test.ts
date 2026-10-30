@@ -56,6 +56,7 @@ jest.mock('../../../utils/textProcessing', () => ({
   asyncConvertEnglishToJapaneseReading: jest.fn((text: string) =>
     Promise.resolve(text)
   ),
+  normalizeSpeechTextForTTS: jest.fn((text: string) => Promise.resolve(text)),
 }))
 
 const mockSynthesizeVoiceGeminiApi = jest.fn()
@@ -308,5 +309,41 @@ describe('speakCharacter concurrency', () => {
       sampleRate: 24000,
     })
     await flushPromises()
+  })
+
+  it('talk.buffer が渡された場合、TTS合成を行わずに直接キューへタスクを追加する', async () => {
+    const audioBuffer = new ArrayBuffer(20)
+    const view = new Uint8Array(audioBuffer)
+    // RIFF....WAVE
+    view[0] = 0x52
+    view[1] = 0x49
+    view[2] = 0x46
+    view[3] = 0x46
+    view[8] = 0x57
+    view[9] = 0x41
+    view[10] = 0x56
+    view[11] = 0x45
+
+    speakCharacter('session-buffer', {
+      message: '挨拶メッセージ',
+      emotion: 'happy',
+      buffer: audioBuffer,
+    })
+
+    await flushPromises()
+
+    expect(mockSynthesizeVoicevoxApi).not.toHaveBeenCalled()
+    expect(mockAddTask).toHaveBeenCalledWith(
+      expect.objectContaining({
+        sessionId: 'session-buffer',
+        kind: 'buffer',
+        audioBuffer,
+        isNeedDecode: true,
+        talk: expect.objectContaining({
+          message: '挨拶メッセージ',
+          emotion: 'happy',
+        }),
+      })
+    )
   })
 })

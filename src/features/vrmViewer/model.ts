@@ -173,7 +173,6 @@ export class Model {
     }
   }
 
-
   /**
    * 現在の音声再生を停止
    */

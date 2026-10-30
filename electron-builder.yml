@@ -6,17 +6,16 @@ directories:
 npmRebuild: false
 nodeGypRebuild: false
 buildDependenciesFromSource: false
+afterPack: scripts/after-pack.cjs
 
 files:
   - electron.mjs
   - package.json
-  - '!**/node_modules/**/*'
+  - '!node_modules/**'
 
 extraResources:
   - from: .next/standalone
     to: standalone
-    filter:
-      - '**/*'
 
 win:
   target:

@@ -26,7 +26,8 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
   }
 
   try {
-    const logsDir = path.join(process.cwd(), 'logs')
+    const logsDir =
+      process.env.CHAT_LOGS_DIR || path.join(process.cwd(), 'logs')
 
     // logsディレクトリが存在しない場合は空配列を返す
     if (!fs.existsSync(logsDir)) {
