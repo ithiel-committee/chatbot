@@ -134,7 +134,7 @@ cp .env.example .env.local
 | `OPENAI_API_KEY`                       | OpenAI API キー                                                      | `sk-...`                        |
 | `AITUBERKIT_SERVER_SECRET_ACCESS_MODE` | サーバー側APIキーの利用制限 (`unprotected` でブラウザ側の入力不要に) | `unprotected`                   |
 | `NEXT_PUBLIC_SELECT_LANGUAGE`          | 初期表示言語 (`ja` / `en`)                                           | `ja`                            |
-| `NEXT_PUBLIC_BACKGROUND_IMAGE_PATH`    | 初期表示の背景画像パス                                               | `/backgrounds/bg.jpg`           |
+| `NEXT_PUBLIC_BACKGROUND_IMAGE_PATH`    | 初期表示の背景画像パス                                               | `/backgrounds/bg-c.png`         |
 | `VOICEVOX_SERVER_URL`                  | VOICEVOX サーバーのURL                                               | `http://localhost:50021`        |
 
 ※ `.env.example` の末尾に「iThiel Committee（イティエル）」および「C3（ホログラム対話）」のプリセット設定例がコメント形式で記載されています。必要に応じてコピー＆ペーストしてご利用いただけます。

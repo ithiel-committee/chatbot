@@ -56,7 +56,7 @@ const Based = () => {
     fetch('/api/get-background-list')
       .then((res) => res.json())
       .then((files) =>
-        setBackgroundFiles(files.filter((file: string) => file !== 'bg.jpg'))
+        setBackgroundFiles(files.filter((file: string) => file !== 'bg-c.png'))
       )
       .catch((error) => {
         logger.error('Error fetching background list:', error)
@@ -106,7 +106,7 @@ const Based = () => {
         throw new Error(t('BackgroundListFetchError'))
       }
       const files = await listResponse.json()
-      setBackgroundFiles(files.filter((file: string) => file !== 'bg.jpg'))
+      setBackgroundFiles(files.filter((file: string) => file !== 'bg-c.png'))
     } catch (error) {
       logger.error('Error uploading background:', error)
       setUploadError(t('BackgroundUploadError'))
@@ -232,7 +232,7 @@ const Based = () => {
             }}
             disabled={isLoading || isUploading || isRestrictedMode}
           >
-            <option value="/backgrounds/bg.jpg">
+            <option value="/backgrounds/bg-c.png">
               {t('DefaultBackground')}
             </option>
             <option value="green">{t('GreenBackground')}</option>

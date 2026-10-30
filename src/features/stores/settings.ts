@@ -610,7 +610,7 @@ const getInitialValuesFromEnv = (): SettingsState => ({
   maxPastMessages:
     parseInt(process.env.NEXT_PUBLIC_MAX_PAST_MESSAGES || '10') || 10,
   backgroundImageUrl:
-    process.env.NEXT_PUBLIC_BACKGROUND_IMAGE_PATH || '/backgrounds/bg.jpg',
+    process.env.NEXT_PUBLIC_BACKGROUND_IMAGE_PATH || '/backgrounds/bg-c.png',
   useVideoAsBackground:
     process.env.NEXT_PUBLIC_USE_VIDEO_AS_BACKGROUND === 'true',
   hideVideoDisplay: process.env.NEXT_PUBLIC_HIDE_VIDEO_DISPLAY === 'true',

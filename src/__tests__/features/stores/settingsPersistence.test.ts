@@ -140,4 +140,82 @@ describe('settingsStore persistence', () => {
     expect(reloadedSettingsStore.getState().chatLogMode).toBe('hidden')
     expect(reloadedSettingsStore.getState().backgroundImageUrl).toBe('green')
   })
+
+  describe('background image overwrite and persistence behavior', () => {
+    it('verifies default background is /backgrounds/bg-c.png when not configured', () => {
+      const settingsStore = loadStore()
+      expect(settingsStore.getState().backgroundImageUrl).toBe(
+        '/backgrounds/bg-c.png'
+      )
+    })
+
+    it('preserves setting when changed from default (/backgrounds/bg-c.png) to /backgrounds/bg.jpg', () => {
+      process.env.NEXT_PUBLIC_ALWAYS_OVERRIDE_WITH_ENV_VARIABLES = 'false'
+      const settingsStore = loadStore()
+
+      settingsStore.setState({
+        backgroundImageUrl: '/backgrounds/bg.jpg',
+      })
+
+      const persisted = JSON.parse(localStorage.getItem(storageKey) ?? '{}')
+      expect(persisted.state.backgroundImageUrl).toBe('/backgrounds/bg.jpg')
+
+      const reloadedStore = loadStore()
+      expect(reloadedStore.getState().backgroundImageUrl).toBe(
+        '/backgrounds/bg.jpg'
+      )
+    })
+
+    it('preserves setting when changed from default to green', () => {
+      process.env.NEXT_PUBLIC_ALWAYS_OVERRIDE_WITH_ENV_VARIABLES = 'false'
+      const settingsStore = loadStore()
+
+      settingsStore.setState({
+        backgroundImageUrl: 'green',
+      })
+
+      const reloadedStore = loadStore()
+      expect(reloadedStore.getState().backgroundImageUrl).toBe('green')
+    })
+
+    it('demonstrates mergePersistedSettings overwrite if background is /backgrounds/bg-c.png and env default is different', () => {
+      // If environment changes default to custom.jpg
+      process.env.NEXT_PUBLIC_BACKGROUND_IMAGE_PATH = '/backgrounds/custom.jpg'
+      process.env.NEXT_PUBLIC_ALWAYS_OVERRIDE_WITH_ENV_VARIABLES = 'false'
+
+      // But user intentionally chose /backgrounds/bg-c.png
+      localStorage.setItem(
+        storageKey,
+        JSON.stringify({
+          state: {
+            backgroundImageUrl: '/backgrounds/bg-c.png',
+          },
+          version: 0,
+        })
+      )
+
+      const reloadedStore = loadStore()
+      // Because mergePersistedSettings treats /backgrounds/bg-c.png as an old default to migrate,
+      // it gets overwritten by currentState.backgroundImageUrl (/backgrounds/custom.jpg)!
+      expect(reloadedStore.getState().backgroundImageUrl).toBe(
+        '/backgrounds/custom.jpg'
+      )
+    })
+
+    it('demonstrates continuous env override when NEXT_PUBLIC_ALWAYS_OVERRIDE_WITH_ENV_VARIABLES is true', () => {
+      process.env.NEXT_PUBLIC_ALWAYS_OVERRIDE_WITH_ENV_VARIABLES = 'true'
+      const settingsStore = loadStore()
+
+      // User changes setting from default to /backgrounds/bg.jpg
+      settingsStore.setState({
+        backgroundImageUrl: '/backgrounds/bg.jpg',
+      })
+
+      // When reloaded, because ALWAYS_OVERRIDE is true, it is overwritten back to default!
+      const reloadedStore = loadStore()
+      expect(reloadedStore.getState().backgroundImageUrl).toBe(
+        '/backgrounds/bg-c.png'
+      )
+    })
+  })
 })
